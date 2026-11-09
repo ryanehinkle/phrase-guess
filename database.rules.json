@@ -1,0 +1,29 @@
+{
+  "rules": {
+    "rooms": {
+      "$room": {
+        ".read": "$room.matches(/^[A-HJ-NP-Z2-9]{6}$/)",
+        ".write": "false",
+        "createdAt": {
+          ".write": "!data.exists() && newData.isNumber() && newData.val() <= now && newData.val() > now - 60000",
+          ".validate": "newData.isNumber()"
+        },
+        "hostSecret": {
+          ".write": "!data.exists() && newData.isString() && newData.val().length <= 80",
+          ".validate": "newData.isString()"
+        },
+        "words": {
+          ".read": true,
+          "$word": {
+            ".write": "!data.exists() && newData.exists() && newData.hasChildren(['text', 'at']) && root.child('rooms').child($room).child('createdAt').exists()",
+            ".validate": "newData.hasChildren(['text', 'at'])",
+            "text": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60" },
+            "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000 && newData.val() >= now - 60000" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
