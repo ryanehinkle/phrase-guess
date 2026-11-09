@@ -20,30 +20,6 @@
           ".write": "root.child('rooms').child($room).child('clearToken').val() === root.child('rooms').child($room).child('hostSecret').val() && newData.isNumber() && newData.val() > now - 60000 && newData.val() < now + 60000",
           ".validate": "newData.isNumber()"
         },
-        "words": {
-          "$word": {
-            ".write": "!data.exists() && newData.exists() && root.child('rooms').child($room).child('createdAt').exists()",
-            ".validate": "newData.hasChildren(['text', 'at', 'name', 'color', 'playerId']) && root.child('rooms').child($room).child('players').child(newData.child('playerId').val()).child('name').val() === newData.child('name').val() && root.child('rooms').child($room).child('players').child(newData.child('playerId').val()).child('color').val() === newData.child('color').val()",
-            "text": {
-              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
-            },
-            "at": {
-              ".validate": "newData.isNumber() && newData.val() <= now + 60000 && newData.val() >= now - 60000"
-            },
-            "$other": {
-              ".validate": false
-            },
-            "name": {
-              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
-            },
-            "color": {
-              ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-f]{6}$/)"
-            },
-            "playerId": {
-              ".validate": "newData.isString() && newData.val().length >= 20 && newData.val().length <= 80"
-            }
-          }
-        },
         "$other": {
           ".validate": false
         },
@@ -51,6 +27,27 @@
           ".write": "root.child('rooms').child($room).child('createdAt').exists() && newData.exists()",
           "$player": {
             ".validate": "newData.hasChildren(['id','name','color']) && newData.child('id').val() === $player && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('color').isString() && newData.child('color').val().matches(/^#[0-9a-f]{6}$/)"
+          }
+        },
+        "game": {
+          ".write": "root.child('rooms').child($room).child('createdAt').exists() && newData.child('hostToken').val() === root.child('rooms').child($room).child('hostSecret').val()",
+          ".validate": "newData.hasChildren(['phase','round','hostToken'])"
+        },
+        "submissions": {
+          "$round": {
+            "$player": {
+              ".write": "!data.exists() && newData.exists() && root.child('rooms').child($room).child('players').child($player).exists() && root.child('rooms').child($room).child('game').child('phase').val() === 'answering' && root.child('rooms').child($room).child('game').child('round').val() === $round * 1 && now <= root.child('rooms').child($room).child('game').child('deadline').val()",
+              ".validate": "newData.hasChildren(['text','at']) && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 48 && newData.child('at').isNumber()",
+              "text": {
+                ".validate": "newData.isString()"
+              },
+              "at": {
+                ".validate": "newData.isNumber()"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
           }
         }
       }
