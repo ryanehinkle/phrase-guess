@@ -23,13 +23,40 @@
         "words": {
           "$word": {
             ".write": "!data.exists() && newData.exists() && root.child('rooms').child($room).child('createdAt').exists()",
-            ".validate": "newData.hasChildren(['text', 'at'])",
-            "text": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60" },
-            "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000 && newData.val() >= now - 60000" },
-            "$other": { ".validate": false }
+            ".validate": "newData.hasChildren(['text', 'at', 'name', 'color', 'playerId']) && root.child('rooms').child($room).child('players').child(newData.child('playerId').val()).child('name').val() === newData.child('name').val() && root.child('rooms').child($room).child('players').child(newData.child('playerId').val()).child('color').val() === newData.child('color').val()",
+            "text": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+            },
+            "at": {
+              ".validate": "newData.isNumber() && newData.val() <= now + 60000 && newData.val() >= now - 60000"
+            },
+            "$other": {
+              ".validate": false
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+            },
+            "color": {
+              ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-f]{6}$/)"
+            },
+            "playerId": {
+              ".validate": "newData.isString() && newData.val().length >= 20 && newData.val().length <= 80"
+            }
           }
         },
-        "$other": { ".validate": false }
+        "$other": {
+          ".validate": false
+        },
+        "players": {
+          ".write": "root.child('rooms').child($room).child('createdAt').exists() && newData.exists()",
+          ".validate": "newData.childrenCount <= 24",
+          "$player": {
+            ".validate": "newData.hasChildren(['id','name','color']) && newData.child('id').val() === $player && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('color').isString() && newData.child('color').val().matches(/^#[0-9a-f]{6}$/)",
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
       }
     }
   }
