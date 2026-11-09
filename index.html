@@ -12,7 +12,7 @@
 <body><div id="app" class="app"></div>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
-import {getDatabase,ref,set,push,onValue,get,remove} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js';
+import {getDatabase,ref,set,push,onValue,get,runTransaction} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js';
 import {firebaseConfig} from './firebase-config.js';
 const root=document.getElementById('app');
 const configured=!!(firebaseConfig?.apiKey&&firebaseConfig?.databaseURL&&!firebaseConfig.apiKey.includes('REPLACE'));
@@ -41,13 +41,15 @@ const wordsRef=ref(db,'rooms/'+room+'/words');
 const roomRef=ref(db,'rooms/'+room);
 const conn=document.getElementById('conn');
 onValue(ref(db,'.info/connected'),snap=>{conn.textContent=snap.val()?'● Live':'● Reconnecting';conn.className='badge '+(snap.val()?'online':'offline')});
-get(roomRef).then(s=>{if(!s.exists()){set(roomRef,{createdAt:Date.now(),hostSecret,words:{}}).catch(console.error)}}).catch(console.error);
-document.getElementById('clear').onclick=async()=>{if(!confirm('Remove all words from this room?'))return;try{await remove(wordsRef)}catch(e){alert('Could not clear the board. Check database rules.')}};
-let visible=new Map();
-onValue(wordsRef,s=>{const entries=Object.entries(s.val()||{}).sort((a,b)=>(a[1].at||0)-(b[1].at||0)).slice(-150);const incoming=new Set(entries.map(([k])=>k));
+runTransaction(ref(db,'rooms/'+room+'/hostSecret'),current=>current===null?hostSecret:undefined,{applyLocally:false}).then(r=>{if(r.committed){return runTransaction(ref(db,'rooms/'+room+'/createdAt'),current=>current===null?Date.now():undefined,{applyLocally:false})}}).catch(e=>{conn.textContent='● Host setup error';console.error(e)});
+document.getElementById('clear').onclick=async()=>{if(!confirm('Remove all words from this room?'))return;try{const result=await runTransaction(ref(db,'rooms/'+room+'/clearToken'),()=>hostSecret,{applyLocally:false});if(!result.committed)throw Error('Not allowed');await runTransaction(ref(db,'rooms/'+room+'/clearedAt'),()=>Date.now(),{applyLocally:false});}catch(e){alert('Could not clear the board. Please check your host permissions.')}};
+let visible=new Map();let lastCleared=0;let wordsData={};
+onValue(ref(db,'rooms/'+room+'/clearedAt'),s=>{lastCleared=s.val()||0;drawWords()});
+onValue(wordsRef,s=>{wordsData=s.val()||{};drawWords()},e=>{conn.textContent='● Database error';console.error(e)});
+function drawWords(){const entries=Object.entries(wordsData).filter(([,v])=>v&&typeof v.text==='string'&&(v.at||0)>lastCleared).sort((a,b)=>(a[1].at||0)-(b[1].at||0)).slice(-150);const incoming=new Set(entries.map(([k])=>k));
 for(const [key,el] of visible){if(!incoming.has(key)){el.remove();visible.delete(key)}}
 document.getElementById('empty').classList.toggle('hidden',entries.length>0);
-const elBoard=document.getElementById('board');for(let i=0;i<entries.length;i++){const [key,data]=entries[i];if(visible.has(key))continue;const el=document.createElement('div');el.className='bubble';el.textContent=String(data.text||'').slice(0,60);el.style.background=palette[(i+key.length)%palette.length];el.style.setProperty('--float',(5+i%5)+'s');el.style.left=(4+(hash(key+'x')%73))+'%';el.style.top=(5+(hash(key+'y')%75))+'%';el.style.zIndex=String(i+1);elBoard.append(el);const maxX=Math.max(2,elBoard.clientWidth-el.offsetWidth-12);const maxY=Math.max(2,elBoard.clientHeight-el.offsetHeight-12);el.style.left=Math.round((hash(key+'x')%1000)/1000*maxX)+'px';el.style.top=Math.round((hash(key+'y')%1000)/1000*maxY)+'px';visible.set(key,el)}},e=>{conn.textContent='● Database error';console.error(e)});
+const elBoard=document.getElementById('board');for(let i=0;i<entries.length;i++){const [key,data]=entries[i];if(visible.has(key))continue;const el=document.createElement('div');el.className='bubble';el.textContent=String(data.text||'').slice(0,60);el.style.background=palette[(i+key.length)%palette.length];el.style.setProperty('--float',(5+i%5)+'s');el.style.left=(4+(hash(key+'x')%73))+'%';el.style.top=(5+(hash(key+'y')%75))+'%';el.style.zIndex=String(i+1);elBoard.append(el);const maxX=Math.max(2,elBoard.clientWidth-el.offsetWidth-12);const maxY=Math.max(2,elBoard.clientHeight-el.offsetHeight-12);el.style.left=Math.round((hash(key+'x')%1000)/1000*maxX)+'px';el.style.top=Math.round((hash(key+'y')%1000)/1000*maxY)+'px';visible.set(key,el)}}
 }
 function hash(s){let n=2166136261;for(const c of s){n^=c.charCodeAt(0);n=Math.imul(n,16777619)}return n>>>0}
 function player(room){root.innerHTML='<main class="panel"><p class="roomline">ROOM <span class="roomcode">'+room+'</span></p><h1>Send a word</h1><p>Your word will pop up on the big screen.</p><form id="sendForm"><input id="word" class="field" maxlength="60" placeholder="Type a word or phrase..." autocomplete="off" enterkeyhint="send" required aria-label="Word or phrase"><div class="row"><span class="notice">Send as many as you like</span><span class="limit" id="limit">0/60</span></div><button class="btn primary" id="send" type="submit">Send word ↑</button></form><p id="feedback" class="hint" aria-live="polite"></p><a class="smalllink" href="?">Join another room</a></main>';
