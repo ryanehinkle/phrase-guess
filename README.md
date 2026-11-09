@@ -16,6 +16,6 @@ GitHub Pages is static, so it **cannot synchronize devices on its own**. This pr
 
 - The big-screen view displays submitted words as bubbles. Use **Clear words** between rounds, or **New room** to start a fresh code.
 - This is a casual party tool, not a locked-down private room. Anyone with a code/URL can join, and the Firebase web configuration is intentionally visible to browsers. Keep admin service credentials out of this repository.
-- The supplied sample rules allow guests to add words but not delete them; as a result **Clear words** requires a more secure host-authenticated backend to work properly. The current prototype includes the Clear button but it will show a permission error under these rules. Avoid opening up write access to all words to fix this.
+- **Clear words** hides older submissions while preserving the room. For a public-facing event or stronger abuse protection, add Firebase Authentication and securely scoped database rules. Rooms and old submissions are not automatically deleted.
 - Rooms are not automatically deleted. Firebase usage may incur charges if you exceed the free-tier allowance.
 - The QR image is loaded from a third-party QR service; phones can instead type the room code manually.
