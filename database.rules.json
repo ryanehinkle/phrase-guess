@@ -36,7 +36,7 @@
         "submissions": {
           "$round": {
             "$player": {
-              ".write": "!data.exists() && newData.exists() && root.child('rooms').child($room).child('players').child($player).exists() && root.child('rooms').child($room).child('game').child('phase').val() === 'answering' && root.child('rooms').child($room).child('game').child('round').val() === $round * 1 && now <= root.child('rooms').child($room).child('game').child('deadline').val()",
+              ".write": "!data.exists() && newData.exists() && root.child('rooms').child($room).child('players').child($player).exists() && root.child('rooms').child($room).child('game').child('phase').val() === 'answering' && root.child('rooms').child($room).child('game').child('roundKey').val() === $round && now <= root.child('rooms').child($room).child('game').child('deadline').val()",
               ".validate": "newData.hasChildren(['text','at']) && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 48 && newData.child('at').isNumber()",
               "text": {
                 ".validate": "newData.isString()"
