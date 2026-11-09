@@ -24,7 +24,11 @@ function home(){shell('PLAY TOGETHER','<main class="welcome"><div class="eyebrow
  $('joinBtn').onclick=()=>{$('joinForm').classList.toggle('hidden');$('roomcode').focus()};
  $('joinForm').onsubmit=e=>{e.preventDefault();const code=$('roomcode').value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if(code.length===6)location.href=route(code)};
 }
-function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(!hostToken){shell('HOST','<main class="card"><h1>Host session not found</h1><p>Start a new game from the home page on this device.</p><a href="?">Go home</a></main>');return}startListeners();get(gameRef).then(s=>{if(!s.exists())return runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,hostToken,used:{},scores:{},duration:45,winningScore:25}:undefined,{applyLocally:false})}).catch(showError)}
+async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(!hostToken){shell('HOST','<main class="card"><h1>Host session not found</h1><p>Start a new game from the home page on this device.</p><a href="?">Go home</a></main>');return}startListeners();try{
+ await runTransaction(ref(db,'rooms/'+room+'/hostSecret'),v=>v===null?hostToken:undefined,{applyLocally:false});
+ await runTransaction(ref(db,'rooms/'+room+'/createdAt'),v=>v===null?Date.now():undefined,{applyLocally:false});
+ await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,hostToken,used:{},scores:{},duration:45,winningScore:25}:undefined,{applyLocally:false});
+ }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
 function startListeners(){onValue(gameRef,s=>{game=s.val()||{};render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();if(isHost)hostCheck()},170)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
@@ -51,7 +55,7 @@ function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h
  if(!me){playerJoin();return}
  const answer=submissions[game.round]?.[me.id];
  const phase=game.phase;
- const stamp=phase+'-'+game.round+'-'+!!answer+'-'+JSON.stringify(game.scores||{});
+ const stamp=phase+'-'+game.round+'-'+!!answer+'-'+answerCount()+'-'+JSON.stringify(game.scores||{});
  if(lastScreen===stamp){updateClocks();return}lastScreen=stamp;
  let body='<main class="mobile"><div class="playerbar"><span><i style="background:'+colorStyle(me.color)+'"></i>'+esc(me.name)+'</span><b>'+Number(game.scores?.[me.id]||0)+' pts</b></div>';
  if(phase==='lobby')body+='<div class="mobilecenter"><div class="eyebrow">ROOM '+room+'</div><h1>You’re in!</h1><p>Waiting for the host to start.</p><div class="spin"></div><span class="muted">'+playerArray().length+' players in the lobby</span></div>';
@@ -61,7 +65,7 @@ function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h
  if($('answerform'))$('answerform').onsubmit=async e=>{e.preventDefault();const v=$('answer').value.trim().replace(/\s+/g,' ');if(!v)return;const button=$('answerform').querySelector('button');button.disabled=true;try{const path=ref(db,'rooms/'+room+'/submissions/'+game.round+'/'+me.id);const tx=await runTransaction(path,current=>current===null?{text:v,at:Date.now()}:undefined,{applyLocally:false});if(!tx.committed)throw Error('Already submitted');}catch(err){button.disabled=false;alert(err.message)}};
  updateClocks()
 }
-function playerJoin(){lastScreen='';shell('JOIN • '+room,'<main class="card joincard"><div class="eyebrow">ROOM '+room+'</div><h1>Join the game</h1><p>Pick a name and a unique color.</p><form id="joinplayer"><input id="nickname" maxlength="20" placeholder="Your name" required autocomplete="nickname"><h3>Choose your color</h3><div class="colorgrid" id="colors"></div><button class="primary">Join game →</button><div id="joinerror" class="error hidden"></div></form></main>');
+function playerJoin(){if(lastScreen==='join'&&$('joinplayer'))return;lastScreen='join';shell('JOIN • '+room,'<main class="card joincard"><div class="eyebrow">ROOM '+room+'</div><h1>Join the game</h1><p>Pick a name and a unique color.</p><form id="joinplayer"><input id="nickname" maxlength="20" placeholder="Your name" required autocomplete="nickname"><h3>Choose your color</h3><div class="colorgrid" id="colors"></div><button class="primary">Join game →</button><div id="joinerror" class="error hidden"></div></form></main>');
  let chosen=null;for(const color of COLORS){let taken=playerArray().some(p=>p.color===color),b=document.createElement('button');b.className='color'+(taken?' taken':'');b.type='button';b.style.background=color;b.disabled=taken;b.title=taken?'Taken':color;b.onclick=()=>{chosen=color;document.querySelectorAll('.color').forEach(x=>x.classList.remove('active'));b.classList.add('active')};$('colors').append(b)}
  $('joinplayer').onsubmit=async e=>{e.preventDefault();let name=$('nickname').value.trim().replace(/\s+/g,' ');if(!chosen){$('joinerror').textContent='Choose an available color.';$('joinerror').classList.remove('hidden');return}
  let pid=uid(),submit=$('joinplayer').querySelector('button.primary');submit.disabled=true;
