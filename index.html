@@ -34,8 +34,9 @@ document.getElementById('new').onclick=()=>{const room=randomRoom(),secret=id();
 document.getElementById('join').onclick=()=>{document.getElementById('joinBox').classList.toggle('hidden');document.getElementById('code').focus()};
 document.getElementById('joinForm').onsubmit=e=>{e.preventDefault();const v=document.getElementById('code').value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if(v)location.href='?room='+v};}
 function board(room){const url=roomUrl(room);const hostSecret=sessionStorage.getItem(storageKey+room);if(!hostSecret){landing();return}root.innerHTML='<header class="top"><div class="brand">Phrase Guess</div><div class="badge" id="conn">Connecting…</div></header><section class="board" id="board"><div id="empty" class="empty"><h2>Waiting for words...</h2><p>Scan the code or enter <strong>'+room+'</strong> to join.</p></div></section><footer class="footer"><div class="join"><div class="qr"><img id="qr" alt="Join room QR code"></div><div><small>JOIN CODE</small><strong>'+room+'</strong><a id="link" target="_blank" rel="noopener noreferrer">Open join link</a></div></div><div class="controls"><button class="btn" id="clear">Clear words</button><button class="btn primary" id="newroom">New room</button></div></footer>';
-document.getElementById('qr').querySelector('img').src='https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data='+encodeURIComponent(url);
+document.getElementById('qr').src='https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data='+encodeURIComponent(url);
 document.getElementById('link').href=url;
+document.getElementById('qr').addEventListener('error',()=>{const qr=document.getElementById('qr');qr.alt='QR unavailable — use the room code or join link';qr.style.display='none';qr.parentElement.textContent='JOIN';qr.parentElement.style.color='#13203a';qr.parentElement.style.fontWeight='800'});
 document.getElementById('newroom').onclick=()=>{const r=randomRoom(),s=id();sessionStorage.setItem(storageKey+r,s);location.href='?room='+r+'&host=1'};
 const wordsRef=ref(db,'rooms/'+room+'/words');
 const roomRef=ref(db,'rooms/'+room);
