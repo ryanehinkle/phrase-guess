@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{font-family:"DM Sans",system-ui,sans-serif;color:#f9fafb;background:#090f1e;font-synthesis:none}*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 18% 5%,#202d52 0%,transparent 45%),radial-gradient(ellipse at 95% 85%,#102c47 0%,transparent 48%),#090f1e}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #83bafd;outline-offset:3px}.app{min-height:100dvh;display:flex;flex-direction:column}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:24px clamp(20px,4vw,58px);position:relative;z-index:2}.brand{font-size:clamp(22px,3vw,32px);font-weight:800;letter-spacing:-1.5px}.badge{background:#18243d;border:1px solid #34445e;border-radius:999px;padding:9px 14px;color:#b3c7eb;font-weight:700;font-size:13px}.board{flex:1;position:relative;min-height:55vh;overflow:hidden;margin:0 18px 18px;border:1px solid #2a3957;border-radius:28px;background:linear-gradient(125deg,#121f38aa,#0b152c88)}.empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none;padding:30px;color:#bac9e5}.empty h2{font-size:clamp(24px,3.8vw,48px);margin:0 0 9px;color:white;letter-spacing:-1px}.empty p{margin:0}.footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px clamp(20px,4vw,58px) 24px;flex-wrap:wrap;position:relative;z-index:2}.join{display:flex;align-items:center;gap:15px}.qr{width:90px;height:90px;background:white;border-radius:12px;padding:6px;display:grid;place-items:center}.qr img{width:100%;height:100%;display:block}.join small{display:block;color:#9fb2d1;font-size:13px}.join strong{display:block;letter-spacing:3px;font-size:29px}.join a{font-size:12px;color:#80baf9;text-decoration:none;word-break:break-all}.controls{display:flex;gap:10px;flex-wrap:wrap}.btn{border:1px solid #354866;background:#192640;color:#e8efff;padding:12px 18px;border-radius:13px;font-weight:800}.btn.primary{background:#478bff;border-color:#478bff;color:white}.bubble{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;padding:15px 22px;min-width:105px;max-width:min(340px,80%);border-radius:999px;border:1px solid #ffffff4d;box-shadow:0 14px 34px #0005;color:white;font-weight:800;font-size:clamp(18px,2.3vw,34px);overflow-wrap:anywhere;animation:pop .48s cubic-bezier(.22,1.4,.36,1) both,levitate var(--float,6s) ease-in-out infinite alternate;transition:left .35s,top .35s}@keyframes pop{from{opacity:0;transform:scale(.25)}to{opacity:1;transform:scale(1)}}@keyframes levitate{from{translate:0 0}to{translate:0 -12px}}.panel{max-width:460px;width:calc(100% - 36px);margin:auto;padding:34px;border:1px solid #34425c;border-radius:26px;background:#142039;box-shadow:0 30px 90px #0005}.panel h1{font-size:clamp(32px,7vw,44px);line-height:1.1;letter-spacing:-1.8px;margin:0 0 12px}.panel p{color:#adc2e1;line-height:1.55}.field{width:100%;padding:16px;background:#0a1529;border:1px solid #425371;border-radius:13px;color:white;font-size:18px;outline:0}.field:focus{border-color:#77b0ff}.panel form{display:grid;gap:12px;margin-top:24px}.panel .btn{font-size:17px;padding:16px}.hint{min-height:24px;color:#97dbb5!important;font-size:14px}.hidden{display:none!important}.notice{font-size:12px;color:#91a7c8;max-width:640px}.online{color:#89e4b4}.offline{color:#ffb98e}.smalllink{font-size:13px;color:#9fc8ff}.roomline{font-size:14px;font-weight:700;color:#cad8ed;margin:0}.limit{font-size:13px;text-align:right;color:#91a5c8}.roomcode{letter-spacing:5px;text-transform:uppercase}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.intro{max-width:800px;margin:auto;padding:20px;text-align:center}.intro h1{font-size:clamp(40px,8vw,88px);letter-spacing:-4px;margin:15px 0}.intro p{color:#b1c0da}.intro .btn{margin:10px}@media(max-width:600px){.top{padding:18px}.board{min-height:55vh;margin:0 10px 10px}.footer{padding:12px 18px 22px}.qr{width:72px;height:72px}.join strong{font-size:22px}.panel{padding:26px}.badge{font-size:11px}.bubble{font-size:clamp(15px,5vw,23px);padding:12px 16px}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+:root{font-family:"DM Sans",system-ui,sans-serif;color:#f9fafb;background:#090f1e;font-synthesis:none}*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 18% 5%,#202d52 0%,transparent 45%),radial-gradient(ellipse at 95% 85%,#102c47 0%,transparent 48%),#090f1e}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #83bafd;outline-offset:3px}.app{min-height:100dvh;display:flex;flex-direction:column}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:24px clamp(20px,4vw,58px);position:relative;z-index:2}.brand{font-size:clamp(22px,3vw,32px);font-weight:800;letter-spacing:-1.5px}.badge{background:#18243d;border:1px solid #34445e;border-radius:999px;padding:9px 14px;color:#b3c7eb;font-weight:700;font-size:13px}.board{flex:1;position:relative;min-height:55vh;overflow:hidden;margin:0 18px 18px;border:1px solid #2a3957;border-radius:28px;background:linear-gradient(125deg,#121f38aa,#0b152c88)}.empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none;padding:30px;color:#bac9e5}.empty h2{font-size:clamp(24px,3.8vw,48px);margin:0 0 9px;color:white;letter-spacing:-1px}.empty p{margin:0}.footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px clamp(20px,4vw,58px) 24px;flex-wrap:wrap;position:relative;z-index:2}.join{display:flex;align-items:center;gap:15px}.qr{width:90px;height:90px;background:white;border-radius:12px;padding:6px;display:grid;place-items:center}.qr img{width:100%;height:100%;display:block}.join small{display:block;color:#9fb2d1;font-size:13px}.join strong{display:block;letter-spacing:3px;font-size:29px}.join a{font-size:12px;color:#80baf9;text-decoration:none;word-break:break-all}.controls{display:flex;gap:10px;flex-wrap:wrap}.btn{border:1px solid #354866;background:#192640;color:#e8efff;padding:12px 18px;border-radius:13px;font-weight:800}.btn.primary{background:#478bff;border-color:#478bff;color:white}.bubble{position:absolute;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;text-align:center;padding:15px 22px;min-width:105px;max-width:min(340px,80%);border-radius:999px;border:1px solid #ffffff4d;box-shadow:0 14px 34px #0005;color:white;font-weight:800;font-size:clamp(18px,2.3vw,34px);overflow-wrap:anywhere;animation:pop .48s cubic-bezier(.22,1.4,.36,1) both,levitate var(--float,6s) ease-in-out infinite alternate;transition:left .35s,top .35s}.wordby{font-size:12px;font-weight:700;opacity:.85;letter-spacing:.3px}.wordtext{font-size:inherit}.colors{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:12px 0}.swatch{aspect-ratio:1;border:3px solid transparent;border-radius:14px;position:relative;padding:0}.swatch.selected{border-color:white;box-shadow:0 0 0 3px #88b8ff}.swatch:disabled{opacity:.17;cursor:not-allowed}.swatch.selected:after{content:'✓';font-weight:800;font-size:21px;color:white;text-shadow:0 1px 5px #0009}.playerchip{display:inline-flex;gap:8px;align-items:center;background:#20314e;padding:8px 13px;border-radius:999px;font-weight:700;margin-top:8px}.playerdot{width:13px;height:13px;border-radius:50%;display:inline-block}.subtle{font-size:13px;color:#b9c9e1}.taken{color:#f5ae8c!important}@keyframes pop{from{opacity:0;transform:scale(.25)}to{opacity:1;transform:scale(1)}}@keyframes levitate{from{translate:0 0}to{translate:0 -12px}}.panel{max-width:460px;width:calc(100% - 36px);margin:auto;padding:34px;border:1px solid #34425c;border-radius:26px;background:#142039;box-shadow:0 30px 90px #0005}.panel h1{font-size:clamp(32px,7vw,44px);line-height:1.1;letter-spacing:-1.8px;margin:0 0 12px}.panel p{color:#adc2e1;line-height:1.55}.field{width:100%;padding:16px;background:#0a1529;border:1px solid #425371;border-radius:13px;color:white;font-size:18px;outline:0}.field:focus{border-color:#77b0ff}.panel form{display:grid;gap:12px;margin-top:24px}.panel .btn{font-size:17px;padding:16px}.hint{min-height:24px;color:#97dbb5!important;font-size:14px}.hidden{display:none!important}.notice{font-size:12px;color:#91a7c8;max-width:640px}.online{color:#89e4b4}.offline{color:#ffb98e}.smalllink{font-size:13px;color:#9fc8ff}.roomline{font-size:14px;font-weight:700;color:#cad8ed;margin:0}.limit{font-size:13px;text-align:right;color:#91a5c8}.roomcode{letter-spacing:5px;text-transform:uppercase}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.intro{max-width:800px;margin:auto;padding:20px;text-align:center}.intro h1{font-size:clamp(40px,8vw,88px);letter-spacing:-4px;margin:15px 0}.intro p{color:#b1c0da}.intro .btn{margin:10px}@media(max-width:600px){.top{padding:18px}.board{min-height:55vh;margin:0 10px 10px}.footer{padding:12px 18px 22px}.qr{width:72px;height:72px}.join strong{font-size:22px}.panel{padding:26px}.badge{font-size:11px}.bubble{font-size:clamp(15px,5vw,23px);padding:12px 16px}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body><div id="app" class="app"></div>
@@ -23,6 +23,7 @@ const requestedRoom=(args.get('room')||'').toUpperCase().replace(/[^A-Z0-9]/g,''
 const wantsHost=args.has('host');
 const storageKey='phrase-guess-host-v1';
 const palette=['#246dc4','#8a4bd1','#007a8a','#c3547e','#bb6d24','#31775a','#8b5cb7','#5469bd'];
+const playerColors=['#ef4444','#f97316','#f59e0b','#84cc16','#22c55e','#10b981','#14b8a6','#06b6d4','#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e','#a16207','#65a30d','#059669','#0f766e','#0369a1','#1d4ed8','#7c3aed','#be185d'];
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const randomRoom=()=>{let s='';for(let i=0;i<6;i++)s+='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)];return s};
 const roomUrl=room=>new URL('?room='+encodeURIComponent(room),location.href).toString();
@@ -50,13 +51,80 @@ onValue(wordsRef,s=>{wordsData=s.val()||{};drawWords()},e=>{conn.textContent='�
 function drawWords(){const entries=Object.entries(wordsData).filter(([,v])=>v&&typeof v.text==='string'&&(v.at||0)>lastCleared).sort((a,b)=>(a[1].at||0)-(b[1].at||0)).slice(-150);const incoming=new Set(entries.map(([k])=>k));
 for(const [key,el] of visible){if(!incoming.has(key)){el.remove();visible.delete(key)}}
 document.getElementById('empty').classList.toggle('hidden',entries.length>0);
-const elBoard=document.getElementById('board');for(let i=0;i<entries.length;i++){const [key,data]=entries[i];if(visible.has(key))continue;const el=document.createElement('div');el.className='bubble';el.textContent=String(data.text||'').slice(0,60);el.style.background=palette[(i+key.length)%palette.length];el.style.setProperty('--float',(5+i%5)+'s');el.style.left=(4+(hash(key+'x')%73))+'%';el.style.top=(5+(hash(key+'y')%75))+'%';el.style.zIndex=String(i+1);elBoard.append(el);const maxX=Math.max(2,elBoard.clientWidth-el.offsetWidth-12);const maxY=Math.max(2,elBoard.clientHeight-el.offsetHeight-12);el.style.left=Math.round((hash(key+'x')%1000)/1000*maxX)+'px';el.style.top=Math.round((hash(key+'y')%1000)/1000*maxY)+'px';visible.set(key,el)}}
+const elBoard=document.getElementById('board');for(let i=0;i<entries.length;i++){const [key,data]=entries[i];if(visible.has(key))continue;const el=document.createElement('div');el.className='bubble';el.innerHTML='<span class="wordtext"></span><span class="wordby"></span>';el.querySelector('.wordtext').textContent=String(data.text||'').slice(0,60);el.querySelector('.wordby').textContent=String(data.name||'Guest').slice(0,24);el.style.background=playerColors.includes(data.color)?data.color:palette[(i+key.length)%palette.length];el.style.setProperty('--float',(5+i%5)+'s');el.style.left=(4+(hash(key+'x')%73))+'%';el.style.top=(5+(hash(key+'y')%75))+'%';el.style.zIndex=String(i+1);elBoard.append(el);const maxX=Math.max(2,elBoard.clientWidth-el.offsetWidth-12);const maxY=Math.max(2,elBoard.clientHeight-el.offsetHeight-12);el.style.left=Math.round((hash(key+'x')%1000)/1000*maxX)+'px';el.style.top=Math.round((hash(key+'y')%1000)/1000*maxY)+'px';visible.set(key,el)}}
 }
 function hash(s){let n=2166136261;for(const c of s){n^=c.charCodeAt(0);n=Math.imul(n,16777619)}return n>>>0}
-function player(room){root.innerHTML='<main class="panel"><p class="roomline">ROOM <span class="roomcode">'+room+'</span></p><h1>Send a word</h1><p>Your word will pop up on the big screen.</p><form id="sendForm"><input id="word" class="field" maxlength="60" placeholder="Type a word or phrase..." autocomplete="off" enterkeyhint="send" required aria-label="Word or phrase"><div class="row"><span class="notice">Send as many as you like</span><span class="limit" id="limit">0/60</span></div><button class="btn primary" id="send" type="submit">Send word ↑</button></form><p id="feedback" class="hint" aria-live="polite"></p><a class="smalllink" href="?">Join another room</a></main>';
-const form=document.getElementById('sendForm'),field=document.getElementById('word'),feedback=document.getElementById('feedback'),button=document.getElementById('send');
-field.addEventListener('input',()=>document.getElementById('limit').textContent=field.value.length+'/60');
-form.onsubmit=async e=>{e.preventDefault();const text=field.value.trim().replace(/\s+/g,' ');if(!text)return;button.disabled=true;feedback.textContent='Sending…';try{const roomSnap=await get(ref(db,'rooms/'+room+'/createdAt'));if(!roomSnap.exists())throw Error('Room not found. Double-check the join code.');await push(ref(db,'rooms/'+room+'/words'),{text,at:Date.now()});field.value='';document.getElementById('limit').textContent='0/60';feedback.textContent='✓ Sent! Add another.';field.focus()}catch(err){feedback.textContent=err.message||'Could not send. Try again.'}finally{button.disabled=false}};
-get(ref(db,'rooms/'+room+'/createdAt')).then(s=>{if(!s.exists())feedback.textContent='Room not found yet. Check the code or ask the host to reload.'}).catch(()=>{feedback.textContent='Connection unavailable. Please try again.'});}
+
+function player(room){
+ const savedKey='phrase-guess-player-'+room;
+ let identity=null, players={}, selectedColor=null, submitting=false;
+ try{identity=JSON.parse(localStorage.getItem(savedKey)||'null')}catch{}
+ root.innerHTML='<main class="panel"><p class="roomline">ROOM <span class="roomcode">'+room+'</span></p><div id="register"><h1>Join the game</h1><p>Choose your name and a color. Each one is unique to you in this room.</p><form id="joinPlayer"><input id="nickname" class="field" maxlength="24" placeholder="Your name" autocomplete="nickname" required aria-label="Player name"><div class="subtle">Pick your color</div><div class="colors" id="colors"></div><button class="btn primary" type="submit" id="joinBtn">Join room →</button></form><p id="joinFeedback" class="hint" aria-live="polite"></p></div><div id="play" class="hidden"><h1>Send a word</h1><div id="identity" class="playerchip"></div><p>Your words will appear on the big screen in your color.</p><form id="sendForm"><input id="word" class="field" maxlength="60" placeholder="Type a word or phrase..." autocomplete="off" enterkeyhint="send" required aria-label="Word or phrase"><div class="row"><span class="notice">Send as many as you like</span><span class="limit" id="limit">0/60</span></div><button class="btn primary" id="send" type="submit">Send word ↑</button></form><p id="feedback" class="hint" aria-live="polite"></p></div><a class="smalllink" href="?">Join another room</a></main>';
+ const joinFeedback=document.getElementById('joinFeedback');
+ const nameInput=document.getElementById('nickname');
+ const colorsEl=document.getElementById('colors');
+ const claimsRef=ref(db,'rooms/'+room+'/players');
+ function renderColors(){
+   colorsEl.innerHTML='';
+   for(const color of playerColors){
+     const taken=Object.values(players).some(p=>p.color===color && (!identity||p.id!==identity.id));
+     const button=document.createElement('button');button.type='button';button.className='swatch'+(selectedColor===color?' selected':'');button.style.background=color;button.disabled=taken;button.setAttribute('aria-label',taken?'Color taken':'Choose '+color);button.setAttribute('aria-pressed',String(selectedColor===color));
+     button.onclick=()=>{selectedColor=color;renderColors()};
+     colorsEl.append(button);
+   }
+   if(selectedColor && Object.values(players).some(p=>p.color===selectedColor && (!identity||p.id!==identity.id))) selectedColor=null;
+ }
+ function showPlay(){
+   document.getElementById('register').classList.add('hidden');
+   document.getElementById('play').classList.remove('hidden');
+   const chip=document.getElementById('identity');chip.replaceChildren();
+   const dot=document.createElement('span');dot.className='playerdot';dot.style.background=identity.color;
+   chip.append(dot,document.createTextNode(identity.name));
+ }
+ onValue(claimsRef,s=>{
+   players=s.val()||{};
+   if(identity && players[identity.id] && players[identity.id].name===identity.name && players[identity.id].color===identity.color){showPlay()}
+   else {identity=null;localStorage.removeItem(savedKey);document.getElementById('register').classList.remove('hidden');document.getElementById('play').classList.add('hidden')}
+   renderColors();
+ },e=>{joinFeedback.textContent='Unable to load players: '+e.message});
+ document.getElementById('joinPlayer').onsubmit=async e=>{
+   e.preventDefault();
+   const name=nameInput.value.trim().replace(/\\s+/g,' ');
+   if(!name || name.length>24){joinFeedback.textContent='Enter a name up to 24 characters.';return}
+   if(!selectedColor){joinFeedback.textContent='Please pick an available color.';return}
+   const color=selectedColor, playerId=id(), key=name.toLocaleLowerCase('en-US');
+   const button=document.getElementById('joinBtn');button.disabled=true;joinFeedback.textContent='Joining…';
+   try{
+     const roomSnap=await get(ref(db,'rooms/'+room+'/createdAt'));
+     if(!roomSnap.exists())throw Error('Room not found. Ask the host for a new code.');
+     let collision='';
+     const result=await runTransaction(claimsRef,current=>{
+       const roster=current||{};
+       if(Object.values(roster).some(p=>p.name.toLocaleLowerCase('en-US')===key)){collision='That name is already taken.';return}
+       if(Object.values(roster).some(p=>p.color===color)){collision='That color is already taken.';return}
+       return {...roster,[playerId]:{id:playerId,name,color}};
+     },{applyLocally:false});
+     if(!result.committed)throw Error(collision||'That name or color was just taken. Please try another.');
+     identity={id:playerId,name,color};localStorage.setItem(savedKey,JSON.stringify(identity));
+     joinFeedback.textContent='';showPlay();
+   }catch(err){joinFeedback.textContent=err.message||'Could not join. Try again.'}
+   finally{button.disabled=false}
+ };
+ const field=document.getElementById('word'),feedback=document.getElementById('feedback'),button=document.getElementById('send');
+ field.addEventListener('input',()=>document.getElementById('limit').textContent=field.value.length+'/60');
+ document.getElementById('sendForm').onsubmit=async e=>{
+   e.preventDefault();
+   const text=field.value.trim().replace(/\\s+/g,' ');
+   if(!text||submitting||!identity)return;
+   submitting=true;button.disabled=true;feedback.textContent='Sending…';
+   try{
+     const record=players[identity.id];
+     if(!record||record.name!==identity.name||record.color!==identity.color)throw Error('Player session expired. Rejoin the room.');
+     await push(ref(db,'rooms/'+room+'/words'),{text,at:Date.now(),name:identity.name,color:identity.color,playerId:identity.id});
+     field.value='';document.getElementById('limit').textContent='0/60';feedback.textContent='✓ Sent! Add another.';field.focus();
+   }catch(err){feedback.textContent=err.message||'Could not send. Try again.'}
+   finally{submitting=false;button.disabled=false}
+ };
+}
 if(!db)setup();else if(requestedRoom&&wantsHost)board(requestedRoom);else if(requestedRoom)player(requestedRoom);else landing();
 </script></body></html>
