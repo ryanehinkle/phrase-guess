@@ -89,7 +89,7 @@ function player(room){
  },e=>{joinFeedback.textContent='Unable to load players: '+e.message});
  document.getElementById('joinPlayer').onsubmit=async e=>{
    e.preventDefault();
-   const name=nameInput.value.trim().replace(/\\s+/g,' ');
+   const name=nameInput.value.trim().replace(/\s+/g,' ');
    if(!name || name.length>24){joinFeedback.textContent='Enter a name up to 24 characters.';return}
    if(!selectedColor){joinFeedback.textContent='Please pick an available color.';return}
    const color=selectedColor, playerId=id(), key=name.toLocaleLowerCase('en-US');
@@ -114,7 +114,7 @@ function player(room){
  field.addEventListener('input',()=>document.getElementById('limit').textContent=field.value.length+'/60');
  document.getElementById('sendForm').onsubmit=async e=>{
    e.preventDefault();
-   const text=field.value.trim().replace(/\\s+/g,' ');
+   const text=field.value.trim().replace(/\s+/g,' ');
    if(!text||submitting||!identity)return;
    submitting=true;button.disabled=true;feedback.textContent='Sending…';
    try{
