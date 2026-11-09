@@ -27,7 +27,7 @@ function home(){shell('PLAY TOGETHER','<main class="welcome"><div class="eyebrow
 async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(!hostToken){shell('HOST','<main class="card"><h1>Host session not found</h1><p>Start a new game from the home page on this device.</p><a href="?">Go home</a></main>');return}startListeners();try{
  await runTransaction(ref(db,'rooms/'+room+'/hostSecret'),v=>v===null?hostToken:undefined,{applyLocally:false});
  await runTransaction(ref(db,'rooms/'+room+'/createdAt'),v=>v===null?Date.now():undefined,{applyLocally:false});
- await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,hostToken,used:{},scores:{},duration:45,winningScore:25}:undefined,{applyLocally:false});
+ await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',hostToken,used:{},scores:{},duration:45,winningScore:25}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
 function startListeners(){onValue(gameRef,s=>{game=s.val()||{};render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();if(isHost)hostCheck()},170)}
@@ -48,7 +48,7 @@ function hostRender(){const oldInput=$('duration')?.value;const needScreen=game.
  if($('next'))$('next').onclick=()=>nextRound(game.duration||45);
  if($('reveal'))$('reveal').onclick=()=>finishRound();
  if($('finish'))$('finish').onclick=()=>updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined);
- if($('restart'))$('restart').onclick=()=>updateGame(g=>({...g,phase:'lobby',round:0,used:{},scores:{}}));
+ if($('restart'))$('restart').onclick=()=>updateGame(g=>({...g,phase:'lobby',round:0,roundKey:'0',used:{},scores:{}}));
  updateClocks()
 }
 function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h1>Looking for room…</h1><p>Make sure the host has created it.</p></main>');return}
@@ -76,7 +76,7 @@ function render(){if(!room)return;if(isHost&&hostToken)hostRender();else if(!isH
 function updateClocks(){if(game.phase!=='answering')return;let remain=Math.max(0,Math.ceil((game.deadline-now())/1000));if($('timer')){$('timer').textContent=Math.floor(remain/60)+':'+String(remain%60).padStart(2,'0');$('timer').classList.toggle('danger',remain<=10)}if($('bar'))$('bar').style.width=Math.min(100,Math.max(0,(game.deadline-now())/((game.duration||45)*1000)*100))+'%';if($('count'))$('count').textContent=answerCount()+' of '+playerArray().length+' answered'}
 async function updateGame(fn){if(!hostToken)return;try{await runTransaction(gameRef,g=>{if(!g||g.hostToken!==hostToken)return;return fn(g)},{applyLocally:false})}catch(e){showError(e)}}
 async function nextRound(duration){if(hostBusy)return;hostBusy=true;try{if(!deck.length){let res=await fetch('./prompts.json');if(!res.ok)throw Error('Prompt deck unavailable');deck=await res.json()}
- await updateGame(g=>{if(!['lobby','results'].includes(g.phase))return;let used=g.used||{};let choices=deck.map((_,i)=>i).filter(i=>!used[i]);if(!choices.length){used={};choices=deck.map((_,i)=>i)}let index=choices[Math.floor(Math.random()*choices.length)];return {...g,phase:'answering',round:(g.round||0)+1,prompt:deck[index],duration,deadline:now()+duration*1000,used:{...used,[index]:true},lastPoints:{}}})}catch(e){alert(e.message)}finally{hostBusy=false}}
+ await updateGame(g=>{if(!['lobby','results'].includes(g.phase))return;let used=g.used||{};let choices=deck.map((_,i)=>i).filter(i=>!used[i]);if(!choices.length){used={};choices=deck.map((_,i)=>i)}let index=choices[Math.floor(Math.random()*choices.length)];return {...g,phase:'answering',round:(g.round||0)+1,roundKey:String((g.round||0)+1),prompt:deck[index],duration,deadline:now()+duration*1000,used:{...used,[index]:true},lastPoints:{}}})}catch(e){alert(e.message)}finally{hostBusy=false}}
 async function finishRound(){if(hostBusy)return;hostBusy=true;try{const snap=await get(ref(db,'rooms/'+room+'/submissions/'+game.round));const answerMap=snap.val()||{};const results=compute(playerArray(),answerMap);await updateGame(g=>{if(g.phase!=='answering')return;let scores={...(g.scores||{})};for(const [pid,pts] of Object.entries(results.points))scores[pid]=(scores[pid]||0)+pts;return {...g,phase:'results',scores,lastPoints:results.points}})}finally{hostBusy=false}}
 function hostCheck(){if(!isHost||game.phase!=='answering'||hostBusy)return;const total=playerArray().length;if(now()>=game.deadline || (total>=2&&answerCount()>=total))finishRound()}
 if(!room)home();else if(isHost)hostInit();else playerInit();
