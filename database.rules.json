@@ -50,10 +50,7 @@
         "players": {
           ".write": "root.child('rooms').child($room).child('createdAt').exists() && newData.exists()",
           "$player": {
-            ".validate": "newData.hasChildren(['id','name','color']) && newData.child('id').val() === $player && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('color').isString() && newData.child('color').val().matches(/^#[0-9a-f]{6}$/)",
-            "$other": {
-              ".validate": false
-            }
+            ".validate": "newData.hasChildren(['id','name','color']) && newData.child('id').val() === $player && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('color').isString() && newData.child('color').val().matches(/^#[0-9a-f]{6}$/)"
           }
         }
       }
