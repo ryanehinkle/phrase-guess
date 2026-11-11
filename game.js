@@ -19,7 +19,19 @@ const now=()=>Date.now()+serverOffset;
 const route=code=>location.pathname+'?room='+code;
 const hostRoute=code=>route(code)+'&host=1';
 function brand(){return '<span class="brand" aria-label="JINX!">J<span class="glitch-letter" data-letter="I">I</span>NX<span class="glitch-letter bang" data-letter="!">!</span></span>'}
-function shell(title,body){root.innerHTML='<div class="layout'+(!room?' landing-layout':'')+'"><header><a class="logo" href="?">'+brand()+'</a><div class="pill">'+title+'</div></header>'+body+'</div>';queueFit()}
+function shell(title,body){
+ root.innerHTML='<div class="layout'+(!room?' landing-layout':'')+'"><header><a class="logo" href="?">'+brand()+'</a><div class="pill">'+title+'</div></header>'+body+'</div>';
+ // Submission updates can replace the entire page while the keyboard is closing.
+ // Apply the old dimensions immediately, before the next browser paint.
+ if(!isHost&&room&&(keyboardFocus||keyboardClosing)){
+   const layout=root.querySelector('.layout');
+   if(layout){
+     layout.style.zoom=frozenZoom||'1';
+     if(frozenHeight){layout.style.height=frozenHeight+'px';layout.style.maxHeight='none'}
+   }
+ }
+ queueFit();
+}
 function home(){shell('','<main class="welcome landing"><div class="landing-mark">'+brand()+'</div><p>Can you guess the same word?</p><div class="actions"><button id="create" class="primary">Create a room</button><button id="joinBtn">Join a room</button></div><form id="joinForm" class="joinform hidden"><input id="roomcode" maxlength="6" placeholder="ROOM CODE" required autocomplete="off"><button class="primary">Join</button></form></main>');
  $('create').onclick=()=>{unlockSound();const code=random(),secret=uid();sessionStorage.setItem(key+'host-'+code,secret);location.href=hostRoute(code)};
  $('joinBtn').onclick=()=>{$('joinForm').classList.toggle('hidden');$('roomcode').focus();queueFit()};
@@ -548,24 +560,28 @@ async function finishRound(){if(hostBusy)return;hostBusy=true;try{const snap=awa
 function hostCheck(){if(!isHost||game.phase!=='answering'||hostBusy)return;const total=playerArray().length;if(now()>=game.deadline || (total>=2&&answerCount()>=total))finishRound()}
 
 let fitQueued=false;
-let keyboardFocus=false, frozenZoom='', frozenHeight=0, blurFitTimer=0;
+let keyboardFocus=false,keyboardClosing=false,frozenZoom='',frozenHeight=0;
+let keyboardOpenHeight=0,keyboardReleaseTimer=0,keyboardReleaseStart=0;
 function isTextField(target){
- return target instanceof HTMLElement && (target.matches('input, textarea, [contenteditable="true"]'));
+ return target instanceof HTMLElement && target.matches('input, textarea, [contenteditable="true"]');
 }
 function queueFit(){
  if(fitQueued)return;
  fitQueued=true;
  requestAnimationFrame(()=>{fitQueued=false;fitScreen()});
 }
+function keyboardLayoutLocked(){
+ return !isHost&&!!room&&(keyboardFocus||keyboardClosing);
+}
 function fitScreen(){
  const layout=root.querySelector('.layout');
  if(!layout)return;
- // Mobile virtual keyboards reduce visualViewport.height. Do not scale the
- // entire interface in response: keep the pre-keyboard layout and text size.
- if(keyboardFocus){
-   if(frozenZoom)layout.style.zoom=frozenZoom;
+ // Keep the same physical dimensions through keyboard opening, Enter/submission,
+ // the entire iOS keyboard-closing animation, and any Firebase rerender.
+ if(keyboardLayoutLocked()){
+   layout.style.zoom=frozenZoom||'1';
    if(frozenHeight){layout.style.height=frozenHeight+'px';layout.style.maxHeight='none'}
-   positionFocusedField();
+   if(keyboardFocus)positionFocusedField();
    return;
  }
  layout.style.height='';
@@ -579,52 +595,67 @@ function fitScreen(){
  if(ratio<.995)layout.style.zoom=String(Math.max(.45,ratio*.985));
 }
 function positionFocusedField(){
- const layout=root.querySelector('.layout');
- const center=layout?.querySelector('.mobilecenter');
- if(!center)return;
- center.style.removeProperty('--keyboard-shift');
- if(!keyboardFocus)return;
+ const center=root.querySelector('.mobilecenter');
+ if(!center||!keyboardFocus)return;
  const input=document.activeElement;
  if(!isTextField(input))return;
  const vv=window.visualViewport;
- const visibleBottom=vv ? vv.offsetTop+vv.height : window.innerHeight;
+ const visibleBottom=vv?vv.offsetTop+vv.height:window.innerHeight;
  const form=input.closest('form');
  const target=form?.querySelector('button[type="submit"], button.primary')||input;
  const targetBottom=target.getBoundingClientRect().bottom;
  const needed=Math.max(0,targetBottom-visibleBottom+16);
- // Move the form above the keyboard, but never shrink the whole interface.
- if(needed>0){
-   const available=Math.max(0,center.getBoundingClientRect().top-8);
-   center.style.setProperty('--keyboard-shift',(-Math.min(needed,available+Math.max(0,visibleBottom*.12)))+'px');
+ // Only move the content; never scale the interface.
+ const available=Math.max(0,center.getBoundingClientRect().top-8);
+ const shift=needed>0?-Math.min(needed,available+Math.max(0,visibleBottom*.12)):0;
+ center.style.setProperty('--keyboard-shift',shift+'px');
+}
+function viewportHeight(){
+ return window.visualViewport?.height||window.innerHeight;
+}
+function releaseKeyboardLayout(){
+ if(keyboardFocus)return;
+ // Safari's visual viewport bounces through intermediate heights on dismissal.
+ // Wait for it to recover and settle before changing the page dimensions.
+ const recovered=viewportHeight()>=keyboardOpenHeight*.92;
+ const elapsed=performance.now()-keyboardReleaseStart;
+ if((recovered&&elapsed>=480)||elapsed>=1800){
+   keyboardClosing=false;
+   keyboardReleaseTimer=0;
+   frozenZoom='';frozenHeight=0;keyboardOpenHeight=0;
+   root.querySelector('.mobilecenter')?.style.removeProperty('--keyboard-shift');
+   queueFit();
+   return;
  }
+ keyboardReleaseTimer=setTimeout(releaseKeyboardLayout,75);
 }
 document.addEventListener('focusin',event=>{
- if(!isTextField(event.target))return;
- clearTimeout(blurFitTimer);
- if(!keyboardFocus){
+ if(!isTextField(event.target)||isHost||!room)return;
+ clearTimeout(keyboardReleaseTimer);keyboardReleaseTimer=0;
+ if(!keyboardFocus&&!keyboardClosing){
    const layout=root.querySelector('.layout');
    if(layout){
      frozenZoom=layout.style.zoom||'1';
      frozenHeight=layout.offsetHeight;
    }
+   keyboardOpenHeight=viewportHeight();
  }
- keyboardFocus=true;
+ keyboardFocus=true;keyboardClosing=false;
  queueFit();
 },true);
 document.addEventListener('focusout',event=>{
- if(!isTextField(event.target))return;
- clearTimeout(blurFitTimer);
- blurFitTimer=setTimeout(()=>{
-   if(isTextField(document.activeElement))return;
-   keyboardFocus=false;frozenZoom='';frozenHeight=0;
-   const center=root.querySelector('.mobilecenter');
-   center?.style.removeProperty('--keyboard-shift');
-   queueFit();
- },200);
+ if(!isTextField(event.target)||isHost||!room)return;
+ // Don't unfreeze when Enter removes the input but the keyboard is still up.
+ keyboardFocus=false;keyboardClosing=true;
+ keyboardReleaseStart=performance.now();
+ clearTimeout(keyboardReleaseTimer);
+ keyboardReleaseTimer=setTimeout(releaseKeyboardLayout,75);
 },true);
 window.addEventListener('resize',queueFit,{passive:true});
 window.visualViewport?.addEventListener('resize',queueFit,{passive:true});
-window.visualViewport?.addEventListener('scroll',()=>{if(keyboardFocus)positionFocusedField()},{passive:true});
+window.visualViewport?.addEventListener('scroll',()=>{
+ if(keyboardFocus)positionFocusedField();
+},{passive:true});
 
 document.addEventListener('pointerdown',()=>{if(audioDevice&&(!soundReady||musicState==='blocked'||idleState==='blocked'))unlockSound()},{passive:true});
 if(!room)home();else if(isHost)hostInit();else playerInit();
