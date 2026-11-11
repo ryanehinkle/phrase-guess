@@ -421,6 +421,10 @@ async function finishRound(){if(hostBusy)return;hostBusy=true;try{const snap=awa
 function hostCheck(){if(!isHost||game.phase!=='answering'||hostBusy)return;const total=playerArray().length;if(now()>=game.deadline || (total>=2&&answerCount()>=total))finishRound()}
 
 let fitQueued=false;
+let keyboardFocus=false, frozenZoom='', frozenHeight=0, blurFitTimer=0;
+function isTextField(target){
+ return target instanceof HTMLElement && (target.matches('input, textarea, [contenteditable="true"]'));
+}
 function queueFit(){
  if(fitQueued)return;
  fitQueued=true;
@@ -429,6 +433,16 @@ function queueFit(){
 function fitScreen(){
  const layout=root.querySelector('.layout');
  if(!layout)return;
+ // Mobile virtual keyboards reduce visualViewport.height. Do not scale the
+ // entire interface in response: keep the pre-keyboard layout and text size.
+ if(keyboardFocus){
+   if(frozenZoom)layout.style.zoom=frozenZoom;
+   if(frozenHeight){layout.style.height=frozenHeight+'px';layout.style.maxHeight='none'}
+   positionFocusedField();
+   return;
+ }
+ layout.style.height='';
+ layout.style.maxHeight='';
  layout.style.zoom='1';
  const vw=document.documentElement.clientWidth;
  const vh=window.visualViewport?.height||window.innerHeight;
@@ -437,7 +451,52 @@ function fitScreen(){
  const ratio=Math.min(1,vh/Math.max(1,height),vw/Math.max(1,width));
  if(ratio<.995)layout.style.zoom=String(Math.max(.45,ratio*.985));
 }
+function positionFocusedField(){
+ const layout=root.querySelector('.layout');
+ const center=layout?.querySelector('.mobilecenter');
+ if(!center)return;
+ center.style.removeProperty('--keyboard-shift');
+ if(!keyboardFocus)return;
+ const input=document.activeElement;
+ if(!isTextField(input))return;
+ const vv=window.visualViewport;
+ const visibleBottom=vv ? vv.offsetTop+vv.height : window.innerHeight;
+ const form=input.closest('form');
+ const target=form?.querySelector('button[type="submit"], button.primary')||input;
+ const targetBottom=target.getBoundingClientRect().bottom;
+ const needed=Math.max(0,targetBottom-visibleBottom+16);
+ // Move the form above the keyboard, but never shrink the whole interface.
+ if(needed>0){
+   const available=Math.max(0,center.getBoundingClientRect().top-8);
+   center.style.setProperty('--keyboard-shift',(-Math.min(needed,available+Math.max(0,visibleBottom*.12)))+'px');
+ }
+}
+document.addEventListener('focusin',event=>{
+ if(!isTextField(event.target))return;
+ clearTimeout(blurFitTimer);
+ if(!keyboardFocus){
+   const layout=root.querySelector('.layout');
+   if(layout){
+     frozenZoom=layout.style.zoom||'1';
+     frozenHeight=layout.offsetHeight;
+   }
+ }
+ keyboardFocus=true;
+ queueFit();
+},true);
+document.addEventListener('focusout',event=>{
+ if(!isTextField(event.target))return;
+ clearTimeout(blurFitTimer);
+ blurFitTimer=setTimeout(()=>{
+   if(isTextField(document.activeElement))return;
+   keyboardFocus=false;frozenZoom='';frozenHeight=0;
+   const center=root.querySelector('.mobilecenter');
+   center?.style.removeProperty('--keyboard-shift');
+   queueFit();
+ },200);
+},true);
 window.addEventListener('resize',queueFit,{passive:true});
 window.visualViewport?.addEventListener('resize',queueFit,{passive:true});
+window.visualViewport?.addEventListener('scroll',()=>{if(keyboardFocus)positionFocusedField()},{passive:true});
 
 if(!room)home();else if(isHost)hostInit();else playerInit();
