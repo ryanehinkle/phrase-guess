@@ -375,7 +375,7 @@ function startRoundMusic(){
      const elapsed=Math.max(0,(now()-startAt)/1000);
      try{track.currentTime=(offset+elapsed)%duration}catch{}
    }
-   track.play().catch(()=>{if(musicState==='playing')musicState='blocked'});
+   track.play().catch(()=>{if(musicState==='playing'){musicState='blocked';setMusicMix(0,18000,.01)}});
    if(musicContext?.state==='suspended')musicContext.resume().catch(()=>{});
    setMusicMix(MUSIC_LEVEL,18000,.85);
  };
@@ -451,7 +451,7 @@ function startIdleMusic(){
    idleStarted=true;
   }
   const playing=idleMusic.play();
-  playing?.catch(()=>{if(idleState==='playing')idleState='blocked'});
+  playing?.catch(()=>{if(idleState==='playing'){idleState='blocked';setIdleMix(0,18000,.01)}});
   if(musicContext?.state==='suspended')musicContext.resume().catch(()=>{});
   setIdleMix(IDLE_LEVEL,18000,1.15);
  };
