@@ -121,3 +121,5 @@ body{background-color:#090d1b;background-image:radial-gradient(ellipse at 16% 0%
 .cinema-full-phrase .typing-caret{display:inline-block;width:3px;height:.92em;min-height:15px;margin-left:4px;vertical-align:middle}
 .cinema-answer.typing-complete .typing-caret{opacity:0}
 @media(max-width:650px){.host-fullstage{padding:14px;min-height:64vh}.host-fullstage .prompt{font-size:clamp(36px,10vw,76px)}.host-fullstage .timer{font-size:85px}.host-bottom{flex-wrap:wrap}.host-bottom-controls{width:100%}.host-bottom-controls button{flex:1}.cinema-full-phrase{font-size:clamp(22px,6vw,36px)}}
+
+.host-fullstage{position:relative}.cinema-full-phrase .ranswer{font-weight:1000}.host-fullstage .match-celebration{margin-top:20px}
