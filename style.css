@@ -213,3 +213,8 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 .hostgrid .hostcontrols{width:100%;margin-top:auto}
 @media(max-width:880px){.hostgrid .qrframe{width:clamp(110px,13vw,160px);height:clamp(110px,13vw,160px)}.hostgrid .side{padding:11px}.qr-code{font-size:clamp(19px,2vw,27px)}}
 @media(max-width:550px){.hostgrid .qrframe{width:100px;height:100px}.hostgrid .qrwrap{margin:3px 0 12px}.lobby-players h3{font-size:14px}.lobby-player{padding:6px;font-size:12px}.qr-code{font-size:18px}}
+
+/* Keep the phone game's text and controls the same size when the keyboard opens. */
+.mobilecenter{transform:translateY(var(--keyboard-shift,0px));transition:transform .16s ease-out}
+.mobile input,.joincard input,.joinform input{font-size:max(16px,1rem)}
+@media(prefers-reduced-motion:reduce){.mobilecenter{transition:none}}
