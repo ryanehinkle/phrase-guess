@@ -41,20 +41,20 @@ function lobbyMarkup(){
 }
 function qrMarkup(){
  const url=new URL(route(room),location.href).href;
- return '<div class="qrwrap"><div class="qrframe" id="qrframe"><img id="qr" alt="Join QR code"></div><div><small>JOIN CODE</small><strong>'+room+'</strong><a href="'+esc(url)+'" target="_blank" rel="noopener">Join link</a></div></div>';
+ return '<div class="qrwrap"><div class="qrframe" id="qrframe"><img id="qr" alt="Join QR code"></div><strong class="qr-code">'+room+'</strong></div>';
 }
 function drawQR(){
  const frame=$('qrframe');if(!frame)return;
  const url=new URL(route(room),location.href).href;
  const img=$('qr');
- img.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&color=ECF2FF&bgcolor=101B32&data='+encodeURIComponent(url);
+ img.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&color=9ACBFF&bgcolor=101B32&data='+encodeURIComponent(url);
  if(typeof QRCodeStyling==='undefined')return;
  try{
   const q=new QRCodeStyling({
    width:184,height:184,type:'svg',data:url,margin:11,
    qrOptions:{errorCorrectionLevel:'H'},
-   dotsOptions:{type:'rounded',color:'#eaf0ff'},
-   cornersSquareOptions:{type:'extra-rounded',color:'#8d95ff'},
+   dotsOptions:{type:'rounded',color:'#9acbff'},
+   cornersSquareOptions:{type:'extra-rounded',color:'#9acbff'},
    cornersDotOptions:{type:'dot',color:'#9acbff'},
    backgroundOptions:{color:'rgba(0,0,0,0)'}
   });
@@ -241,7 +241,7 @@ function hostRender(){
  game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">Final results</button>':'<button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
  '<button id="restart" class="primary">Play again</button>';
  if(lobby){
-   shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
+   shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<div class="lobby-players"><h3>Players</h3><div class="lobby-player-list">'+playerArray().map(p=>'<div class="lobby-player"><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span></div>').join('')+'</div></div><div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
    drawQR();
    startLobbyBubbles();
  }else{
