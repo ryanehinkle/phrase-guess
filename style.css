@@ -59,9 +59,9 @@
 body{background-color:#090d1b;background-image:radial-gradient(ellipse at 16% 0%,#313b8180,transparent 54%),radial-gradient(ellipse at 100% 95%,#11506948,transparent 49%)}
 .brand{font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-weight:1000;font-style:italic;letter-spacing:-.09em;display:inline-block;padding-right:.15em;color:#f7fbff;filter:drop-shadow(0 3px 17px #4f83ff4d)}
 .glitch-letter{position:relative;display:inline-block;z-index:1}
-.glitch-letter::before,.glitch-letter::after{content:attr(data-letter);position:absolute;inset:0;opacity:.72;pointer-events:none;z-index:-1}
-.glitch-letter::before{color:#ff629e;transform:translate(2px,-1px)}
-.glitch-letter::after{color:#54dafa;transform:translate(-2px,1px)}
+.glitch-letter::before,.glitch-letter::after{content:attr(data-letter);position:absolute;inset:0;opacity:.88;pointer-events:none;z-index:-1}
+.glitch-letter::before{color:#ff477f;transform:translate(3.3px,-1.3px);text-shadow:1px 0 3px #ff477f55}
+.glitch-letter::after{color:#23d9ff;transform:translate(-3.3px,1.3px);text-shadow:-1px 0 3px #23d9ff55}
 .brand .bang{margin-left:.08em;transform:rotate(-7deg);color:#b6adff}
 .logo{font-size:clamp(30px,3.6vw,45px);line-height:1}
 .short-rules{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:26px auto 12px}

@@ -14,6 +14,7 @@ const distance=(a,b)=>{let p=Array.from({length:b.length+1},(_,i)=>i);for(let i=
 const similar=(a,b)=>a===b || (Math.min(a.length,b.length)>=5 && Math.max(a.length,b.length)<=12 && distance(a,b)<=1);
 const colorStyle=c=>COLORS.includes(c)?c:'#64748b';
 let game={},players={},submissions={},me=null,hostToken=null,serverOffset=0,deck=[],playing=false,lastScreen='',lastRound=-1,roundTimer=null,hostBusy=false;
+let gameLoaded=false,playersLoaded=false;
 onValue(ref(db,'.info/serverTimeOffset'),s=>serverOffset=Number(s.val()||0));
 const now=()=>Date.now()+serverOffset;
 const route=code=>location.pathname+'?room='+code;
@@ -41,12 +42,19 @@ function home(){shell('','<main class="welcome landing"><div class="landing-mark
 async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(!hostToken){shell('HOST','<main class="card"><h1>Host session not found</h1><p>Start a new game from the home page on this device.</p><a href="?">Go home</a></main>');return}startListeners();unlockSound();try{
  await runTransaction(ref(db,'rooms/'+room+'/hostSecret'),v=>v===null?hostToken:undefined,{applyLocally:false});
  await runTransaction(ref(db,'rooms/'+room+'/createdAt'),v=>v===null?Date.now():undefined,{applyLocally:false});
- await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',hostToken,used:{},scores:{},duration:45,winningScore:25,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
+ await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',sessionId:uid(),hostToken,used:{},scores:{},duration:45,winningScore:25,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
-function startListeners(){onValue(gameRef,s=>{game=s.val()||{};if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost){hostCheck();updateTopAnswerPanel()}},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck();updateAutoNext();updateTopAnswerPanel()}},65)}
+function syncPlayerSession(){
+ if(isHost||!me||!gameLoaded||!playersLoaded)return;
+ const record=players[me.id];
+ if(!record||record.name!==me.name||(record.sessionId||'legacy')!==(game.sessionId||'legacy')){
+  me=null;localStorage.removeItem(key+'player-'+room);lastScreen='';
+ }
+}
+function startListeners(){onValue(gameRef,s=>{game=s.val()||{};gameLoaded=true;syncPlayerSession();if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};playersLoaded=true;syncPlayerSession();render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost){hostCheck();updateTopAnswerPanel()}},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck();updateAutoNext();updateTopAnswerPanel()}},65)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
-function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color).sort((a,b)=>(a.joined||0)-(b.joined||0))}
+function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color&&(p.sessionId||'legacy')===(game.sessionId||'legacy')).sort((a,b)=>(a.joined||0)-(b.joined||0))}
 
 function lobbyMarkup(){
  const roster=playerArray();
@@ -128,7 +136,7 @@ function displayAnswer(value){
     .replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,' ').trim().toUpperCase();
 }
 function revealEntries(){
-  const answers=submissions[game.round]||{};
+  const answers=submissions[game.roundKey||String(game.round)]||{};
   return playerArray().map(p=>({...p,answer:displayAnswer(answers[p.id]?.text||''),points:Number(game.lastPoints?.[p.id]||0)}));
 }
 function phraseSegments(answer){
@@ -159,6 +167,7 @@ function paintReveal(){
   if(!['results','ended'].includes(game.phase))return;
   const elapsed=revealElapsed(),letterCount=Math.max(0,Math.floor((elapsed-REVEAL_LEAD_MS)/REVEAL_LETTER_MS));
   const done=revealFinished();
+  playRevealSoundscape(elapsed,letterCount);
   playResultCue(elapsed);
   const cards=document.querySelectorAll('[data-reveal-answer]');
   for(const card of cards){
@@ -241,7 +250,7 @@ function spawnConfetti(){
   setTimeout(()=>layer.remove(),4300);
 }
 function compute(roster,answers){const clusters=[];const points={};for(const p of roster){const text=answers[p.id]?.text;if(!text)continue;const n=normalize(text);if(!n)continue;let group=clusters.find(g=>g.keys.some(k=>similar(n,k)));if(!group){group={keys:[],ids:[]};clusters.push(group)}group.keys.push(n);group.ids.push(p.id)}for(const g of clusters)for(const id of g.ids)points[id]=g.ids.length===2?3:g.ids.length>=3?1:0;return {points,clusters}}
-function answerCount(){const ans=submissions[game.round]||{};return playerArray().filter(p=>ans[p.id]?.text).length}
+function answerCount(){const ans=submissions[game.roundKey||String(game.round)]||{};return playerArray().filter(p=>ans[p.id]?.text).length}
 
 // Top Answers are corpus-informed suggestions, NOT survey responses or scoring rules.
 // Datamuse uses Google Books Ngram collocations and dictionary/WordNet relations.
@@ -308,7 +317,7 @@ function updateTopAnswerPanel(){
   }
   return;
  }
- const current=submissions[game.round]||{},roster=playerArray();
+ const current=submissions[game.roundKey||String(game.round)]||{},roster=playerArray();
  const ranks=answers.map((answer,i)=>{
   const guessed=roster.filter(p=>normalize(current[p.id]?.text||'')===normalize(answer));
   const cls=guessed.length>=2?'matched-gold':guessed.length===1?'matched-player':'';
@@ -345,7 +354,7 @@ let recapSelectedRound=0;
 function recapHistory(){
  const entries=Object.values(game.history||{}).filter(x=>x&&Number(x.round)>0).sort((a,b)=>Number(a.round)-Number(b.round));
  if(!entries.length&&game.round&&game.phase==='ended'){
-  const answers=submissions[game.round]||{};
+  const answers=submissions[game.roundKey||String(game.round)]||{};
   return [{round:game.round,prompt:game.prompt,participants:playerArray().map(p=>({id:p.id,name:p.name,color:p.color})),points:game.lastPoints||{},answers:Object.fromEntries(Object.entries(answers).map(([id,a])=>[id,a?.text||''])),match:!!game.lastMatch}];
  }
  return entries;
@@ -465,13 +474,17 @@ function hostRender(){
  if($('autoNext'))$('autoNext').onclick=()=>{autoNextEnabled=!autoNextEnabled;if(autoNextEnabled)autoNextArmedAt=now();sessionStorage.setItem(autoNextStore,String(autoNextEnabled));unlockSound();updateAutoNext()};
  if($('reveal'))$('reveal').onclick=()=>finishRound();
  if($('finish'))$('finish').onclick=()=>{if(revealFinished())updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined)};
- if($('restart'))$('restart').onclick=()=>{recapSelectedRound=0;updateGame(g=>({...g,phase:'lobby',round:0,roundKey:'0',used:{},scores:{},history:{},streak:0,bestStreak:0,matches:0}))};
+ if($('restart'))$('restart').onclick=()=>{
+  recapSelectedRound=0;autoNextEnabled=false;sessionStorage.removeItem(autoNextStore);
+  autoNextTriggered='';lastScreen='';
+  updateGame(g=>g.phase==='ended'?{...g,phase:'lobby',sessionId:uid(),round:0,roundKey:'0',prompt:null,deadline:null,revealedAt:null,used:{},scores:{},history:{},lastPoints:{},lastMatch:false,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined);
+ };
  bindRecap();
  updateClocks();paintReveal();syncRevealScreen();updateAutoNext();if(game.phase==='answering'||game.phase==='results')lookupTopAnswers(game.prompt);updateTopAnswerPanel();
 }
 function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h1>Looking for room…</h1><p>Make sure the host has created it.</p></main>');return}
  if(!me){playerJoin();return}
- const answer=submissions[game.round]?.[me.id];
+ const answer=submissions[game.roundKey||String(game.round)]?.[me.id];
  const phase=game.phase;
  const stamp=phase+'-'+game.round+'-'+!!answer+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
  if(lastScreen===stamp){updateClocks();paintReveal();return}lastScreen=stamp;
@@ -481,14 +494,14 @@ function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h
  else if(phase==='ended')body+=mobileRecapMarkup();
  else body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+(game.mode==='duo'?'<div class="duo-score-mobile">'+Number(game.matches||0)+' / 10 MATCHES · '+Number(game.streak||0)+' STREAK</div>':'<div class="yourpoints" id="myRoundPoints">+'+Number(game.lastPoints?.[me.id]||0)+'</div>')+responseList()+'<p class="muted">'+(phase==='ended'?'Game over':'Next round soon…')+'</p></div>';
  body+='</main><div id="error" class="error hidden"></div>';shell('PLAYER • '+room,body);
- if($('answerform'))$('answerform').onsubmit=async e=>{e.preventDefault();unlockSound();const v=$('answer').value.trim().replace(/\s+/g,' ');if(!v)return;const button=$('answerform').querySelector('button');button.disabled=true;try{const path=ref(db,'rooms/'+room+'/submissions/'+game.round+'/'+me.id);const tx=await runTransaction(path,current=>current===null?{text:v,at:Date.now()}:undefined,{applyLocally:false});if(!tx.committed)throw Error('Already submitted');}catch(err){button.disabled=false;alert(err.message)}};
+ if($('answerform'))$('answerform').onsubmit=async e=>{e.preventDefault();unlockSound();const v=$('answer').value.trim().replace(/\s+/g,' ');if(!v)return;const button=$('answerform').querySelector('button');button.disabled=true;try{const path=ref(db,'rooms/'+room+'/submissions/'+(game.roundKey||String(game.round))+'/'+me.id);const tx=await runTransaction(path,current=>current===null?{text:v,at:Date.now()}:undefined,{applyLocally:false});if(!tx.committed)throw Error('Already submitted');}catch(err){button.disabled=false;alert(err.message)}};
  updateClocks();paintReveal();syncRevealScreen();if(phase==='ended')bindRecap()
 }
 function playerJoin(){if(lastScreen==='join'&&$('joinplayer'))return;lastScreen='join';shell('JOIN • '+room,'<main class="card joincard"><div class="eyebrow">ROOM '+room+'</div><h1>Join the game</h1><p>Pick a name and a unique color.</p><form id="joinplayer"><input id="nickname" maxlength="20" placeholder="Your name" required autocomplete="nickname"><h3>Choose your color</h3><div class="colorgrid" id="colors"></div><button class="primary">Join game →</button><div id="joinerror" class="error hidden"></div></form></main>');
  let chosen=null;for(const color of COLORS){let taken=playerArray().some(p=>p.color===color),b=document.createElement('button');b.className='color'+(taken?' taken':'');b.type='button';b.style.background=color;b.disabled=taken;b.title=taken?'Taken':color;b.onclick=()=>{chosen=color;document.querySelectorAll('.color').forEach(x=>x.classList.remove('active'));b.classList.add('active')};$('colors').append(b)}
  $('joinplayer').onsubmit=async e=>{e.preventDefault();unlockSound();let name=$('nickname').value.trim().replace(/\s+/g,' ');if(!chosen){$('joinerror').textContent='Choose an available color.';$('joinerror').classList.remove('hidden');return}
  let pid=uid(),submit=$('joinplayer').querySelector('button.primary');submit.disabled=true;
- try{let response=await runTransaction(playersRef,current=>{let all=current||{};if(Object.values(all).some(p=>p.color===chosen||p.name.toLowerCase()===name.toLowerCase()))return;return {...all,[pid]:{id:pid,name,color:chosen,joined:Date.now()}}},{applyLocally:false});if(!response.committed)throw Error('That name or color was just taken. Pick another.');me={id:pid,name,color:chosen};localStorage.setItem(key+'player-'+room,JSON.stringify(me));render()}catch(err){$('joinerror').textContent=err.message;$('joinerror').classList.remove('hidden');submit.disabled=false}
+ try{let response=await runTransaction(playersRef,current=>{let all=Object.fromEntries(Object.entries(current||{}).filter(([,p])=>p&&(p.sessionId||'legacy')===(game.sessionId||'legacy')));if(Object.values(all).some(p=>p.color===chosen||p.name.toLowerCase()===name.toLowerCase()))return;return {...all,[pid]:{id:pid,name,color:chosen,joined:Date.now(),sessionId:game.sessionId||'legacy'}}},{applyLocally:false});if(!response.committed)throw Error('That name or color was just taken. Pick another.');me={id:pid,name,color:chosen};localStorage.setItem(key+'player-'+room,JSON.stringify(me));render()}catch(err){$('joinerror').textContent=err.message;$('joinerror').classList.remove('hidden');submit.disabled=false}
  }
 }
 function render(){if(!room)return;if(isHost&&hostToken)hostRender();else if(!isHost)renderPlayer();queueFit()}
@@ -500,7 +513,7 @@ function unlockSound(){
  if(!audioDevice)return;
  soundReady=true;
  if(!tickAudio){tickAudio=new Audio('data:audio/mpeg;base64,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');tickAudio.preload='auto';tickAudio.volume=.31}
- if(!correctAudio){correctAudio=new Audio('./assets/correct.mp3');correctAudio.preload='auto';correctAudio.volume=.9}
+ if(!correctAudio){correctAudio=new Audio('./assets/correct.mp3?v=2');correctAudio.preload='auto';correctAudio.volume=.9}
  if(!incorrectAudio){incorrectAudio=new Audio('./assets/incorrect.mp3');incorrectAudio.preload='auto';incorrectAudio.volume=.6}
  if(musicState==='blocked')musicState='off';
  if(idleState==='blocked')idleState='off';
@@ -707,6 +720,41 @@ function syncRoundMusic(){
  }
 }
 
+// Soft Web Audio effects synchronized with the shared reveal clock.
+let lastRevealSoundId='',lastRevealLetter=0;
+function playRevealSoundscape(elapsed,letterCount){
+ if(!isHost||!soundReady||!musicContext||musicContext.state!=='running')return;
+ const id=room+':'+(game.sessionId||'legacy')+':'+game.round+':'+game.revealedAt;
+ const ctx=musicContext;
+ if(lastRevealSoundId!==id){
+  lastRevealSoundId=id;lastRevealLetter=0;
+  // Only play the suspense swell on a freshly opened reveal, not on reconnect.
+  if(elapsed<300){
+   const t=ctx.currentTime,filter=ctx.createBiquadFilter(),gain=ctx.createGain();
+   filter.type='lowpass';filter.frequency.setValueAtTime(180,t);filter.frequency.exponentialRampToValueAtTime(105,t+1.2);
+   gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.035,t+.24);gain.gain.exponentialRampToValueAtTime(.0001,t+1.25);
+   filter.connect(gain).connect(ctx.destination);
+   for(const [frequency,wave] of [[78,'sine'],[117,'triangle']]){
+    const osc=ctx.createOscillator();osc.type=wave;
+    osc.frequency.setValueAtTime(frequency,t);osc.frequency.exponentialRampToValueAtTime(frequency*.85,t+1.25);
+    osc.connect(filter);osc.start(t);osc.stop(t+1.27);
+   }
+  }
+ }
+ const max=Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)));
+ const typing=elapsed>=REVEAL_LEAD_MS&&elapsed<REVEAL_LEAD_MS+max*REVEAL_LETTER_MS;
+ if(!typing||letterCount<=lastRevealLetter)return;
+ const skipped=letterCount-lastRevealLetter;
+ lastRevealLetter=letterCount;
+ // One light digital pulse per two characters; don't fire a burst on tab resume.
+ if(skipped!==1||letterCount%2!==0)return;
+ const t=ctx.currentTime,osc=ctx.createOscillator(),gain=ctx.createGain();
+ osc.type='triangle';osc.frequency.setValueAtTime(680+(letterCount%5)*43,t);
+ osc.frequency.exponentialRampToValueAtTime(520+(letterCount%5)*43,t+.075);
+ gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.014,t+.008);
+ gain.gain.exponentialRampToValueAtTime(.0001,t+.08);
+ osc.connect(gain).connect(ctx.destination);osc.start(t);osc.stop(t+.085);
+}
 function playResultCue(elapsed){
  if(!isHost)return;
  const id=room+':'+game.round+':'+game.revealedAt;
@@ -729,8 +777,8 @@ function countdownTick(remaining){
 function updateClocks(){if(game.phase!=='answering')return;let remain=Math.max(0,Math.ceil((game.deadline-now())/1000));countdownTick(remain);if($('timer')){$('timer').textContent=Math.floor(remain/60)+':'+String(remain%60).padStart(2,'0');$('timer').classList.toggle('danger',remain<=10)}if($('bar'))$('bar').style.width=Math.min(100,Math.max(0,(game.deadline-now())/((game.duration||45)*1000)*100))+'%';if($('count'))$('count').textContent=answerCount()+' / '+playerArray().length+' locked'}
 async function updateGame(fn){if(!hostToken)return;try{await runTransaction(gameRef,g=>{if(!g||g.hostToken!==hostToken)return;return fn(g)},{applyLocally:false})}catch(e){showError(e)}}
 async function nextRound(duration){if(hostBusy||(game.phase==='results'&&!revealFinished()))return;hostBusy=true;try{if(!deck.length){await ensureTopAnswers();if(!topAnswerBank)throw Error('Top Answers file could not load. Refresh and retry.');let res=await fetch('./prompts.json',{cache:'no-store'});if(!res.ok)throw Error('Prompt deck unavailable');const all=await res.json();deck=all.filter(prompt=>validateTopAnswers(topAnswerBank[prompt]).length===TOP_ANSWERS_COUNT);if(!deck.length)throw Error('No validated prompts found.');}
- await updateGame(g=>{if(!['lobby','results'].includes(g.phase)||(g.mode==='duo'&&g.round>=10))return;let used=g.used||{};let choices=deck.map((_,i)=>i).filter(i=>!used[i]);if(!choices.length){used={};choices=deck.map((_,i)=>i)}let index=choices[Math.floor(Math.random()*choices.length)];return {...g,phase:'answering',round:(g.round||0)+1,roundKey:String((g.round||0)+1),prompt:deck[index],duration,deadline:now()+duration*1000,used:{...used,[index]:true},lastPoints:{},mode:g.phase==='lobby'?(playerArray().length===2?'duo':'classic'):(g.mode||'classic')}})}catch(e){alert(e.message)}finally{hostBusy=false}}
-async function finishRound(){if(hostBusy)return;hostBusy=true;try{const snap=await get(ref(db,'rooms/'+room+'/submissions/'+game.round));const answerMap=snap.val()||{};const results=compute(playerArray(),answerMap);await updateGame(g=>{if(g.phase!=='answering')return;let scores={...(g.scores||{})};for(const [pid,pts] of Object.entries(results.points))scores[pid]=(scores[pid]||0)+pts;const duo=g.mode==='duo',match=duo&&playerArray().length===2&&Object.values(results.points).filter(x=>x===3).length===2;const streak=duo?(match?(g.streak||0)+1:0):0;return {...g,phase:'results',revealedAt:now(),scores,lastPoints:results.points,lastMatch:match,streak,bestStreak:duo?Math.max(g.bestStreak||0,streak):0,matches:duo?(g.matches||0)+(match?1:0):0,history:{...(g.history||{}),[String(g.round)]:{round:g.round,prompt:g.prompt,answers:Object.fromEntries(Object.entries(answerMap).map(([id,a])=>[id,displayAnswer(a?.text||'')])),points:results.points,participants:playerArray().map(p=>({id:p.id,name:p.name,color:p.color})),match:duo?match:Object.values(results.points).some(x=>x>0),at:now()}}}})}finally{hostBusy=false}}
+ await updateGame(g=>{if(!['lobby','results'].includes(g.phase)||(g.mode==='duo'&&g.round>=10))return;let used=g.used||{};let choices=deck.map((_,i)=>i).filter(i=>!used[i]);if(!choices.length){used={};choices=deck.map((_,i)=>i)}let index=choices[Math.floor(Math.random()*choices.length)];return {...g,phase:'answering',round:(g.round||0)+1,roundKey:(g.sessionId?g.sessionId+'-'+((g.round||0)+1):String((g.round||0)+1)),prompt:deck[index],duration,deadline:now()+duration*1000,used:{...used,[index]:true},lastPoints:{},mode:g.phase==='lobby'?(playerArray().length===2?'duo':'classic'):(g.mode||'classic')}})}catch(e){alert(e.message)}finally{hostBusy=false}}
+async function finishRound(){if(hostBusy)return;hostBusy=true;try{const snap=await get(ref(db,'rooms/'+room+'/submissions/'+(game.roundKey||String(game.round))));const answerMap=snap.val()||{};const results=compute(playerArray(),answerMap);await updateGame(g=>{if(g.phase!=='answering')return;let scores={...(g.scores||{})};for(const [pid,pts] of Object.entries(results.points))scores[pid]=(scores[pid]||0)+pts;const duo=g.mode==='duo',match=duo&&playerArray().length===2&&Object.values(results.points).filter(x=>x===3).length===2;const streak=duo?(match?(g.streak||0)+1:0):0;return {...g,phase:'results',revealedAt:now(),scores,lastPoints:results.points,lastMatch:match,streak,bestStreak:duo?Math.max(g.bestStreak||0,streak):0,matches:duo?(g.matches||0)+(match?1:0):0,history:{...(g.history||{}),[String(g.round)]:{round:g.round,prompt:g.prompt,answers:Object.fromEntries(Object.entries(answerMap).map(([id,a])=>[id,displayAnswer(a?.text||'')])),points:results.points,participants:playerArray().map(p=>({id:p.id,name:p.name,color:p.color})),match:duo?match:Object.values(results.points).some(x=>x>0),at:now()}}}})}finally{hostBusy=false}}
 function hostCheck(){if(!isHost||game.phase!=='answering'||hostBusy)return;const total=playerArray().length;if(now()>=game.deadline || (total>=2&&answerCount()>=total))finishRound()}
 
 let fitQueued=false;
