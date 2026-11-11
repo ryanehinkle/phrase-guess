@@ -361,3 +361,27 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 @media(max-width:750px){.recap-lower{grid-template-columns:1fr 1fr;max-height:50vh}.recap-metrics{gap:5px}.recap-metric{padding:9px}.recap-header h1{font-size:clamp(19px,3.4vw,34px)}.recap-leader{font-size:9px}.recap-screen{gap:8px;padding:12px}.recap-chart-panel,.recap-detail-panel{padding:10px}.recap-answer-grid{grid-template-columns:1fr;gap:3px}.recap-player-answer{padding:5px}}
 @media(max-width:550px){.recap-lower{grid-template-columns:1fr;grid-template-rows:1fr 1.25fr;max-height:64vh}.recap-metric strong{font-size:22px}.recap-metric span{font-size:9px}.recap-header{flex-direction:column;align-items:start;gap:5px}.recap-bar-track{max-width:14px}.recap-player-answer{grid-template-columns:8px 1fr auto}.recap-answer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.recap-bar-fill{transition:none}}
+
+/* Phone game recap: same round history in a compact, keyboard-free layout. */
+.mobile-recap{display:flex;flex-direction:column;justify-content:center;gap:clamp(7px,1.4vh,14px);min-height:0;flex:1;overflow:hidden;padding:clamp(8px,2vh,19px) clamp(4px,2vw,11px);text-align:center}
+.mobile-recap>.eyebrow{margin:0;color:#a8b9ed}
+.mobile-recap h1{margin:0;font-size:clamp(21px,6.5vw,34px);font-weight:950;letter-spacing:-.04em;line-height:1.1}
+.mobile-recap-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mobile-recap-stats>div{border:1px solid #354875;border-radius:13px;background:#1b2946;padding:clamp(8px,1.5vh,14px) 4px;display:flex;flex-direction:column;gap:2px}
+.mobile-recap-stats strong{font-size:clamp(21px,6.6vw,36px);line-height:1.1;color:#f1f5ff;font-weight:950}
+.mobile-recap-stats div:nth-child(2) strong{color:#ffd175}
+.mobile-recap-stats div:nth-child(3) strong{color:#9d9bff}
+.mobile-recap-stats span{font-size:clamp(10px,2.6vw,12px);font-weight:800;color:#acb8d6}
+.mobile-recap-rounds{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;min-height:0;max-height:18vh;overflow:hidden}
+.mobile-recap-rounds button{border-radius:10px;border:1px solid #47577b;background:#263556;color:#b2c0de;min-width:35px;min-height:31px;padding:3px 7px;font-size:12px;font-weight:900;cursor:pointer}
+.mobile-recap-rounds button.hit{color:#dfccff;border-color:#7771c4;background:#52538d44}
+.mobile-recap-rounds button.selected{background:linear-gradient(140deg,#677eff,#8e71ec);color:white;border-color:#a8a1ff;box-shadow:0 5px 16px #686dff40}
+.mobile-recap-detail{display:flex;flex-direction:column;gap:10px;padding:clamp(9px,2vh,15px);border-radius:16px;border:1px solid #344874;background:linear-gradient(145deg,#1a2948,#111d36);min-height:0;flex:1;max-height:42vh;overflow:hidden;text-align:left}
+.mobile-recap-detail .recap-prompt{font-size:clamp(17px,4.3vw,25px)}
+.mobile-recap-detail .recap-answer-grid{grid-template-columns:1fr 1fr;gap:5px}
+.mobile-recap-detail .recap-player-answer{padding:6px;gap:4px}
+.mobile-recap-detail .recap-player-answer b{font-size:clamp(10px,2.4vw,13px)}
+.mobile-recap-detail .recap-player-answer strong{font-size:11px}
+.mobile-recap-detail .recap-player-name{font-size:clamp(9px,2.2vw,12px)}
+.mobile-recap-detail .recap-round-result{font-size:12px}
+@media(max-height:660px){.mobile-recap{gap:6px}.mobile-recap-detail{max-height:37vh}.mobile-recap-stats>div{padding:5px}.mobile-recap-rounds button{min-height:27px}}
