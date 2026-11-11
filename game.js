@@ -363,7 +363,7 @@ async function lookupTopAnswers(prompt){
  ];
  const candidates=new Map();
  try{
-  const responses=await Promise.all(queries.map(async(query)=>{
+  const settled=await Promise.allSettled(queries.map(async(query)=>{
    const controller=new AbortController();
    const timeout=setTimeout(()=>controller.abort(),4800);
    try{
@@ -371,6 +371,7 @@ async function lookupTopAnswers(prompt){
     return r.ok?await r.json():[];
    }finally{clearTimeout(timeout)}
   }));
+  const responses=settled.map(r=>r.status==='fulfilled'&&Array.isArray(r.value)?r.value:[]);
   for(let q=0;q<responses.length;q++){
    for(const entry of responses[q]){
     const candidate=validateTopAnswers([entry.word])[0];
@@ -409,17 +410,19 @@ function updateTopAnswerPanel(){
  if(!shown)return;
  const words=topAnswersCache.get(game.prompt)||[];
  if(!words.length){
-  if(!topAnswersPending.has(game.prompt))lookupTopAnswers(game.prompt);
-  list.innerHTML='<span class="top-answers-loading">Finding common answers…</span>';
+  if(!topAnswersCache.has(game.prompt)&&!topAnswersPending.has(game.prompt))lookupTopAnswers(game.prompt);
+  const message=topAnswersCache.has(game.prompt)?'No reliable suggestions available':'Finding common answers…';
+  if(list.dataset.renderKey!==message){list.dataset.renderKey=message;list.innerHTML='<span class="top-answers-loading">'+message+'</span>'}
   return;
  }
  const roster=playerArray(),submitted=submissions[game.round]||{};
- list.innerHTML=words.map((answer,i)=>{
-  const matched=roster.filter(p=>similar(normalize(answer),normalize(submitted[p.id]?.text||''))&&normalize(submitted[p.id]?.text||''));
+ const display=words.map((answer,i)=>{
+  const matched=roster.filter(p=>normalize(submitted[p.id]?.text||'')===normalize(answer));
   const style=matched.length===1?' style="--top-match:'+colorStyle(matched[0].color)+'"':'';
   const cls=matched.length>1?' matched-gold':matched.length===1?' matched-player':'';
   return '<div class="top-answer'+cls+'"'+style+'><span class="top-answer-rank">'+(i+1)+'</span><span class="top-answer-word">'+esc(answer)+'</span></div>';
  }).join('');
+ if(list.dataset.renderKey!==display){list.dataset.renderKey=display;list.innerHTML=display}
 }
 
 function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+'</section>'}
