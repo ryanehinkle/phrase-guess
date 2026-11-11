@@ -31,7 +31,7 @@ async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(
  await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',hostToken,used:{},scores:{},duration:45,winningScore:25,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
-function startListeners(){onValue(gameRef,s=>{game=s.val()||{};syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost)hostCheck()},65)}
+function startListeners(){onValue(gameRef,s=>{game=s.val()||{};if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost)hostCheck()},65)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
 function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color).sort((a,b)=>(a.joined||0)-(b.joined||0))}
 
@@ -281,6 +281,8 @@ function render(){if(!room)return;if(isHost&&hostToken)hostRender();else if(!isH
 let lastTickKey='',tickAudio=null,soundReady=false;
 let correctAudio=null,incorrectAudio=null,lastResultCue='';
 function unlockSound(){
+ // Phones are silent controllers; only the host display owns game audio.
+ if(!isHost)return;
  soundReady=true;
  if(!tickAudio){tickAudio=new Audio('data:audio/mpeg;base64,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');tickAudio.preload='auto';tickAudio.volume=.45}
  if(!correctAudio){correctAudio=new Audio('./assets/correct.mp3');correctAudio.preload='auto';correctAudio.volume=.7}
@@ -299,7 +301,7 @@ const MUSIC_LEVEL=.32;
 let roundMusic=null,musicContext=null,musicGain=null,musicFilter=null;
 let musicRound='',musicState='off',musicFadeTimer=null,musicVolumeRaf=0,musicMissing=false;
 function prepareRoundMusic(){
- if(roundMusic||musicMissing||!soundReady)return;
+ if(!isHost||roundMusic||musicMissing||!soundReady)return;
  const track=new Audio();
  track.preload='auto';track.loop=true;track.volume=0;track.src=MUSIC_PATH;
  track.addEventListener('error',()=>{musicMissing=true;musicState='off';track.pause();});
@@ -353,7 +355,7 @@ function setMusicMix(volume,cutoff,seconds){
  }
 }
 function startRoundMusic(){
- if(!soundReady||musicMissing)return;
+ if(!isHost||!soundReady||musicMissing)return;
  prepareRoundMusic();
  if(!roundMusic||musicMissing)return;
  cancelMusicFade();
@@ -387,7 +389,7 @@ function endRoundMusic(){
  },1150);
 }
 function syncRoundMusic(){
- if(!soundReady)return;
+ if(!isHost||!soundReady)return;
  if(game.phase!=='answering'){endRoundMusic();return}
  const id=room+':'+game.round;
  if(musicRound===id&&musicState==='playing')return;
@@ -396,6 +398,7 @@ function syncRoundMusic(){
 }
 
 function playResultCue(elapsed){
+ if(!isHost)return;
  const id=room+':'+game.round+':'+game.revealedAt;
  const endOfTyping=REVEAL_LEAD_MS+Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)))*REVEAL_LETTER_MS;
  if(lastResultCue===id||elapsed<endOfTyping)return;
@@ -408,7 +411,7 @@ function playResultCue(elapsed){
  try{effect.pause();effect.currentTime=0;effect.play().catch(()=>{})}catch{}
 }
 function countdownTick(remaining){
- if(!soundReady||remaining<=0||game.phase!=='answering')return;
+ if(!isHost||!soundReady||remaining<=0||game.phase!=='answering')return;
  const id=game.round+':'+remaining;if(id===lastTickKey)return;lastTickKey=id;
  try{tickAudio.pause();tickAudio.currentTime=0;tickAudio.play().catch(()=>{});}catch{}
 }
