@@ -26,7 +26,7 @@ A phone-powered word-matching party game, hosted on GitHub Pages and synced over
 
 After the cinematic reveal, the host screen animates a compact **Top Answers** panel, revealing common phrase completions letter by letter. If an entry exactly matches one player's answer it uses their chosen color; if several players guessed it, it turns gold. This is purely a bonus display — it never affects scoring.
 
-The list is generated from `top-phrases.json`, a curated bank of over 1,700 recognizable standalone phrases and a set of human-ranked overrides for popular prompts. For example, `_____ HUMOR` favors **DARK, DRY, SARCASTIC, BLACK, GOOD**, not rare terms such as *aqueous humor* or *vitreous humor*. The game no longer ranks arbitrary neighboring words from books as though they were party-game guesses.
+The list is generated from `top-phrases.json`, a curated bank of over 2,100 recognizable standalone phrases and a set of human-ranked overrides for popular prompts. For example, `_____ HUMOR` favors **DARK, DRY, SARCASTIC, BLACK, GOOD**, not rare terms such as *aqueous humor* or *vitreous humor*. The game no longer ranks arbitrary neighboring words from books as though they were party-game guesses.
 
 These are **suggested familiar completions, not actual survey or Family Feud results**. When the bank doesn't contain enough believable phrases for a prompt, the panel deliberately shows fewer than five (or none), rather than making up bad answers. Expanding coverage will require continued curation of the phrase bank.
 
