@@ -24,11 +24,11 @@ A phone-powered word-matching party game, hosted on GitHub Pages and synced over
 
 ## Top Answers
 
-After the cinematic reveal, the host screen animates a compact **Top Answers** panel, revealing common phrase completions letter by letter. If an entry exactly matches one player's answer it uses their chosen color; if several players guessed it, it turns gold. This is purely a bonus display — it never affects scoring.
+The host-only Top Answers panel appears after each cinematic reveal and types out five suggestions in sequence. A suggestion that matches one player's answer is highlighted in that player's color; answers shared by two or more players are highlighted gold. It does **not** affect scoring.
 
-The list is generated from `top-phrases.json`, a curated bank of over 2,100 recognizable standalone phrases and a set of human-ranked overrides for popular prompts. For example, `_____ HUMOR` favors **DARK, DRY, SARCASTIC, BLACK, GOOD**, not rare terms such as *aqueous humor* or *vitreous humor*. The game no longer ranks arbitrary neighboring words from books as though they were party-game guesses.
+The game now loads `top-answers.json`, a **complete, precomputed five-item list for each of the 5,159 prompts** in `prompts.json`. A validation pass checks every entry has five unique nonempty completions, avoiding the missing-answer problem caused by the earlier sparse phrase-bank lookup. The original `top-phrases.json` remains as a curated source/reference. No Datamuse or other external network API is required during play.
 
-These are **suggested familiar completions, not actual survey or Family Feud results**. When the bank doesn't contain enough believable phrases for a prompt, the panel deliberately shows fewer than five (or none), rather than making up bad answers. Expanding coverage will require continued curation of the phrase bank.
+These lists are **party-game estimates**, *not actual survey results or a measured popularity ranking*. Many were generated using familiar expressions and category-aware common-word patterns; some rarer prompts will still need manual quality review. Treat the database as editable curated game content rather than claiming independently validated "top five" responses.
 
 ## Limitations of the browser-only version
 
