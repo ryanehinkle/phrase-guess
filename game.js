@@ -340,6 +340,72 @@ function updateTopAnswerPanel(){
 }
 
 function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+'</section>'}
+
+let recapSelectedRound=0;
+function recapHistory(){
+ const entries=Object.values(game.history||{}).filter(x=>x&&Number(x.round)>0).sort((a,b)=>Number(a.round)-Number(b.round));
+ if(!entries.length&&game.round&&game.phase==='ended'){
+  const answers=submissions[game.round]||{};
+  return [{round:game.round,prompt:game.prompt,points:game.lastPoints||{},answers:Object.fromEntries(Object.entries(answers).map(([id,a])=>[id,a?.text||''])),match:!!game.lastMatch}];
+ }
+ return entries;
+}
+function recapDetails(entry){
+ if(!entry)return '<div class="recap-empty">No round history recorded yet.</div>';
+ const roster=playerArray(),answers=entry.answers||{},points=entry.points||{};
+ const matching=Object.values(points).filter(x=>Number(x)>0).length>=2;
+ return '<div class="recap-detail-heading"><span class="recap-round-kicker">ROUND '+Number(entry.round)+'</span><span class="recap-round-result '+(matching?'is-match':'')+'">'+(matching?'MATCH':'NO MATCH')+'</span></div>'+
+ '<div class="recap-prompt">'+esc(entry.prompt||'')+'</div><div class="recap-answer-grid">'+
+ roster.map(p=>'<div class="recap-player-answer"><i style="background:'+colorStyle(p.color)+'"></i><span class="recap-player-name">'+esc(p.name)+'</span><b>'+esc(answers[p.id]||'—')+'</b><strong>'+(Number(points[p.id]||0)>0?'+'+Number(points[p.id]):'—')+'</strong></div>').join('')+
+ '</div>';
+}
+function recapMarkup(){
+ const history=recapHistory(),rounds=history.length,matches=history.filter(x=>Object.values(x.points||{}).filter(n=>Number(n)>0).length>=2).length;
+ const rate=rounds?Math.round(matches/rounds*100):0;
+ const roster=playerArray().sort((a,b)=>Number(game.scores?.[b.id]||0)-Number(game.scores?.[a.id]||0));
+ const best=game.mode==='duo'?Number(game.bestStreak||0):Math.max(0,...Object.values(game.scores||{}).map(Number));
+ const totals=game.mode==='duo'?[
+  [rounds,'Rounds played'],[Number(game.matches||matches),'Jinxes'],[rate+'%','Match rate'],[best,'Best streak']
+ ]:[
+  [rounds,'Rounds played'],[matches,'Matched rounds'],[rate+'%','Match rate'],[best,'High score']
+ ];
+ const max=game.mode==='duo'?1:Math.max(1,...history.map(x=>Object.values(x.points||{}).reduce((a,b)=>a+Number(b||0),0)));
+ const bars=history.map(x=>{
+  const points=Object.values(x.points||{}).reduce((a,b)=>a+Number(b||0),0);
+  const hit=Object.values(x.points||{}).filter(z=>Number(z)>0).length>=2;
+  const level=game.mode==='duo'?(hit?100:13):Math.max(13,points/max*100);
+  return '<button class="recap-bar'+(hit?' hit':'')+'" data-recap-round="'+x.round+'" title="Round '+x.round+': '+(hit?'match':'no match')+'" aria-label="View round '+x.round+'"><span class="recap-bar-track"><span class="recap-bar-fill" style="height:'+level+'%"></span></span><small>'+x.round+'</small></button>';
+ }).join('');
+ if(!recapSelectedRound||!history.some(x=>x.round===recapSelectedRound))recapSelectedRound=history.at(-1)?.round||0;
+ return '<section class="recap-screen"><div class="recap-header"><div><div class="eyebrow">GAME RECAP</div><h1>'+(game.mode==='duo'?(game.matches>=5?'ON THE SAME WAVELENGTH':'THAT WAS A GOOD RUN'):'THAT’S A WRAP!')+'</h1></div><div class="recap-leader">'+(game.mode==='duo'?'MATCH CHALLENGE':(roster.length?'TOP PLAYER · '+esc(roster[0].name):'FINAL SCORES'))+'</div></div>'+
+ '<div class="recap-metrics">'+totals.map(([v,label])=>'<div class="recap-metric"><strong>'+v+'</strong><span>'+label+'</span></div>').join('')+'</div>'+
+ '<div class="recap-lower"><div class="recap-chart-panel"><div class="recap-panel-heading"><b>ROUND BY ROUND</b><span>Tap any round</span></div><div class="recap-bars">'+bars+'</div>'+
+ (game.mode==='duo'?'<div class="recap-legend"><i></i> Jinx! &nbsp;&nbsp; <i class="miss"></i> No match</div>':'<div class="recap-legend">Bars show points earned each round</div>')+
+ '</div><div class="recap-detail-panel"><div class="recap-panel-heading"><b>ROUND BREAKDOWN</b><div class="recap-nav"><button id="recapPrev" aria-label="Previous round">‹</button><button id="recapNext" aria-label="Next round">›</button></div></div><div id="recapDetail">'+recapDetails(history.find(x=>x.round===recapSelectedRound))+'</div></div></div>'+
+ (game.mode==='classic'?'<div class="recap-ranking">'+roster.slice(0,5).map((p,i)=>'<span><i style="background:'+colorStyle(p.color)+'"></i>'+esc(p.name)+' <b>'+Number(game.scores?.[p.id]||0)+'</b></span>').join('')+'</div>':'')+
+ '</section>';
+}
+function updateRecapSelection(){
+ if(game.phase!=='ended')return;
+ const history=recapHistory(),selected=history.find(x=>x.round===recapSelectedRound);
+ const detail=$('recapDetail');if(detail)detail.innerHTML=recapDetails(selected);
+ document.querySelectorAll('[data-recap-round]').forEach(el=>{
+  const active=Number(el.dataset.recapRound)===recapSelectedRound;
+  el.classList.toggle('selected',active);el.setAttribute('aria-pressed',String(active));
+ });
+ const n=history.findIndex(x=>x.round===recapSelectedRound);
+ if($('recapPrev'))$('recapPrev').disabled=n<=0;
+ if($('recapNext'))$('recapNext').disabled=n>=history.length-1;
+}
+function bindRecap(){
+ if(game.phase!=='ended')return;
+ const entries=recapHistory();
+ document.querySelectorAll('[data-recap-round]').forEach(el=>el.onclick=()=>{recapSelectedRound=Number(el.dataset.recapRound);updateRecapSelection()});
+ if($('recapPrev'))$('recapPrev').onclick=()=>{let i=entries.findIndex(x=>x.round===recapSelectedRound);if(i>0){recapSelectedRound=entries[i-1].round;updateRecapSelection()}};
+ if($('recapNext'))$('recapNext').onclick=()=>{let i=entries.findIndex(x=>x.round===recapSelectedRound);if(i<entries.length-1){recapSelectedRound=entries[i+1].round;updateRecapSelection()}};
+ updateRecapSelection();
+}
+
 // Host-only auto-play setting: wait five full seconds after the reveal finishes.
 const AUTO_NEXT_DELAY_MS=5000;
 const autoNextStore='jinx:auto-next:'+room;
@@ -369,13 +435,13 @@ function updateAutoNext(){
 
 function hostRender(){
  const oldInput=$('duration')?.value;
- const needScreen=game.phase+'-'+game.round+'-'+playerArray().map(p=>p.id).join(',')+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt;
+ const needScreen=game.phase+'-'+game.round+'-'+playerArray().map(p=>p.id).join(',')+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
  if(needScreen===lastScreen){updateClocks();paintReveal();return}
  lastScreen=needScreen;
  const lobby=game.phase==='lobby';
  const actions=lobby?'<label>Timer <select id="duration"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label><button id="start" class="primary">Start game</button>':
  game.phase==='answering'?'<button id="reveal">Reveal early</button>':
- game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">Final results</button>':'<button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Toggle automatic next rounds"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button><button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
+ game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">See results</button>':'<button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Toggle automatic next rounds"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button><button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
  '<button id="restart" class="primary">Play again</button>';
  if(lobby){
    shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<div class="lobby-players"><h3>Players</h3><div class="lobby-player-list">'+playerArray().map(p=>'<div class="lobby-player"><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span></div>').join('')+'</div></div><div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
@@ -383,14 +449,15 @@ function hostRender(){
    startLobbyBubbles();
  }else{
    stopLobbyBubbles();
-   shell('ROUND '+game.round,'<main class="host-fullscreen"><div class="host-fullstage">'+roundMarkup()+(game.phase==='results'||game.phase==='ended'?topAnswersMarkup():'')+'</div><div class="host-bottom"><div class="host-bottom-status">'+(game.mode==='duo'?'<span>'+Number(game.matches||0)+'/10 matches</span><span>'+Number(game.streak||0)+' streak</span>':'<span>'+playerArray().length+' players</span>')+'</div><div class="host-bottom-controls">'+actions+'</div></div></main><div id="error" class="error hidden"></div>');
+   shell(game.phase==='ended'?'GAME RECAP':'ROUND '+game.round,'<main class="host-fullscreen"><div class="host-fullstage">'+(game.phase==='ended'?recapMarkup():roundMarkup()+(game.phase==='results'?topAnswersMarkup():''))+'</div><div class="host-bottom"><div class="host-bottom-status">'+(game.mode==='duo'?'<span>'+Number(game.matches||0)+'/10 matches</span><span>'+Number(game.streak||0)+' streak</span>':'<span>'+playerArray().length+' players</span>')+'</div><div class="host-bottom-controls">'+actions+'</div></div></main><div id="error" class="error hidden"></div>');
  }
  if($('start')){$('duration').value=oldInput||String(game.duration||45);$('start').onclick=()=>{unlockSound();if(playerArray().length<2)return alert('Need 2 players.');nextRound(Number($('duration').value))}}
  if($('next'))$('next').onclick=()=>{unlockSound();nextRound(game.duration||45)};
  if($('autoNext'))$('autoNext').onclick=()=>{autoNextEnabled=!autoNextEnabled;if(autoNextEnabled)autoNextArmedAt=now();sessionStorage.setItem(autoNextStore,String(autoNextEnabled));unlockSound();updateAutoNext()};
  if($('reveal'))$('reveal').onclick=()=>finishRound();
  if($('finish'))$('finish').onclick=()=>{if(revealFinished())updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined)};
- if($('restart'))$('restart').onclick=()=>updateGame(g=>({...g,phase:'lobby',round:0,roundKey:'0',used:{},scores:{},streak:0,bestStreak:0,matches:0}));
+ if($('restart'))$('restart').onclick=()=>{recapSelectedRound=0;updateGame(g=>({...g,phase:'lobby',round:0,roundKey:'0',used:{},scores:{},history:{},streak:0,bestStreak:0,matches:0}))};
+ bindRecap();
  updateClocks();paintReveal();syncRevealScreen();updateAutoNext();if(game.phase==='answering'||game.phase==='results')lookupTopAnswers(game.prompt);updateTopAnswerPanel();
 }
 function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h1>Looking for room…</h1><p>Make sure the host has created it.</p></main>');return}
@@ -653,7 +720,7 @@ function updateClocks(){if(game.phase!=='answering')return;let remain=Math.max(0
 async function updateGame(fn){if(!hostToken)return;try{await runTransaction(gameRef,g=>{if(!g||g.hostToken!==hostToken)return;return fn(g)},{applyLocally:false})}catch(e){showError(e)}}
 async function nextRound(duration){if(hostBusy||(game.phase==='results'&&!revealFinished()))return;hostBusy=true;try{if(!deck.length){await ensureTopAnswers();if(!topAnswerBank)throw Error('Top Answers file could not load. Refresh and retry.');let res=await fetch('./prompts.json',{cache:'no-store'});if(!res.ok)throw Error('Prompt deck unavailable');const all=await res.json();deck=all.filter(prompt=>validateTopAnswers(topAnswerBank[prompt]).length===TOP_ANSWERS_COUNT);if(!deck.length)throw Error('No validated prompts found.');}
  await updateGame(g=>{if(!['lobby','results'].includes(g.phase)||(g.mode==='duo'&&g.round>=10))return;let used=g.used||{};let choices=deck.map((_,i)=>i).filter(i=>!used[i]);if(!choices.length){used={};choices=deck.map((_,i)=>i)}let index=choices[Math.floor(Math.random()*choices.length)];return {...g,phase:'answering',round:(g.round||0)+1,roundKey:String((g.round||0)+1),prompt:deck[index],duration,deadline:now()+duration*1000,used:{...used,[index]:true},lastPoints:{},mode:g.phase==='lobby'?(playerArray().length===2?'duo':'classic'):(g.mode||'classic')}})}catch(e){alert(e.message)}finally{hostBusy=false}}
-async function finishRound(){if(hostBusy)return;hostBusy=true;try{const snap=await get(ref(db,'rooms/'+room+'/submissions/'+game.round));const answerMap=snap.val()||{};const results=compute(playerArray(),answerMap);await updateGame(g=>{if(g.phase!=='answering')return;let scores={...(g.scores||{})};for(const [pid,pts] of Object.entries(results.points))scores[pid]=(scores[pid]||0)+pts;const duo=g.mode==='duo',match=duo&&playerArray().length===2&&Object.values(results.points).filter(x=>x===3).length===2;const streak=duo?(match?(g.streak||0)+1:0):0;return {...g,phase:'results',revealedAt:now(),scores,lastPoints:results.points,lastMatch:match,streak,bestStreak:duo?Math.max(g.bestStreak||0,streak):0,matches:duo?(g.matches||0)+(match?1:0):0}})}finally{hostBusy=false}}
+async function finishRound(){if(hostBusy)return;hostBusy=true;try{const snap=await get(ref(db,'rooms/'+room+'/submissions/'+game.round));const answerMap=snap.val()||{};const results=compute(playerArray(),answerMap);await updateGame(g=>{if(g.phase!=='answering')return;let scores={...(g.scores||{})};for(const [pid,pts] of Object.entries(results.points))scores[pid]=(scores[pid]||0)+pts;const duo=g.mode==='duo',match=duo&&playerArray().length===2&&Object.values(results.points).filter(x=>x===3).length===2;const streak=duo?(match?(g.streak||0)+1:0):0;return {...g,phase:'results',revealedAt:now(),scores,lastPoints:results.points,lastMatch:match,streak,bestStreak:duo?Math.max(g.bestStreak||0,streak):0,matches:duo?(g.matches||0)+(match?1:0):0,history:{...(g.history||{}),[String(g.round)]:{round:g.round,prompt:g.prompt,answers:Object.fromEntries(Object.entries(answerMap).map(([id,a])=>[id,displayAnswer(a?.text||'')])),points:results.points,match:duo?match:Object.values(results.points).some(x=>x>0),at:now()}}}})}finally{hostBusy=false}}
 function hostCheck(){if(!isHost||game.phase!=='answering'||hostBusy)return;const total=playerArray().length;if(now()>=game.deadline || (total>=2&&answerCount()>=total))finishRound()}
 
 let fitQueued=false;
