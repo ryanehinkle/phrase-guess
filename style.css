@@ -97,3 +97,5 @@ body{background-color:#090d1b;background-image:radial-gradient(ellipse at 16% 0%
 @keyframes cinemaEnter{from{opacity:0;clip-path:circle(0% at 50% 50%)}to{opacity:1;clip-path:circle(90% at 50% 50%)}}
 @media(max-width:720px){.cinema-grid{padding:24px 12px}.cinema-answer{min-height:100px;padding:13px}.cinema-answers{gap:9px}.qrframe{flex-basis:130px;height:130px}.qrframe img{height:120px;width:120px}}
 @media(prefers-reduced-motion:reduce){.cinema{animation:none;transition:none}.cinema.break-away{filter:none;transform:none}}
+
+.cinema.show-outcome .cinema-outcome{opacity:1;transform:scale(1)}.duo-final{font-size:clamp(20px,3vw,38px);color:#d2afff;font-weight:950;margin-top:25px;letter-spacing:.5px}.playerbar b{white-space:nowrap}
