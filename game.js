@@ -50,8 +50,20 @@ function revealEntries(){
   const answers=submissions[game.round]||{};
   return playerArray().map(p=>({...p,answer:displayAnswer(answers[p.id]?.text||''),points:Number(game.lastPoints?.[p.id]||0)}));
 }
+function phraseSegments(answer){
+ const parts=String(game.prompt||'').split('_____');
+ return {
+   before:displayAnswer((parts[0]||'').trim()),
+   answer:answer||'',
+   after:displayAnswer(parts.slice(1).join('_____').trim())
+ };
+}
+function fullPhraseLength(answer){
+ const p=phraseSegments(answer);
+ return p.before.length+p.answer.length+p.after.length+(p.before&&p.answer?1:0)+(p.after&&(p.before||p.answer)?1:0);
+}
 function revealDuration(){
-  return REVEAL_LEAD_MS + Math.max(0,...revealEntries().map(p=>p.answer.length))*REVEAL_LETTER_MS + REVEAL_AFTER_MS;
+ return REVEAL_LEAD_MS+Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)))*REVEAL_LETTER_MS+REVEAL_AFTER_MS;
 }
 function revealElapsed(){return game.revealedAt ? Math.max(0,now()-Number(game.revealedAt)) : Number.MAX_SAFE_INTEGER}
 function revealFinished(){return !['results','ended'].includes(game.phase)||revealElapsed()>=revealDuration()}
@@ -69,13 +81,29 @@ function paintReveal(){
   const cards=document.querySelectorAll('[data-reveal-answer]');
   for(const card of cards){
     const answer=card.dataset.revealAnswer||'',target=card.querySelector('.ranswer');
-    const visible=elapsed>=REVEAL_LEAD_MS?answer.slice(0,letterCount):'';
-    if(target&&target.textContent!==visible)target.textContent=visible;
+    if(card.classList.contains('cinema-answer')){
+      const p=phraseSegments(answer);
+      const all=[p.before,p.answer,p.after].filter(Boolean);
+      // Type the fixed phrase and the player's answer together, left to right.
+      let left=elapsed>=REVEAL_LEAD_MS?letterCount:0;
+      const segments=[['.cinema-before',p.before],['.ranswer',p.answer],['.cinema-after',p.after]];
+      for(const [selector,part] of segments){
+        const node=card.querySelector(selector);if(!node)continue;
+        let output='';
+        if(part){if(left>0&&selector!=='.cinema-before'&&((selector==='.ranswer'&&p.before)||(selector==='.cinema-after'&&(p.before||p.answer)))){output=' ';left--}
+          const n=Math.min(left,part.length);output+=part.slice(0,n);left-=n;
+        }
+        if(node.textContent!==output)node.textContent=output;
+      }
+    }else{
+      const visible=elapsed>=REVEAL_LEAD_MS?answer.slice(0,letterCount):'';
+      if(target&&target.textContent!==visible)target.textContent=visible;
+    }
     card.classList.toggle('typing-started',elapsed>=REVEAL_LEAD_MS);
     card.classList.toggle('typing-complete',done);
     if(elapsed>=REVEAL_LEAD_MS&&letterCount>=answer.length)card.classList.add('word-complete');
   }
-  const cinema=$('revealScreen');if(cinema){const maxLetters=Math.max(0,...revealEntries().map(p=>p.answer.length));cinema.classList.toggle('show-outcome',elapsed>=REVEAL_LEAD_MS+maxLetters*REVEAL_LETTER_MS+250);cinema.classList.toggle('break-away',done);if(done&&revealElapsed()>revealDuration()+280)cinema.remove()};const intro=$('revealIntro');
+  const cinema=$('revealScreen');if(cinema){const maxLetters=Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)));cinema.classList.toggle('show-outcome',elapsed>=REVEAL_LEAD_MS+maxLetters*REVEAL_LETTER_MS+250);cinema.classList.toggle('break-away',done);if(done&&revealElapsed()>revealDuration()+280)cinema.remove()};const intro=$('revealIntro');
   if(intro)intro.textContent=elapsed<REVEAL_LEAD_MS?'GET READY TO REVEAL':done?'ANSWERS REVEALED':'EVERYONE IS REVEALING…';
   for(const points of document.querySelectorAll('.reveal-points')){
     points.classList.toggle('points-shown',done);
@@ -110,7 +138,7 @@ function syncRevealScreen(){
  if(document.getElementById('revealScreen')?.dataset.key===id)return;
  document.getElementById('revealScreen')?.remove();
  const el=document.createElement('div');el.id='revealScreen';el.dataset.key=id;el.className='cinema';
- el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-prompt">'+esc(game.prompt||'')+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><strong class="ranswer"></strong><span class="typing-caret"></span></div>').join('')+'</div><div class="cinema-outcome">'+(game.mode==='duo'?(game.lastMatch?'JINX!':'NOT THIS TIME'):(revealEntries().some(p=>p.points>0)?'MATCH!':'NO MATCH'))+'</div></div>';
+ el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(game.mode==='duo'?(game.lastMatch?'JINX!':'NOT THIS TIME'):(revealEntries().some(p=>p.points>0)?'MATCH!':'NO MATCH'))+'</div></div>';
  document.body.append(el);paintReveal();
 }
 
@@ -133,16 +161,28 @@ function spawnConfetti(){
 function compute(roster,answers){const clusters=[];const points={};for(const p of roster){const text=answers[p.id]?.text;if(!text)continue;const n=normalize(text);if(!n)continue;let group=clusters.find(g=>g.keys.some(k=>similar(n,k)));if(!group){group={keys:[],ids:[]};clusters.push(group)}group.keys.push(n);group.ids.push(p.id)}for(const g of clusters)for(const id of g.ids)points[id]=g.ids.length===2?3:g.ids.length>=3?1:0;return {points,clusters}}
 function answerCount(){const ans=submissions[game.round]||{};return playerArray().filter(p=>ans[p.id]?.text).length}
 function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+'</section>'}
-function hostRender(){const oldInput=$('duration')?.value;const needScreen=game.phase+'-'+game.round+'-'+playerArray().map(p=>p.id).join(',')+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt;
- if(needScreen===lastScreen){updateClocks();paintReveal();return}lastScreen=needScreen;
- shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+(game.phase==='lobby'?lobbyMarkup():roundMarkup())+'</div><aside class="side">'+qrMarkup()+'<h3>'+(game.mode==='duo'&&game.phase!=='lobby'?'Duo challenge':'Scores')+'</h3>'+scoreboard()+'<div class="hostcontrols">'+(game.phase==='lobby'?'<label>Round timer <select id="duration"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label><button id="start" class="primary">Start game →</button>':game.phase==='answering'?'<button id="reveal">Reveal early</button>':game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">Final results</button>':'<button id="next" class="primary">Next round</button><button id="finish">End game</button>'):'<button id="restart" class="primary">Play again</button>')+'</div></aside></main><div id="error" class="error hidden"></div>');
- drawQR();
+function hostRender(){
+ const oldInput=$('duration')?.value;
+ const needScreen=game.phase+'-'+game.round+'-'+playerArray().map(p=>p.id).join(',')+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt;
+ if(needScreen===lastScreen){updateClocks();paintReveal();return}
+ lastScreen=needScreen;
+ const lobby=game.phase==='lobby';
+ const actions=lobby?'<label>Timer <select id="duration"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label><button id="start" class="primary">Start game</button>':
+ game.phase==='answering'?'<button id="reveal">Reveal early</button>':
+ game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">Final results</button>':'<button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
+ '<button id="restart" class="primary">Play again</button>';
+ if(lobby){
+   shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<h3>Players</h3>'+scoreboard()+'<div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
+   drawQR();
+ }else{
+   shell('ROUND '+game.round,'<main class="host-fullscreen"><div class="host-fullstage">'+roundMarkup()+'</div><div class="host-bottom"><div class="host-bottom-status">'+(game.mode==='duo'?'<span>'+Number(game.matches||0)+'/10 matches</span><span>'+Number(game.streak||0)+' streak</span>':'<span>'+playerArray().length+' players</span>')+'</div><div class="host-bottom-controls">'+actions+'</div></div></main><div id="error" class="error hidden"></div>');
+ }
  if($('start')){$('duration').value=oldInput||String(game.duration||45);$('start').onclick=()=>{unlockSound();if(playerArray().length<2)return alert('Need 2 players.');nextRound(Number($('duration').value))}}
  if($('next'))$('next').onclick=()=>{unlockSound();nextRound(game.duration||45)};
  if($('reveal'))$('reveal').onclick=()=>finishRound();
  if($('finish'))$('finish').onclick=()=>{if(revealFinished())updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined)};
  if($('restart'))$('restart').onclick=()=>updateGame(g=>({...g,phase:'lobby',round:0,roundKey:'0',used:{},scores:{},streak:0,bestStreak:0,matches:0}));
- updateClocks();paintReveal();syncRevealScreen()
+ updateClocks();paintReveal();syncRevealScreen();
 }
 function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h1>Looking for room…</h1><p>Make sure the host has created it.</p></main>');return}
  if(!me){playerJoin();return}
