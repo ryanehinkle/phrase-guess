@@ -235,21 +235,23 @@ function roundMarkup(){const phase=game.phase,answering=phase==='answering',resu
 const AUTO_NEXT_DELAY_MS=5000;
 const autoNextStore='jinx:auto-next:'+room;
 let autoNextEnabled=isHost&&sessionStorage.getItem(autoNextStore)==='true';
-let autoNextTriggered='';
+let autoNextTriggered='',autoNextArmedAt=now();
 function updateAutoNext(){
  if(!isHost)return;
  const btn=$('autoNext');
  if(!btn)return;
  const active=game.phase==='results'&&revealFinished();
- const elapsed=Math.max(0,revealElapsed()-revealDuration());
- const left=Math.max(0,Math.ceil((AUTO_NEXT_DELAY_MS-elapsed)/1000));
+ const resultsReadyAt=Number(game.revealedAt||0)+revealDuration();
+ // Enabling automation during an already finished reveal still gets a full 5s.
+ const advanceAt=Math.max(resultsReadyAt,autoNextArmedAt)+AUTO_NEXT_DELAY_MS;
+ const left=Math.max(0,Math.ceil((advanceAt-now())/1000));
  btn.setAttribute('aria-pressed',String(autoNextEnabled));
  btn.title=autoNextEnabled?'Pause automatic next rounds':'Automatically start next round 5 seconds after results';
  const symbol=$('autoNextIcon'),label=$('autoNextLabel');
  if(symbol)symbol.textContent=autoNextEnabled?'Ⅱ':'▶';
  if(label)label.textContent=autoNextEnabled?(active?left+'s':'Auto'):'Auto';
  btn.classList.toggle('active',autoNextEnabled);
- if(!autoNextEnabled||!active||elapsed<AUTO_NEXT_DELAY_MS||hostBusy)return;
+ if(!autoNextEnabled||!active||now()<advanceAt||hostBusy)return;
  const id=room+':'+game.round+':'+game.revealedAt;
  if(autoNextTriggered===id)return;
  autoNextTriggered=id;
@@ -276,7 +278,7 @@ function hostRender(){
  }
  if($('start')){$('duration').value=oldInput||String(game.duration||45);$('start').onclick=()=>{unlockSound();if(playerArray().length<2)return alert('Need 2 players.');nextRound(Number($('duration').value))}}
  if($('next'))$('next').onclick=()=>{unlockSound();nextRound(game.duration||45)};
- if($('autoNext'))$('autoNext').onclick=()=>{autoNextEnabled=!autoNextEnabled;sessionStorage.setItem(autoNextStore,String(autoNextEnabled));unlockSound();updateAutoNext()};
+ if($('autoNext'))$('autoNext').onclick=()=>{autoNextEnabled=!autoNextEnabled;if(autoNextEnabled)autoNextArmedAt=now();sessionStorage.setItem(autoNextStore,String(autoNextEnabled));unlockSound();updateAutoNext()};
  if($('reveal'))$('reveal').onclick=()=>finishRound();
  if($('finish'))$('finish').onclick=()=>{if(revealFinished())updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined)};
  if($('restart'))$('restart').onclick=()=>updateGame(g=>({...g,phase:'lobby',round:0,roundKey:'0',used:{},scores:{},streak:0,bestStreak:0,matches:0}));
