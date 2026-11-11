@@ -282,3 +282,29 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
  .top-answer-rank{font-size:9px;flex-basis:9px}
 }
 @media(prefers-reduced-motion:reduce){.top-answers{transition:none;transform:none}}
+
+/* Phrase-only Top Answers: reveal the box, then stagger and type each guess. */
+.top-answers{
+ transform:translate3d(10px,-9px,0) scale(.945);
+ transform-origin:top right;
+ transition:opacity .42s ease,transform .52s cubic-bezier(.16,1,.3,1);
+}
+.top-answers.visible{transform:translate3d(0,0,0) scale(1)}
+.top-answers-heading{opacity:0;transform:translateY(6px);transition:opacity .35s ease .1s,transform .35s ease .1s}
+.top-answers.visible .top-answers-heading{opacity:1;transform:none}
+.top-answer{
+ opacity:0;transform:translate3d(5px,6px,0);
+ transition:opacity .24s ease,transform .34s cubic-bezier(.2,.75,.25,1),background .2s,color .2s;
+}
+.top-answer.entered{opacity:1;transform:none}
+.top-answer-word{min-width:0}
+.top-answer-caret{
+ display:none;flex:0 0 2px;height:.95em;border-radius:2px;
+ background:currentColor;opacity:.9;animation:topCaretBlink .55s step-end infinite;
+}
+.top-answer.typing .top-answer-caret{display:block}
+@keyframes topCaretBlink{50%{opacity:0}}
+@media(prefers-reduced-motion:reduce){
+ .top-answers,.top-answers-heading,.top-answer{transition:none;transform:none}
+ .top-answer-caret{animation:none}
+}
