@@ -218,3 +218,21 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 .mobilecenter{transform:translateY(var(--keyboard-shift,0px));transition:transform .16s ease-out}
 .mobile input,.joincard input,.joinform input{font-size:max(16px,1rem)}
 @media(prefers-reduced-motion:reduce){.mobilecenter{transition:none}}
+
+/* JINX auto-next: restrained, matching the rounded host controls. */
+.host-bottom-controls .auto-next{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-width:94px;padding-inline:15px;border:1px solid #485681;
+  background:linear-gradient(145deg,#1d2949,#131e3a);color:#b9c9ee;
+  border-radius:13px;font-weight:850;white-space:nowrap;
+  transition:border-color .2s,background .2s,box-shadow .2s,color .2s,transform .2s;
+}
+.host-bottom-controls .auto-next:hover:not(:disabled){border-color:#93a1ff;transform:translateY(-1px)}
+.host-bottom-controls .auto-next.active{
+  border-color:#8984ff;color:#f1efff;background:linear-gradient(120deg,#333667,#282e58);
+  box-shadow:inset 0 1px 0 #ffffff12,0 0 20px #707aff25;
+}
+.auto-next #autoNextIcon{font-size:17px;line-height:1}
+.auto-next #autoNextLabel{font-size:13px;font-variant-numeric:tabular-nums}
+@media(max-width:650px){.host-bottom-controls{flex-wrap:wrap}.host-bottom-controls .auto-next{min-width:80px;flex:.8;padding-inline:10px}.host-bottom-controls #next{flex:1.3}.host-bottom-controls #finish{flex:.85}}
+@media(prefers-reduced-motion:reduce){.host-bottom-controls .auto-next{transition:none}}
