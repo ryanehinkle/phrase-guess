@@ -397,6 +397,15 @@ function updateRecapSelection(){
  if($('recapPrev'))$('recapPrev').disabled=n<=0;
  if($('recapNext'))$('recapNext').disabled=n>=history.length-1;
 }
+function mobileRecapMarkup(){
+ const history=recapHistory(),matched=history.filter(x=>Object.values(x.points||{}).filter(n=>Number(n)>0).length>=2).length;
+ const rate=history.length?Math.round(matched/history.length*100):0;
+ if(!recapSelectedRound||!history.some(x=>x.round===recapSelectedRound))recapSelectedRound=history.at(-1)?.round||0;
+ return '<div class="mobile-recap"><div class="eyebrow">GAME RECAP</div><h1>'+ (game.mode==='duo'?'YOUR JINX! RESULTS':'FINAL SCORES')+'</h1><div class="mobile-recap-stats">'+
+ '<div><strong>'+history.length+'</strong><span>Rounds</span></div><div><strong>'+(game.mode==='duo'?Number(game.matches||0):matched)+'</strong><span>Matches</span></div><div><strong>'+rate+'%</strong><span>Match rate</span></div></div>'+
+ '<div class="mobile-recap-rounds">'+history.map(x=>'<button data-recap-round="'+x.round+'" class="'+(Object.values(x.points||{}).filter(n=>Number(n)>0).length>=2?'hit':'')+'">R'+x.round+'</button>').join('')+'</div>'+
+ '<div class="mobile-recap-detail"><div class="recap-panel-heading"><b>ROUND DETAILS</b><div class="recap-nav"><button id="recapPrev" aria-label="Previous round">‹</button><button id="recapNext" aria-label="Next round">›</button></div></div><div id="recapDetail">'+recapDetails(history.find(x=>x.round===recapSelectedRound))+'</div></div></div>';
+}
 function bindRecap(){
  if(game.phase!=='ended')return;
  const entries=recapHistory();
@@ -464,15 +473,16 @@ function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h
  if(!me){playerJoin();return}
  const answer=submissions[game.round]?.[me.id];
  const phase=game.phase;
- const stamp=phase+'-'+game.round+'-'+!!answer+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt;
+ const stamp=phase+'-'+game.round+'-'+!!answer+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
  if(lastScreen===stamp){updateClocks();paintReveal();return}lastScreen=stamp;
  let body='<main class="mobile"><div class="playerbar"><span><i style="background:'+colorStyle(me.color)+'"></i>'+esc(me.name)+'</span><b>'+(game.mode==='duo'&&phase!=='lobby'?Number(game.matches||0)+' matches':Number(game.scores?.[me.id]||0)+' pts')+'</b></div>';
  if(phase==='lobby')body+='<div class="mobilecenter"><div class="eyebrow">ROOM '+room+'</div><h1>You’re in!</h1><p>Waiting for the host to start.</p><div class="spin"></div><span class="muted">'+playerArray().length+' players in the lobby</span></div>';
  else if(phase==='answering')body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt)+'</div><div class="timer" id="timer">0:00</div><div class="progress"><div id="bar"></div></div>'+(answer?'<div class="submitted"><span class="check">✓</span><h2>Answer locked!</h2><p>'+esc(answer.text)+'</p><span class="muted" id="count">'+answerCount()+' of '+playerArray().length+' submitted</span></div>':'<form id="answerform"><input id="answer" maxlength="48" placeholder="Your word…" autocomplete="off" enterkeyhint="send" required><button class="primary">Lock in answer →</button><p class="muted">Your answer stays hidden until reveal.</p></form>')+'</div>';
- else body+='<div class="mobilecenter"><div class="eyebrow">'+(phase==='ended'?'FINAL':'ROUND '+game.round)+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+(game.mode==='duo'?'<div class="duo-score-mobile">'+Number(game.matches||0)+' / 10 MATCHES · '+Number(game.streak||0)+' STREAK</div>':'<div class="yourpoints" id="myRoundPoints">+'+Number(game.lastPoints?.[me.id]||0)+'</div>')+responseList()+'<p class="muted">'+(phase==='ended'?'Game over':'Next round soon…')+'</p></div>';
+ else if(phase==='ended')body+=mobileRecapMarkup();
+ else body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+(game.mode==='duo'?'<div class="duo-score-mobile">'+Number(game.matches||0)+' / 10 MATCHES · '+Number(game.streak||0)+' STREAK</div>':'<div class="yourpoints" id="myRoundPoints">+'+Number(game.lastPoints?.[me.id]||0)+'</div>')+responseList()+'<p class="muted">'+(phase==='ended'?'Game over':'Next round soon…')+'</p></div>';
  body+='</main><div id="error" class="error hidden"></div>';shell('PLAYER • '+room,body);
  if($('answerform'))$('answerform').onsubmit=async e=>{e.preventDefault();unlockSound();const v=$('answer').value.trim().replace(/\s+/g,' ');if(!v)return;const button=$('answerform').querySelector('button');button.disabled=true;try{const path=ref(db,'rooms/'+room+'/submissions/'+game.round+'/'+me.id);const tx=await runTransaction(path,current=>current===null?{text:v,at:Date.now()}:undefined,{applyLocally:false});if(!tx.committed)throw Error('Already submitted');}catch(err){button.disabled=false;alert(err.message)}};
- updateClocks();paintReveal();syncRevealScreen()
+ updateClocks();paintReveal();syncRevealScreen();if(phase==='ended')bindRecap()
 }
 function playerJoin(){if(lastScreen==='join'&&$('joinplayer'))return;lastScreen='join';shell('JOIN • '+room,'<main class="card joincard"><div class="eyebrow">ROOM '+room+'</div><h1>Join the game</h1><p>Pick a name and a unique color.</p><form id="joinplayer"><input id="nickname" maxlength="20" placeholder="Your name" required autocomplete="nickname"><h3>Choose your color</h3><div class="colorgrid" id="colors"></div><button class="primary">Join game →</button><div id="joinerror" class="error hidden"></div></form></main>');
  let chosen=null;for(const color of COLORS){let taken=playerArray().some(p=>p.color===color),b=document.createElement('button');b.className='color'+(taken?' taken':'');b.type='button';b.style.background=color;b.disabled=taken;b.title=taken?'Taken':color;b.onclick=()=>{chosen=color;document.querySelectorAll('.color').forEach(x=>x.classList.remove('active'));b.classList.add('active')};$('colors').append(b)}
