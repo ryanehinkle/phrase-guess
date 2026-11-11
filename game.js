@@ -34,9 +34,77 @@ function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)
 function startListeners(){onValue(gameRef,s=>{game=s.val()||{};syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost)hostCheck()},65)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
 function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color).sort((a,b)=>(a.joined||0)-(b.joined||0))}
-function lobbyMarkup(){let roster=playerArray();return '<section class="lobby"><div class="eyebrow">ROOM '+room+'</div><h1>Ready when<br><em>you are.</em></h1><p>Scan the code. Pick a color.</p><div class="roster">'+(roster.map(p=>'<div class="person"><i style="background:'+colorStyle(p.color)+'"></i>'+esc(p.name)+'</div>').join('')||'<span class="muted">Waiting for players…</span>')+'</div><div class="muted">'+roster.length+' player'+(roster.length!==1?'s':'')+' here</div></section>'}
-function qrMarkup(){const url=new URL(route(room),location.href).href;return '<div class="qrwrap"><div class="qrframe" id="qrframe"><img id="qr" alt="Join QR code"></div><div><small>JOIN CODE</small><strong>'+room+'</strong><a href="'+esc(url)+'" target="_blank" rel="noopener">Join link</a></div></div>'}
-function drawQR(){const frame=$('qrframe');if(!frame)return;const url=new URL(route(room),location.href).href;const img=$('qr');img.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data='+encodeURIComponent(url);if(typeof QRCodeStyling==='undefined')return;try{const q=new QRCodeStyling({width:142,height:142,type:'svg',data:url,margin:4,qrOptions:{errorCorrectionLevel:'H'},dotsOptions:{type:'rounded',color:'#192b54'},cornersSquareOptions:{type:'extra-rounded',color:'#4f83ff'},cornersDotOptions:{type:'dot',color:'#192b54'},backgroundOptions:{color:'#f5f8ff'}});q.append(frame);img.style.display='none'}catch(e){console.warn('QR fallback',e)}}
+
+function lobbyMarkup(){
+ const roster=playerArray();
+ return '<section class="lobby jinx-lobby"><div class="bubble-field" id="bubbleField" aria-label="Players in lobby"></div><div class="lobby-status"><div class="lobby-wait">'+(roster.length?'Waiting for players…':'Waiting for players…')+'</div><div class="lobby-count">'+roster.length+' player'+(roster.length===1?'':'s')+' here</div></div></section>';
+}
+function qrMarkup(){
+ const url=new URL(route(room),location.href).href;
+ return '<div class="qrwrap"><div class="qrframe" id="qrframe"><img id="qr" alt="Join QR code"></div><div><small>JOIN CODE</small><strong>'+room+'</strong><a href="'+esc(url)+'" target="_blank" rel="noopener">Join link</a></div></div>';
+}
+function drawQR(){
+ const frame=$('qrframe');if(!frame)return;
+ const url=new URL(route(room),location.href).href;
+ const img=$('qr');
+ img.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&color=ECF2FF&bgcolor=101B32&data='+encodeURIComponent(url);
+ if(typeof QRCodeStyling==='undefined')return;
+ try{
+  const q=new QRCodeStyling({
+   width:184,height:184,type:'svg',data:url,margin:11,
+   qrOptions:{errorCorrectionLevel:'H'},
+   dotsOptions:{type:'rounded',color:'#eaf0ff'},
+   cornersSquareOptions:{type:'extra-rounded',color:'#8d95ff'},
+   cornersDotOptions:{type:'dot',color:'#9acbff'},
+   backgroundOptions:{color:'rgba(0,0,0,0)'}
+  });
+  q.append(frame);img.style.display='none';
+ }catch(e){console.warn('QR fallback',e)}
+}
+let bubbleAnimation=0,bubbleField=null,bubbleObjects=[],bubbleLastTime=0;
+function stopLobbyBubbles(){if(bubbleAnimation){cancelAnimationFrame(bubbleAnimation);bubbleAnimation=0}bubbleField=null;bubbleObjects=[];bubbleLastTime=0}
+function startLobbyBubbles(){
+ const field=$('bubbleField');if(!field||bubbleField===field)return;
+ stopLobbyBubbles();bubbleField=field;
+ const roster=playerArray(),bounds=field.getBoundingClientRect();
+ const width=Math.max(220,bounds.width),height=Math.max(160,bounds.height);
+ const n=roster.length;
+ const size=Math.min(138,Math.max(70,Math.min(width/(Math.ceil(Math.sqrt(Math.max(1,n))*1.6)),height/(Math.ceil(Math.sqrt(Math.max(1,n))*1.5)))));
+ bubbleObjects=roster.map((p,i)=>{
+  const el=document.createElement('div');el.className='player-orb';
+  el.style.setProperty('--orb',colorStyle(p.color));el.textContent=p.name;
+  const diameter=Math.min(size,Math.max(70,58+p.name.length*6));
+  el.style.width=diameter+'px';el.style.height=diameter+'px';
+  field.append(el);
+  const col=i%Math.max(1,Math.floor(width/(size+12))),row=Math.floor(i/Math.max(1,Math.floor(width/(size+12))));
+  return {el,x:Math.min(width-diameter-4,8+col*(size+16)),y:Math.min(height-diameter-4,8+row*(size+16)),vx:(i%2?1:-1)*(35+i%5*11),vy:(i%3?1:-1)*(30+i%4*9),d:diameter};
+ });
+ const tick=timestamp=>{
+  if(bubbleField!==field||!field.isConnected){stopLobbyBubbles();return}
+  const dt=Math.min(.04,(timestamp-(bubbleLastTime||timestamp))/1000);bubbleLastTime=timestamp;
+  const w=field.clientWidth,h=field.clientHeight;
+  for(const b of bubbleObjects){
+   b.x+=b.vx*dt;b.y+=b.vy*dt;
+   if(b.x<0){b.x=0;b.vx=Math.abs(b.vx)}
+   if(b.y<0){b.y=0;b.vy=Math.abs(b.vy)}
+   if(b.x+b.d>w){b.x=Math.max(0,w-b.d);b.vx=-Math.abs(b.vx)}
+   if(b.y+b.d>h){b.y=Math.max(0,h-b.d);b.vy=-Math.abs(b.vy)}
+  }
+  // Elastic-ish collision with overlap correction, just for decoration.
+  for(let i=0;i<bubbleObjects.length;i++)for(let k=i+1;k<bubbleObjects.length;k++){
+   const a=bubbleObjects[i],b=bubbleObjects[k],dx=b.x+b.d/2-a.x-a.d/2,dy=b.y+b.d/2-a.y-a.d/2;
+   const dist=Math.hypot(dx,dy)||.001,min=(a.d+b.d)/2+4;
+   if(dist>=min)continue;
+   const nx=dx/dist,ny=dy/dist,overlap=(min-dist)/2;
+   a.x-=nx*overlap;a.y-=ny*overlap;b.x+=nx*overlap;b.y+=ny*overlap;
+   const projection=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+   if(projection>0){a.vx-=projection*nx;a.vy-=projection*ny;b.vx+=projection*nx;b.vy+=projection*ny}
+  }
+  for(const b of bubbleObjects)b.el.style.transform='translate3d('+b.x+'px,'+b.y+'px,0)';
+  bubbleAnimation=requestAnimationFrame(tick);
+ };
+ bubbleAnimation=requestAnimationFrame(tick);
+}
 function scoreboard(){if(game.mode==='duo'&&game.phase!=='lobby')return '<div class="duo-stats"><div><b>'+Number(game.matches||0)+'</b><span>matches / 10</span></div><div><b>'+Number(game.streak||0)+'</b><span>streak</span></div><div><b>'+Number(game.bestStreak||0)+'</b><span>best streak</span></div></div>';return '<div class="scores">'+playerArray().slice().sort((a,b)=>(game.scores?.[b.id]||0)-(game.scores?.[a.id]||0)).map((p,i)=>'<div class="score"><span class="rank">'+(i+1)+'</span><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span><b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+Number(game.scores?.[p.id]||0)+'</b></div>').join('')+'</div>'}
 
 // Reveal timing is derived from the shared Firebase timestamp, so every phone
@@ -175,7 +243,9 @@ function hostRender(){
  if(lobby){
    shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<h3>Players</h3>'+scoreboard()+'<div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
    drawQR();
+   startLobbyBubbles();
  }else{
+   stopLobbyBubbles();
    shell('ROUND '+game.round,'<main class="host-fullscreen"><div class="host-fullstage">'+roundMarkup()+'</div><div class="host-bottom"><div class="host-bottom-status">'+(game.mode==='duo'?'<span>'+Number(game.matches||0)+'/10 matches</span><span>'+Number(game.streak||0)+' streak</span>':'<span>'+playerArray().length+' players</span>')+'</div><div class="host-bottom-controls">'+actions+'</div></div></main><div id="error" class="error hidden"></div>');
  }
  if($('start')){$('duration').value=oldInput||String(game.duration||45);$('start').onclick=()=>{unlockSound();if(playerArray().length<2)return alert('Need 2 players.');nextRound(Number($('duration').value))}}
