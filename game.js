@@ -288,6 +288,12 @@ function ensureTopPhrases(){
   .then(data=>{
    const index=new Map();
    for(const phrase of data.phrases||[])indexHumanPhrase(index,phrase);
+   // Two-word anchors remaining in the curated prompt deck are also real
+   // expressions; let them contribute safe, familiar completions.
+   for(const prompt of deck){
+    const anchor=String(prompt||'').replace('_____','').trim();
+    if(anchor.split(/\s+/).length===2)indexHumanPhrase(index,anchor);
+   }
    topPhraseIndex=index;
    topPhraseOverrides=data.overrides||{};
    topAnswersCache.clear();
