@@ -123,3 +123,59 @@ body{background-color:#090d1b;background-image:radial-gradient(ellipse at 16% 0%
 @media(max-width:650px){.host-fullstage{padding:14px;min-height:64vh}.host-fullstage .prompt{font-size:clamp(36px,10vw,76px)}.host-fullstage .timer{font-size:85px}.host-bottom{flex-wrap:wrap}.host-bottom-controls{width:100%}.host-bottom-controls button{flex:1}.cinema-full-phrase{font-size:clamp(22px,6vw,36px)}}
 
 .host-fullstage{position:relative}.cinema-full-phrase .ranswer{font-weight:1000}.host-fullstage .match-celebration{margin-top:20px}
+
+/* JINX screen-fit pass: no document scrolling on host or phones. */
+html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
+#app{position:relative;isolation:isolate}
+.layout{width:100%;height:100%;min-height:0;max-height:100dvh;overflow:hidden}
+.layout>header{flex:0 0 auto;padding-block:clamp(8px,1.7dvh,20px)}
+.layout main{min-height:0}
+.landing-layout>header{display:none}
+.landing-layout{justify-content:center;align-items:center}
+.landing{width:min(720px,94vw);max-width:94vw;padding:clamp(12px,3vh,26px);margin:auto;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:clamp(10px,2.4vh,25px)}
+.landing-mark{font-size:clamp(100px,21vw,270px);line-height:.96;white-space:nowrap;filter:drop-shadow(0 12px 46px #6176ff35);animation:landIn .6s cubic-bezier(.15,1.2,.4,1) both}
+.landing .brand{font-size:inherit}
+.landing p{font-size:clamp(17px,2.5vw,25px);font-weight:600;color:#c5d0eb;margin:0}
+.landing .actions{margin:clamp(5px,2vh,16px) 0 0}
+.landing .actions button{min-width:clamp(140px,16vw,200px)}
+.landing .joinform{width:min(460px,100%);margin:0}
+@keyframes landIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:none}}
+/* Fit existing game surfaces into the viewport instead of growing the page. */
+.hostgrid{min-height:0;overflow:hidden;padding-block:clamp(5px,1vh,15px);gap:clamp(9px,1.5vw,22px)}
+.hostgrid .stage{min-height:0;overflow:hidden;padding:clamp(12px,2.5vw,32px)}
+.hostgrid .side{min-height:0;overflow:hidden;padding:clamp(10px,2vw,22px);gap:clamp(5px,1.2vh,13px)}
+.hostgrid .roster{margin:clamp(9px,2vh,22px) auto}
+.hostgrid .lobby h1{font-size:clamp(36px,min(6vw,9vh),90px)}
+.host-fullscreen{overflow:hidden;min-height:0;gap:clamp(7px,1.2vh,16px);padding-block:clamp(5px,1vh,13px)}
+.host-fullstage{min-height:0;overflow:hidden;padding:clamp(12px,2.7vw,40px)}
+.host-fullstage .prompt{font-size:clamp(37px,min(8vw,12vh),125px)}
+.host-fullstage .timer{font-size:clamp(55px,min(10vw,15vh),146px)}
+.host-fullstage .typed-reveals{margin:clamp(9px,1.5vh,18px) auto;gap:clamp(6px,1vw,12px)}
+.host-fullstage .reveal-line{padding:clamp(8px,1.5vw,18px)}
+.host-fullstage .reveal-intro{margin-top:8px}
+.host-bottom{flex:0 0 auto;min-height:0}
+.mobile{display:flex;flex-direction:column;min-height:0;height:100%;padding:clamp(6px,1vh,13px) clamp(12px,4vw,20px) clamp(8px,1vh,20px);overflow:hidden}
+.mobilecenter{min-height:0;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;gap:clamp(5px,1vh,12px);overflow:hidden}
+.mobilecenter .prompt{margin:clamp(6px,1vh,16px) 0;font-size:clamp(27px,min(9vw,7vh),57px)}
+.mobilecenter .timer{font-size:clamp(43px,7vh,60px)}
+.mobilecenter form{width:100%;margin:clamp(9px,1.8vh,22px) auto;gap:clamp(6px,1vh,13px)}
+.mobilecenter .reveals{width:100%;min-height:0;overflow:hidden;margin:4px 0;gap:clamp(4px,.8vh,9px)}
+.mobilecenter .reveal-line{padding:clamp(5px,1vh,11px)}
+.mobilecenter .reveal-owner{font-size:12px}
+.mobilecenter .reveal .rname{font-size:12px}
+.mobilecenter .completed-phrase{min-height:0;font-size:clamp(15px,3.8vw,22px)}
+.mobilecenter .yourpoints{font-size:clamp(40px,7vh,70px)}
+.mobilecenter .reveal-intro,.mobilecenter .match-celebration{margin:0}
+.mobilecenter .submitted{margin:clamp(10px,2vh,20px) auto;padding:clamp(11px,2vh,19px)}
+.joincard{max-height:100%;overflow:hidden;padding:clamp(14px,3vh,32px)}
+.joincard h1{margin:8px 0}
+.joincard .colorgrid{gap:clamp(4px,.9vh,9px)}
+.joincard .color{max-height:clamp(19px,5vh,49px)}
+.cinema{overflow:hidden}
+.cinema-grid{max-height:100dvh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:clamp(5px,1vh,14px);padding-block:clamp(12px,2vh,30px)}
+.cinema-answers{width:100%;min-height:0;max-height:67dvh;overflow:hidden;gap:clamp(5px,1vw,13px);margin:0}
+.cinema-answer{min-height:0;padding:clamp(8px,1.4vh,19px);gap:clamp(5px,.8vh,11px)}
+.cinema-full-phrase{font-size:clamp(16px,min(3.2vw,5vh),47px);min-height:0}
+.cinema-outcome{font-size:clamp(23px,min(5vw,7vh),64px)}
+@media(max-width:880px){.hostgrid{grid-template-columns:minmax(0,1fr) minmax(155px,25vw)}.hostgrid .qrwrap{flex-direction:column}.hostgrid .qrframe{flex-basis:auto}.hostgrid .side{padding:10px}.hostgrid .score{padding:7px}}
+@media(max-width:550px){.landing-mark{font-size:clamp(77px,24vw,142px)}.landing .actions{display:flex;flex-direction:row;gap:9px}.landing .actions button{min-width:0;padding:13px 14px}.hostgrid{grid-template-columns:minmax(0,1fr) minmax(125px,35vw)}.hostgrid .qrframe{width:115px;height:115px}.hostgrid .qrframe img{width:108px;height:108px}.hostgrid .score{font-size:11px}.hostgrid .qrwrap strong{font-size:21px}.cinema-answers{grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr))}}
