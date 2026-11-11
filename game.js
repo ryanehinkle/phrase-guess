@@ -247,70 +247,46 @@ function answerCount(){const ans=submissions[game.round]||{};return playerArray(
 // Datamuse uses Google Books Ngram collocations and dictionary/WordNet relations.
 // Query when each prompt begins so the list is already available when it is revealed.
 const TOP_ANSWERS_COUNT=5;
+let topAnswerBank=null,topAnswerLoading=null;
 const topAnswersCache=new Map();
-let topPhraseIndex=null,topPhraseOverrides={},topPhrasesLoading=null,topPhraseLoadFailed=false;
-
-// No raw Ngram/Datamuse adjacency rankings: they produced obscure terms like
-// AQUEOUS HUMOR while missing everyday guesses such as DARK HUMOR.
-// The indexed phrases here are recognizable, independently meaningful expressions.
+// Every prompt in prompts.json has exactly five precomputed completions.
+// There is no live dictionary lookup, and no "no strong guesses" empty state.
 function validateTopAnswers(values){
  const seen=new Set(),out=[];
  for(const value of values||[]){
   const candidate=String(value||'').trim().toUpperCase().replace(/[^A-Z0-9\s'-]/g,'').replace(/\s+/g,' ');
   const key=normalize(candidate);
-  if(!key||seen.has(key)||candidate.length>26||candidate.split(' ').length>2)continue;
+  if(!key||seen.has(key)||candidate.length>30||candidate.split(' ').length>3)continue;
   seen.add(key);out.push(candidate);
   if(out.length===TOP_ANSWERS_COUNT)break;
  }
  return out;
 }
-function indexHumanPhrase(index,phrase){
- const parts=String(phrase||'').trim().toUpperCase().split(/\s+/).filter(Boolean);
- if(parts.length<2||parts.length>5)return;
- for(let i=1;i<parts.length;i++){
-  const front=parts.slice(0,i),back=parts.slice(i);
-  const left=front.join(' '),right=back.join(' ');
-  // The blank should be a normal word or short expression, not a sentence.
-  if(back.length<=2&&front.length<=3){
-   const key=left+' _____',arr=index.get(key)||[];
-   if(!arr.includes(right)){arr.push(right);index.set(key,arr)}
-  }
-  if(front.length<=2&&back.length<=3){
-   const key='_____ '+right,arr=index.get(key)||[];
-   if(!arr.includes(left)){arr.push(left);index.set(key,arr)}
-  }
- }
-}
-function ensureTopPhrases(){
- if(!isHost||topPhrasesLoading)return topPhrasesLoading;
- topPhrasesLoading=fetch('./top-phrases.json?v=2',{cache:'no-store'})
-  .then(res=>{if(!res.ok)throw Error('Phrase bank unavailable');return res.json()})
+async function ensureTopAnswers(){
+ if(!isHost)return;
+ if(topAnswerBank||topAnswerLoading)return topAnswerLoading;
+ topAnswerLoading=fetch('./top-answers.json?v=3',{cache:'no-store'})
+  .then(r=>{if(!r.ok)throw Error('Top Answers data unavailable');return r.json()})
   .then(data=>{
-   const index=new Map();
-   for(const phrase of data.phrases||[])indexHumanPhrase(index,phrase);
-   // Two-word anchors remaining in the curated prompt deck are also real
-   // expressions; let them contribute safe, familiar completions.
-   for(const prompt of deck){
-    const anchor=String(prompt||'').replace('_____','').trim();
-    if(anchor.split(/\s+/).length===2)indexHumanPhrase(index,anchor);
-   }
-   topPhraseIndex=index;
-   topPhraseOverrides=data.overrides||{};
+   topAnswerBank=data;
    topAnswersCache.clear();
    updateTopAnswerPanel();
   })
-  .catch(err=>{topPhraseLoadFailed=true;console.warn('Top phrases unavailable',err);updateTopAnswerPanel()});
- return topPhrasesLoading;
+  .catch(error=>{
+   console.warn('Top Answers loading issue',error);
+   topAnswerLoading=null;
+   // Allow retry on a future game state transition.
+  });
+ return topAnswerLoading;
 }
 function lookupTopAnswers(prompt){
  if(!isHost||!prompt)return [];
- if(!topPhraseIndex){ensureTopPhrases();return []}
+ if(!topAnswerBank){ensureTopAnswers();return []}
  if(topAnswersCache.has(prompt))return topAnswersCache.get(prompt);
- const handRanked=topPhraseOverrides[prompt]||[];
- const familiar=topPhraseIndex.get(prompt)||[];
- // Overrides reflect ordinary party-game responses. The remainder is made of
- // vetted standalone expressions, never arbitrary adjective/noun co-occurrences.
- const answers=validateTopAnswers([...handRanked,...familiar]);
+ const answers=validateTopAnswers(topAnswerBank[prompt]);
+ // This should never occur for the published deck. Surface an actual data
+ // error rather than claiming a low-quality prompt has no possible answers.
+ if(answers.length!==TOP_ANSWERS_COUNT)console.warn('Incomplete Top Answers',prompt,answers);
  topAnswersCache.set(prompt,answers);
  return answers;
 }
@@ -325,7 +301,7 @@ function updateTopAnswerPanel(){
  if(!shown)return;
  const answers=lookupTopAnswers(game.prompt);
  if(!answers.length){
-  const message=topPhraseLoadFailed?'Phrase suggestions unavailable':topPhraseIndex?'No strong common guesses':'Loading familiar phrases…';
+  const message='Loading Top Answers…';
   if(list.dataset.renderKey!==message){
    list.dataset.renderKey=message;
    list.innerHTML='<span class="top-answers-loading">'+message+'</span>';
