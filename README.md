@@ -24,9 +24,11 @@ A phone-powered word-matching party game, hosted on GitHub Pages and synced over
 
 ## Top Answers
 
-After the cinematic result reveal, the **host-only** Top Answers panel suggests up to five natural completions. These are **corpus-informed estimates, not poll or Family Feud survey results**, and never affect scoring. A guess submitted by one player is colored with that player's color; an entry guessed by two or more players becomes gold.
+After the cinematic reveal, the host screen animates a compact **Top Answers** panel, revealing common phrase completions letter by letter. If an entry exactly matches one player's answer it uses their chosen color; if several players guessed it, it turns gold. This is purely a bonus display — it never affects scoring.
 
-Suggestions are retrieved as needed from the [Datamuse API](https://www.datamuse.com/api/), which uses Google Books Ngrams and lexical/dictionary resources for word relationships and phrase frequency, plus a curated set of common examples. Results are cached locally in the host browser to avoid repeating requests. If the service is unavailable or cannot suggest five defensible completions, the panel may show fewer than five or a brief unavailable message rather than inventing supposedly popular answers. The host needs internet access to obtain new suggestions; player phones make no Datamuse requests.
+The list is generated from `top-phrases.json`, a curated bank of over 1,700 recognizable standalone phrases and a set of human-ranked overrides for popular prompts. For example, `_____ HUMOR` favors **DARK, DRY, SARCASTIC, BLACK, GOOD**, not rare terms such as *aqueous humor* or *vitreous humor*. The game no longer ranks arbitrary neighboring words from books as though they were party-game guesses.
+
+These are **suggested familiar completions, not actual survey or Family Feud results**. When the bank doesn't contain enough believable phrases for a prompt, the panel deliberately shows fewer than five (or none), rather than making up bad answers. Expanding coverage will require continued curation of the phrase bank.
 
 ## Limitations of the browser-only version
 
