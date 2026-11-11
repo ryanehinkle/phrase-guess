@@ -32,7 +32,7 @@ async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(
  await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',hostToken,used:{},scores:{},duration:45,winningScore:25,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
-function startListeners(){onValue(gameRef,s=>{game=s.val()||{};if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck()}},65)}
+function startListeners(){onValue(gameRef,s=>{game=s.val()||{};if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck();updateAutoNext()}},65)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
 function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color).sort((a,b)=>(a.joined||0)-(b.joined||0))}
 
@@ -231,6 +231,31 @@ function spawnConfetti(){
 function compute(roster,answers){const clusters=[];const points={};for(const p of roster){const text=answers[p.id]?.text;if(!text)continue;const n=normalize(text);if(!n)continue;let group=clusters.find(g=>g.keys.some(k=>similar(n,k)));if(!group){group={keys:[],ids:[]};clusters.push(group)}group.keys.push(n);group.ids.push(p.id)}for(const g of clusters)for(const id of g.ids)points[id]=g.ids.length===2?3:g.ids.length>=3?1:0;return {points,clusters}}
 function answerCount(){const ans=submissions[game.round]||{};return playerArray().filter(p=>ans[p.id]?.text).length}
 function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+'</section>'}
+// Host-only auto-play setting: wait five full seconds after the reveal finishes.
+const AUTO_NEXT_DELAY_MS=5000;
+const autoNextStore='jinx:auto-next:'+room;
+let autoNextEnabled=isHost&&sessionStorage.getItem(autoNextStore)==='true';
+let autoNextTriggered='';
+function updateAutoNext(){
+ if(!isHost)return;
+ const btn=$('autoNext');
+ if(!btn)return;
+ const active=game.phase==='results'&&revealFinished();
+ const elapsed=Math.max(0,revealElapsed()-revealDuration());
+ const left=Math.max(0,Math.ceil((AUTO_NEXT_DELAY_MS-elapsed)/1000));
+ btn.setAttribute('aria-pressed',String(autoNextEnabled));
+ btn.title=autoNextEnabled?'Pause automatic next rounds':'Automatically start next round 5 seconds after results';
+ const symbol=$('autoNextIcon'),label=$('autoNextLabel');
+ if(symbol)symbol.textContent=autoNextEnabled?'Ⅱ':'▶';
+ if(label)label.textContent=autoNextEnabled?(active?left+'s':'Auto'):'Auto';
+ btn.classList.toggle('active',autoNextEnabled);
+ if(!autoNextEnabled||!active||elapsed<AUTO_NEXT_DELAY_MS||hostBusy)return;
+ const id=room+':'+game.round+':'+game.revealedAt;
+ if(autoNextTriggered===id)return;
+ autoNextTriggered=id;
+ nextRound(game.duration||45);
+}
+
 function hostRender(){
  const oldInput=$('duration')?.value;
  const needScreen=game.phase+'-'+game.round+'-'+playerArray().map(p=>p.id).join(',')+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt;
@@ -239,7 +264,7 @@ function hostRender(){
  const lobby=game.phase==='lobby';
  const actions=lobby?'<label>Timer <select id="duration"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label><button id="start" class="primary">Start game</button>':
  game.phase==='answering'?'<button id="reveal">Reveal early</button>':
- game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">Final results</button>':'<button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
+ game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">Final results</button>':'<button id="next" class="primary">Next round</button><button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Toggle automatic next rounds"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button><button id="finish">End game</button>'):
  '<button id="restart" class="primary">Play again</button>';
  if(lobby){
    shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<div class="lobby-players"><h3>Players</h3><div class="lobby-player-list">'+playerArray().map(p=>'<div class="lobby-player"><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span></div>').join('')+'</div></div><div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
@@ -251,10 +276,11 @@ function hostRender(){
  }
  if($('start')){$('duration').value=oldInput||String(game.duration||45);$('start').onclick=()=>{unlockSound();if(playerArray().length<2)return alert('Need 2 players.');nextRound(Number($('duration').value))}}
  if($('next'))$('next').onclick=()=>{unlockSound();nextRound(game.duration||45)};
+ if($('autoNext'))$('autoNext').onclick=()=>{autoNextEnabled=!autoNextEnabled;sessionStorage.setItem(autoNextStore,String(autoNextEnabled));unlockSound();updateAutoNext()};
  if($('reveal'))$('reveal').onclick=()=>finishRound();
  if($('finish'))$('finish').onclick=()=>{if(revealFinished())updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined)};
  if($('restart'))$('restart').onclick=()=>updateGame(g=>({...g,phase:'lobby',round:0,roundKey:'0',used:{},scores:{},streak:0,bestStreak:0,matches:0}));
- updateClocks();paintReveal();syncRevealScreen();
+ updateClocks();paintReveal();syncRevealScreen();updateAutoNext();
 }
 function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h1>Looking for room…</h1><p>Make sure the host has created it.</p></main>');return}
  if(!me){playerJoin();return}
