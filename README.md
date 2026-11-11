@@ -24,11 +24,17 @@ A phone-powered word-matching party game, hosted on GitHub Pages and synced over
 
 ## Top Answers
 
-The host-only Top Answers panel appears after each cinematic reveal and types out five suggestions in sequence. A suggestion that matches one player's answer is highlighted in that player's color; answers shared by two or more players are highlighted gold. It does **not** affect scoring.
+JINX! displays a compact **Top Answers** panel after the cinematic reveal. Five suggested completions type in one by one; an exact guess by one player takes that player's color, and a guess made by multiple players turns gold. The suggestions do **not** affect scoring.
 
-The game now loads `top-answers.json`, a **complete, precomputed five-item list for each of the 5,159 prompts** in `prompts.json`. A validation pass checks every entry has five unique nonempty completions, avoiding the missing-answer problem caused by the earlier sparse phrase-bank lookup. The original `top-phrases.json` remains as a curated source/reference. No Datamuse or other external network API is required during play.
+### Phrase quality
 
-These lists are **party-game estimates**, *not actual survey results or a measured popularity ranking*. Many were generated using familiar expressions and category-aware common-word patterns; some rarer prompts will still need manual quality review. Treat the database as editable curated game content rather than claiming independently validated "top five" responses.
+The original `prompts.json` retains **5,159 source prompts**. To avoid the repetitive, nonsensical filler previously shown (for example BIG / LITTLE / NEW / OLD / GIANT or MUFFIN SALAD), the game only selects prompts with a **vetted five-answer entry** in `top-answers.json`. There are currently **854 playable prompts**. The other prompts remain archived in `prompts.json` and can be activated as their responses are curated. Nothing is generated from generic adjective templates during play.
+
+Suggestions are based on hand-reviewed familiar expressions, a curated phrase bank, and conservative filtering of public English bigram usage data ([Peter Norvig's corpus](https://norvig.com/ngrams/)). They are **party-game estimates, not actual survey results or statistically verified popularity rankings**. The short list is designed to be more believable than an artificially complete list of 5,159 poor ones. New active prompts must have exactly five distinct completions.
+
+### Game recap
+
+When the host selects **See results**, the main display switches from the last prompt to a dashboard with genuine round statistics, an interactive round-by-round bar chart, and each question's individual player answers and points. The same history is available in a compact recap on players' phones. Completed rounds are stored in the Firebase game object. New games start with fresh history; games begun before the recap update may not include older rounds.
 
 ## Limitations of the browser-only version
 
