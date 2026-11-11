@@ -37,3 +37,19 @@
 @keyframes promptSettle{from{opacity:0;transform:translateY(-10px)}to{opacity:.85;transform:none}}
 @keyframes scoreBump{from{transform:scale(1.25)}to{transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.reveal-line,.prompt-revealed,.match-celebration,.yourpoints,.reveal-points{animation:none!important;transition:none!important}.confetti-layer{display:none}}
+
+/* Extra small moments of motion throughout a round */
+.roster .person{animation:lobbyPop .48s cubic-bezier(.16,1.35,.4,1) both}
+.roster .person:nth-child(2n){animation-delay:.07s}
+.roster .person:nth-child(3n){animation-delay:.13s}
+.gameview:not(:has(.typed-reveals)) .prompt{animation:promptEnter .58s cubic-bezier(.16,1.3,.3,1) both}
+.gameview:not(:has(.typed-reveals)) .progress div{background:linear-gradient(90deg,#4275d8,#7bbcff,#4275d8);background-size:200% 100%;animation:progressShine 2.5s linear infinite}
+.submitted .check{display:inline-block;animation:checkPop .6s cubic-bezier(.18,1.7,.35,1) both}
+.submitted{animation:revealCard .45s ease-out both}
+.hostcontrols button.primary{transition:transform .2s,filter .2s,box-shadow .2s}
+.hostcontrols button.primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px #245cd34d}
+@keyframes lobbyPop{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes promptEnter{from{opacity:0;transform:translateY(20px) scale(.95);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes checkPop{from{opacity:0;transform:scale(.2) rotate(-22deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes progressShine{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.roster .person,.gameview .prompt,.gameview .progress div,.submitted,.submitted .check{animation:none!important}}
