@@ -31,7 +31,7 @@ async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(
  await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',hostToken,used:{},scores:{},duration:45,winningScore:25,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
-function startListeners(){onValue(gameRef,s=>{game=s.val()||{};render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost)hostCheck()},65)}
+function startListeners(){onValue(gameRef,s=>{game=s.val()||{};syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost)hostCheck()},65)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
 function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color).sort((a,b)=>(a.joined||0)-(b.joined||0))}
 function lobbyMarkup(){let roster=playerArray();return '<section class="lobby"><div class="eyebrow">ROOM '+room+'</div><h1>Ready when<br><em>you are.</em></h1><p>Scan the code. Pick a color.</p><div class="roster">'+(roster.map(p=>'<div class="person"><i style="background:'+colorStyle(p.color)+'"></i>'+esc(p.name)+'</div>').join('')||'<span class="muted">Waiting for players…</span>')+'</div><div class="muted">'+roster.length+' player'+(roster.length!==1?'s':'')+' here</div></section>'}
@@ -215,7 +215,116 @@ function unlockSound(){
  if(!tickAudio){tickAudio=new Audio('data:audio/mpeg;base64,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');tickAudio.preload='auto';tickAudio.volume=.45}
  if(!correctAudio){correctAudio=new Audio('./assets/correct.mp3');correctAudio.preload='auto';correctAudio.volume=.7}
  if(!incorrectAudio){incorrectAudio=new Audio('./assets/incorrect.mp3');incorrectAudio.preload='auto';incorrectAudio.volume=.65}
+ prepareRoundMusic();syncRoundMusic();
 }
+
+/*
+ * Music bed: place a licensed or original track at assets/round-music.mp3.
+ * The track is intentionally optional until that asset is provided.
+ * A stable round-specific seek point avoids a repetitive intro while keeping
+ * rejoining devices at approximately the same point in the track.
+ */
+const MUSIC_PATH='./assets/round-music.mp3';
+const MUSIC_LEVEL=.32;
+let roundMusic=null,musicContext=null,musicGain=null,musicFilter=null;
+let musicRound='',musicState='off',musicFadeTimer=null,musicVolumeRaf=0,musicMissing=false;
+function prepareRoundMusic(){
+ if(roundMusic||musicMissing||!soundReady)return;
+ const track=new Audio();
+ track.preload='auto';track.loop=true;track.volume=0;track.src=MUSIC_PATH;
+ track.addEventListener('error',()=>{musicMissing=true;musicState='off';track.pause();});
+ roundMusic=track;
+ try{
+   const Ctx=window.AudioContext||window.webkitAudioContext;
+   if(Ctx){
+     musicContext=new Ctx();
+     const source=musicContext.createMediaElementSource(track);
+     musicFilter=musicContext.createBiquadFilter();
+     musicFilter.type='lowpass';musicFilter.frequency.value=18000;
+     musicGain=musicContext.createGain();musicGain.gain.value=0;
+     source.connect(musicFilter).connect(musicGain).connect(musicContext.destination);
+     track.volume=1;
+     musicContext.resume().catch(()=>{});
+   }
+ }catch(err){console.warn('Music filter unavailable',err);musicFilter=null;musicGain=null;track.volume=0}
+ track.load();
+}
+function roundHash(text){
+ let h=2166136261;
+ for(let i=0;i<text.length;i++)h=Math.imul(h^text.charCodeAt(i),16777619);
+ return (h>>>0)/4294967296;
+}
+function cancelMusicFade(){
+ if(musicFadeTimer){clearTimeout(musicFadeTimer);musicFadeTimer=null}
+ if(musicVolumeRaf){cancelAnimationFrame(musicVolumeRaf);musicVolumeRaf=0}
+}
+function setMusicMix(volume,cutoff,seconds){
+ if(!roundMusic)return;
+ const duration=Math.max(0,seconds||0);
+ if(musicGain&&musicContext){
+   const t=musicContext.currentTime, gain=musicGain.gain;
+   gain.cancelScheduledValues(t);gain.setValueAtTime(gain.value,t);
+   gain.linearRampToValueAtTime(volume,t+duration);
+   if(musicFilter){
+     const f=musicFilter.frequency;
+     f.cancelScheduledValues(t);f.setValueAtTime(Math.max(80,f.value),t);
+     f.exponentialRampToValueAtTime(Math.max(80,cutoff),t+Math.max(.01,duration));
+   }
+ }else{
+   const from=roundMusic.volume,started=performance.now();
+   const animate=stamp=>{
+     const x=Math.min(1,(stamp-started)/Math.max(1,duration*1000));
+     const easing=x*x*(3-2*x);
+     roundMusic.volume=Math.min(1,Math.max(0,from+(volume-from)*easing));
+     if(x<1)musicVolumeRaf=requestAnimationFrame(animate);
+     else musicVolumeRaf=0;
+   };
+   musicVolumeRaf=requestAnimationFrame(animate);
+ }
+}
+function startRoundMusic(){
+ if(!soundReady||musicMissing)return;
+ prepareRoundMusic();
+ if(!roundMusic||musicMissing)return;
+ cancelMusicFade();
+ musicState='playing';
+ const track=roundMusic;
+ const begin=()=>{
+   if(game.phase!=='answering'||musicState!=='playing')return;
+   const duration=track.duration;
+   if(Number.isFinite(duration)&&duration>1){
+     const seed=roundHash(room+':'+game.round);
+     const offset=seed*Math.max(0,duration-12);
+     const startAt=(Number(game.deadline||now())-Number(game.duration||45)*1000);
+     const elapsed=Math.max(0,(now()-startAt)/1000);
+     try{track.currentTime=(offset+elapsed)%duration}catch{}
+   }
+   track.play().catch(()=>{ /* Playback can be blocked before a user gesture */ });
+   if(musicContext?.state==='suspended')musicContext.resume().catch(()=>{});
+   setMusicMix(MUSIC_LEVEL,18000,.85);
+ };
+ if(track.readyState>=1)begin();
+ else track.addEventListener('loadedmetadata',begin,{once:true});
+}
+function endRoundMusic(){
+ if(!roundMusic||musicState!=='playing')return;
+ cancelMusicFade();musicState='fading';
+ setMusicMix(0,350,1.05);
+ const track=roundMusic;
+ musicFadeTimer=setTimeout(()=>{
+   musicFadeTimer=null;
+   if(musicState==='fading'){track.pause();musicState='off'}
+ },1150);
+}
+function syncRoundMusic(){
+ if(!soundReady)return;
+ if(game.phase!=='answering'){endRoundMusic();return}
+ const id=room+':'+game.round;
+ if(musicRound===id&&musicState==='playing')return;
+ musicRound=id;
+ startRoundMusic();
+}
+
 function playResultCue(elapsed){
  const id=room+':'+game.round+':'+game.revealedAt;
  const endOfTyping=REVEAL_LEAD_MS+Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)))*REVEAL_LETTER_MS;
