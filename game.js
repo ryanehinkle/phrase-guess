@@ -44,7 +44,7 @@ async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(
  await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',hostToken,used:{},scores:{},duration:45,winningScore:25,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
-function startListeners(){onValue(gameRef,s=>{game=s.val()||{};if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck();updateAutoNext()}},65)}
+function startListeners(){onValue(gameRef,s=>{game=s.val()||{};if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost){hostCheck();updateTopAnswerPanel()}},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck();updateAutoNext();updateTopAnswerPanel()}},65)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
 function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color).sort((a,b)=>(a.joined||0)-(b.joined||0))}
 
@@ -242,6 +242,186 @@ function spawnConfetti(){
 }
 function compute(roster,answers){const clusters=[];const points={};for(const p of roster){const text=answers[p.id]?.text;if(!text)continue;const n=normalize(text);if(!n)continue;let group=clusters.find(g=>g.keys.some(k=>similar(n,k)));if(!group){group={keys:[],ids:[]};clusters.push(group)}group.keys.push(n);group.ids.push(p.id)}for(const g of clusters)for(const id of g.ids)points[id]=g.ids.length===2?3:g.ids.length>=3?1:0;return {points,clusters}}
 function answerCount(){const ans=submissions[game.round]||{};return playerArray().filter(p=>ans[p.id]?.text).length}
+
+// Top Answers are corpus-informed suggestions, NOT survey responses or scoring rules.
+// Datamuse uses Google Books Ngram collocations and dictionary/WordNet relations.
+// Query when each prompt begins so the list is already available when it is revealed.
+const TOP_ANSWERS_COUNT=5;
+const topAnswersCache=new Map(),topAnswersPending=new Set();
+const topCachePrefix='jinx:top-answers:v1:';
+const topDefault={
+ 'FORWARD _____':['MOTION','PROGRESS','THINKING','PASS','MARCH'],
+ '_____ COURTHOUSE':['COUNTY','FEDERAL','CITY','OLD','LOCAL'],
+ 'WATER _____':['BOTTLE','PARK','FALL','BALLOON','SLIDE'],
+ 'STREET _____':['LIGHT','SIGN','CAR','FIGHT','FOOD'],
+ '_____ STREET':['MAIN','WALL','SESAME','ELM','HIGH'],
+ 'ICE CREAM _____':['CONE','SANDWICH','TRUCK','CAKE','SUNDAE'],
+ '_____ ICE CREAM':['CHOCOLATE','VANILLA','STRAWBERRY','MINT','COOKIES'],
+ 'CHOCOLATE CHIP _____':['COOKIE','MUFFIN','PANCAKE','BROWNIE','WAFFLE'],
+ '_____ RULER':['FOOT','SCHOOL','WOODEN','METAL','PLASTIC'],
+ '_____ CLUE':['BLUE','BIG','HIDDEN','FIRST','FINAL'],
+ 'PIZZA _____':['PARTY','SLICE','BOX','HUT','DOUGH'],
+ '_____ PIZZA':['CHEESE','PEPPERONI','HAWAIIAN','FROZEN','HOMEMADE'],
+ 'DOG _____':['HOUSE','PARK','FOOD','WALKER','BONE'],
+ 'CAT _____':['FOOD','NAP','TREE','LADY','WALK'],
+ 'SCHOOL _____':['BUS','DAY','LUNCH','NIGHT','DANCE'],
+ '_____ SCHOOL':['HIGH','MIDDLE','ELEMENTARY','SUMMER','PUBLIC'],
+ 'GAME _____':['NIGHT','SHOW','DAY','PLAN','OVER'],
+ '_____ GAME':['BOARD','VIDEO','CARD','BALL','END'],
+ 'COFFEE _____':['SHOP','BEAN','CUP','BREAK','TABLE'],
+ '_____ COFFEE':['ICED','HOT','BLACK','MORNING','DECAF'],
+ 'HOT _____':['DOG','CHOCOLATE','SAUCE','WATER','MESS'],
+ '_____ HOT':['RED','BOILING','TOO','PIPING','VERY'],
+ 'COLD _____':['WATER','DRINK','FEET','BREW','WEATHER'],
+ 'SUN _____':['FLOWER','LIGHT','SHINE','BURN','SET'],
+ '_____ SUN':['RISING','SETTING','MORNING','HOT','MIDNIGHT'],
+ 'FIRE _____':['TRUCK','ALARM','DRILL','PLACE','FIGHTER'],
+ '_____ FIRE':['CAMP','BON','WILD','HOUSE','FOREST'],
+ 'STAR _____':['WARS','FISH','LIGHT','POWER','STRUCK'],
+ '_____ STAR':['ROCK','MOVIE','POP','SHOOTING','RISING'],
+ 'HOME _____':['WORK','RUN','SICK','SWEET','PAGE'],
+ '_____ HOME':['SWEET','WELCOME','NEW','DREAM','FAMILY'],
+ 'MOVIE _____':['NIGHT','STAR','THEATER','TICKET','TRAILER'],
+ '_____ MOVIE':['HORROR','ACTION','COMEDY','SCARY','CHRISTMAS'],
+ 'NIGHT _____':['LIGHT','OWL','MARE','SHIFT','SKY'],
+ '_____ NIGHT':['GOOD','LAST','MOVIE','GAME','DATE'],
+ 'BIRTHDAY _____':['CAKE','PARTY','CARD','PRESENT','WISH'],
+ '_____ BIRTHDAY':['HAPPY','FIRST','SURPRISE','BIG','SPECIAL'],
+ 'TIME _____':['MACHINE','OUT','TRAVEL','ZONE','CAPSULE'],
+ '_____ TIME':['BED','GAME','LUNCH','PARTY','SHOW'],
+ 'FAST _____':['FOOD','CAR','LANE','FORWARD','BREAK'],
+ '_____ FAST':['BREAK','SUPER','LIGHTNING','TOO','REAL'],
+ 'BLACK _____':['FRIDAY','CAT','HOLE','BEAR','COFFEE'],
+ 'WHITE _____':['HOUSE','NOISE','BOARD','LIE','CHOCOLATE'],
+ 'BIG _____':['DEAL','FOOT','APPLE','DREAM','GAME'],
+ 'RED _____':['CAR','FLAG','ROSE','LIGHT','SAUCE'],
+ 'BLUE _____':['SKY','BIRD','MOON','JEANS','WHALE'],
+ 'GREEN _____':['TEA','LIGHT','APPLE','BEAN','HOUSE'],
+ '_____ LIGHT':['TRAFFIC','NIGHT','SUN','FLASH','STREET'],
+ 'CAR _____':['DOOR','WASH','SEAT','POOL','KEYS'],
+ '_____ CAR':['RACE','SPORTS','FAMILY','POLICE','USED'],
+ 'PHONE _____':['CALL','CASE','NUMBER','SCREEN','CHARGER'],
+ '_____ PHONE':['CELL','SMART','MOBILE','HOME','FLIP'],
+ 'FOOD _____':['TRUCK','FIGHT','COURT','CHAIN','BANK'],
+ '_____ FOOD':['FAST','JUNK','DOG','CAT','BABY'],
+ 'BEACH _____':['BALL','PARTY','HOUSE','TOWEL','CHAIR'],
+ '_____ BEACH':['SANDY','MIAMI','TROPICAL','PRIVATE','SUNNY'],
+ 'RAIN _____':['COAT','BOW','DROP','STORM','CHECK'],
+ '_____ RAIN':['HEAVY','ACID','SUMMER','FREEZING','PURPLE'],
+ 'CHRISTMAS _____':['TREE','PARTY','MUSIC','EVE','LIGHTS'],
+ '_____ CHRISTMAS':['MERRY','WHITE','LAST','FIRST','BLUE'],
+ 'SPORTS _____':['BAR','CAR','TEAM','GAME','CENTER'],
+ '_____ SPORTS':['WATER','WINTER','TEAM','EXTREME','COLLEGE'],
+ 'APPLE _____':['PIE','JUICE','SAUCE','WATCH','CORE'],
+ '_____ APPLE':['GREEN','RED','CANDY','BAD','PINE'],
+ 'BOOK _____':['CLUB','STORE','CASE','MARK','SHELF'],
+ '_____ BOOK':['COMIC','COLORING','STORY','TEXT','FACE'],
+ 'HAPPY _____':['BIRTHDAY','ENDING','HOUR','DAY','FEET'],
+ '_____ HAPPY':['SO','VERY','SUPER','EXTREMELY','REALLY'],
+ 'CHICKEN _____':['SOUP','WING','SALAD','NUGGET','SANDWICH'],
+ '_____ CHICKEN':['FRIED','GRILLED','ROASTED','SPICY','BUFFALO'],
+ 'SUMMER _____':['VACATION','SCHOOL','CAMP','LOVE','JOB'],
+ '_____ SUMMER':['HOT','LAST','ENDLESS','EARLY','LAZY'],
+ 'BASKETBALL _____':['COURT','GAME','HOOP','PLAYER','TEAM'],
+ '_____ BASKETBALL':['COLLEGE','HIGH SCHOOL','PRO','STREET','PICKUP'],
+ 'FOOTBALL _____':['GAME','PLAYER','FIELD','TEAM','SEASON'],
+ '_____ FOOTBALL':['FANTASY','COLLEGE','PRO','FLAG','TOUCH'],
+ 'MUSIC _____':['VIDEO','PLAYER','BOX','FESTIVAL','NOTE'],
+ '_____ MUSIC':['POP','COUNTRY','ROCK','CLASSICAL','LIVE']
+};
+const stopGuessWords=new Set('THE A AN AND OR OF TO IN ON AT AS BY FOR FROM WITH THAT THIS THESE THOSE HIS HER THEIR THEY YOU YOUR OUR MY I WE IT ITS IS WAS WERE BE BEEN BEING NOT ARE CAN COULD WOULD SHOULD WILL MAY MIGHT HAVE HAS HAD DO DOES DID VERY REALLY JUST SOME MORE MOST MUCH ANY ALL WHICH WHO WHOM HOW WHEN WHERE WHY HERE THERE ALSO THEN THAN WHILE INTO ABOUT UNDER OVER THROUGH BETWEEN AMONG UP DOWN OUT OFF SO YET IF BUT AFTER BEFORE'.split(' '));
+function validateTopAnswers(words){
+ const used=new Set(),valid=[];
+ for(const item of words||[]){
+  const word=String(typeof item==='string'?item:item?.word||'').trim().toUpperCase().replace(/[^A-Z\s'-]/g,'').replace(/\s+/g,' ');
+  const key=normalize(word);
+  if(!key||used.has(key)||word.length>23||word.split(' ').length>2||word.length<2||stopGuessWords.has(word))continue;
+  used.add(key);valid.push(word);
+  if(valid.length===TOP_ANSWERS_COUNT)break;
+ }
+ return valid;
+}
+function savedTopAnswers(prompt){
+ try{
+  const item=JSON.parse(localStorage.getItem(topCachePrefix+prompt)||'null');
+  if(Array.isArray(item)&&item.length===5)return validateTopAnswers(item);
+ }catch{}
+ return null;
+}
+async function lookupTopAnswers(prompt){
+ if(!isHost||!prompt||topAnswersPending.has(prompt)||topAnswersCache.has(prompt))return;
+ const local=savedTopAnswers(prompt);
+ if(local?.length===5){topAnswersCache.set(prompt,local);updateTopAnswerPanel();return}
+ topAnswersPending.add(prompt);
+ const prefix=prompt.endsWith('_____');
+ const anchor=prompt.replace('_____','').trim().toLowerCase();
+ const words=anchor.split(/\s+/);
+ const edge=prefix?words.at(-1):words[0];
+ const queries=[
+   new URLSearchParams({[prefix?'rel_bga':'rel_bgb']:edge,max:'50'}),
+   new URLSearchParams({[prefix?'lc':'rc']:anchor,max:'50'})
+ ];
+ const candidates=new Map();
+ try{
+  const responses=await Promise.all(queries.map(async(query)=>{
+   const controller=new AbortController();
+   const timeout=setTimeout(()=>controller.abort(),4800);
+   try{
+    const r=await fetch('https://api.datamuse.com/words?'+query.toString(),{signal:controller.signal,mode:'cors'});
+    return r.ok?await r.json():[];
+   }finally{clearTimeout(timeout)}
+  }));
+  for(let q=0;q<responses.length;q++){
+   for(const entry of responses[q]){
+    const candidate=validateTopAnswers([entry.word])[0];
+    if(!candidate||normalize(candidate)===normalize(edge))continue;
+    const key=normalize(candidate);
+    const score=Math.log1p(Math.max(1,Number(entry.score)||1))+(q===0?4:0);
+    candidates.set(key,{word:candidate,score:Math.max(candidates.get(key)?.score||0,score)});
+   }
+  }
+ }catch(error){console.info('Top answer lookup unavailable',error)}
+ // Curated common completions take priority when the corpus also supports them.
+ const curated=validateTopAnswers(topDefault[prompt]);
+ let ranked=[...candidates.values()].sort((a,b)=>b.score-a.score).map(x=>x.word);
+ if(curated.length){
+  // The hand-picked entries are specifically checked as natural phrase completions.
+  ranked=[...curated,...ranked];
+ }
+ let chosen=validateTopAnswers(ranked).slice(0,5);
+ // Avoid displaying generic invented words if the source could not supply five.
+ if(chosen.length<5&&curated.length===5)chosen=curated;
+ topAnswersCache.set(prompt,chosen);
+ if(chosen.length===5){
+  try{localStorage.setItem(topCachePrefix+prompt,JSON.stringify(chosen))}catch{}
+ }
+ topAnswersPending.delete(prompt);
+ updateTopAnswerPanel();
+}
+function topAnswersMarkup(){
+ return '<aside class="top-answers" id="topAnswers" aria-label="Suggested top answers"><div class="top-answers-heading">TOP ANSWERS <span>★</span></div><div id="topAnswersList" class="top-answers-list"><span class="top-answers-loading">Finding common answers…</span></div></aside>';
+}
+function updateTopAnswerPanel(){
+ const panel=$('topAnswers'),list=$('topAnswersList');
+ if(!panel||!list||!isHost)return;
+ const shown=(game.phase==='results'||game.phase==='ended')&&revealFinished();
+ panel.classList.toggle('visible',shown);
+ if(!shown)return;
+ const words=topAnswersCache.get(game.prompt)||[];
+ if(!words.length){
+  if(!topAnswersPending.has(game.prompt))lookupTopAnswers(game.prompt);
+  list.innerHTML='<span class="top-answers-loading">Finding common answers…</span>';
+  return;
+ }
+ const roster=playerArray(),submitted=submissions[game.round]||{};
+ list.innerHTML=words.map((answer,i)=>{
+  const matched=roster.filter(p=>similar(normalize(answer),normalize(submitted[p.id]?.text||''))&&normalize(submitted[p.id]?.text||''));
+  const style=matched.length===1?' style="--top-match:'+colorStyle(matched[0].color)+'"':'';
+  const cls=matched.length>1?' matched-gold':matched.length===1?' matched-player':'';
+  return '<div class="top-answer'+cls+'"'+style+'><span class="top-answer-rank">'+(i+1)+'</span><span class="top-answer-word">'+esc(answer)+'</span></div>';
+ }).join('');
+}
+
 function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+'</section>'}
 // Host-only auto-play setting: wait five full seconds after the reveal finishes.
 const AUTO_NEXT_DELAY_MS=5000;
@@ -286,7 +466,7 @@ function hostRender(){
    startLobbyBubbles();
  }else{
    stopLobbyBubbles();
-   shell('ROUND '+game.round,'<main class="host-fullscreen"><div class="host-fullstage">'+roundMarkup()+'</div><div class="host-bottom"><div class="host-bottom-status">'+(game.mode==='duo'?'<span>'+Number(game.matches||0)+'/10 matches</span><span>'+Number(game.streak||0)+' streak</span>':'<span>'+playerArray().length+' players</span>')+'</div><div class="host-bottom-controls">'+actions+'</div></div></main><div id="error" class="error hidden"></div>');
+   shell('ROUND '+game.round,'<main class="host-fullscreen"><div class="host-fullstage">'+roundMarkup()+(game.phase==='results'||game.phase==='ended'?topAnswersMarkup():'')+'</div><div class="host-bottom"><div class="host-bottom-status">'+(game.mode==='duo'?'<span>'+Number(game.matches||0)+'/10 matches</span><span>'+Number(game.streak||0)+' streak</span>':'<span>'+playerArray().length+' players</span>')+'</div><div class="host-bottom-controls">'+actions+'</div></div></main><div id="error" class="error hidden"></div>');
  }
  if($('start')){$('duration').value=oldInput||String(game.duration||45);$('start').onclick=()=>{unlockSound();if(playerArray().length<2)return alert('Need 2 players.');nextRound(Number($('duration').value))}}
  if($('next'))$('next').onclick=()=>{unlockSound();nextRound(game.duration||45)};
@@ -294,7 +474,7 @@ function hostRender(){
  if($('reveal'))$('reveal').onclick=()=>finishRound();
  if($('finish'))$('finish').onclick=()=>{if(revealFinished())updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined)};
  if($('restart'))$('restart').onclick=()=>updateGame(g=>({...g,phase:'lobby',round:0,roundKey:'0',used:{},scores:{},streak:0,bestStreak:0,matches:0}));
- updateClocks();paintReveal();syncRevealScreen();updateAutoNext();
+ updateClocks();paintReveal();syncRevealScreen();updateAutoNext();if(game.phase==='answering'||game.phase==='results')lookupTopAnswers(game.prompt);updateTopAnswerPanel();
 }
 function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h1>Looking for room…</h1><p>Make sure the host has created it.</p></main>');return}
  if(!me){playerJoin();return}
