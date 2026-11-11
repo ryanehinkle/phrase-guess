@@ -179,3 +179,22 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 .cinema-outcome{font-size:clamp(23px,min(5vw,7vh),64px)}
 @media(max-width:880px){.hostgrid{grid-template-columns:minmax(0,1fr) minmax(155px,25vw)}.hostgrid .qrwrap{flex-direction:column}.hostgrid .qrframe{flex-basis:auto}.hostgrid .side{padding:10px}.hostgrid .score{padding:7px}}
 @media(max-width:550px){.landing-mark{font-size:clamp(77px,24vw,142px)}.landing .actions{display:flex;flex-direction:row;gap:9px}.landing .actions button{min-width:0;padding:13px 14px}.hostgrid{grid-template-columns:minmax(0,1fr) minmax(125px,35vw)}.hostgrid .qrframe{width:115px;height:115px}.hostgrid .qrframe img{width:108px;height:108px}.hostgrid .score{font-size:11px}.hostgrid .qrwrap strong{font-size:21px}.cinema-answers{grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr))}}
+
+/* Clean, animated lobby — preserve just the waiting text and count. */
+.hostgrid .stage{position:relative}
+.jinx-lobby{position:relative;height:100%;width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden;isolation:isolate}
+.bubble-field{position:absolute;inset:clamp(8px,2vh,22px);overflow:hidden;pointer-events:none;z-index:0}
+.lobby-status{z-index:1;position:relative;display:grid;gap:10px;text-align:center;pointer-events:none;background:linear-gradient(90deg,transparent,#101a31e8 20%,#101a31e8 80%,transparent);padding:17px clamp(14px,3vw,35px);border-radius:22px}
+.lobby-wait{font-size:clamp(19px,2.4vw,32px);font-weight:850;letter-spacing:-.025em;color:#f2f5ff}
+.lobby-count{font-size:clamp(14px,1.4vw,20px);color:#aebee5;font-weight:750}
+.player-orb{position:absolute;top:0;left:0;z-index:1;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 30% 22%,color-mix(in srgb,var(--orb),white 37%),var(--orb) 68%,color-mix(in srgb,var(--orb),black 28%));color:#080e22;text-shadow:0 1px 1px #ffffff65;border:2px solid color-mix(in srgb,var(--orb),white 40%);font-size:clamp(12px,1.4vw,19px);font-weight:1000;padding:12px;white-space:normal;overflow-wrap:anywhere;line-height:1.05;box-shadow:inset -8px -10px 24px #02051c38,inset 8px 9px 18px #ffffff33,0 7px 25px color-mix(in srgb,var(--orb),transparent 67%);will-change:transform;animation:orbAppear .5s ease-out both}
+@keyframes orbAppear{from{opacity:0;scale:.4}to{opacity:1;scale:1}}
+/* Quiet zone stays dark, instead of a white QR tile. Light modules remain scannable. */
+.hostgrid .qrwrap{justify-content:flex-start}
+.hostgrid .qrframe,.qrframe{background:transparent!important;box-shadow:none!important;overflow:visible;border-radius:0!important;padding:0;display:grid;place-items:center}
+.hostgrid .qrframe{width:184px;height:184px;flex:0 0 184px}
+.qrframe img,.qrframe canvas,.qrframe svg{background:transparent!important;border-radius:0;max-width:100%;max-height:100%;object-fit:contain}
+.hostgrid .side{background:linear-gradient(150deg,#111c35ec,#0e1932f2)}
+@media(max-width:880px){.hostgrid .qrframe{width:min(160px,100%);height:160px;flex-basis:auto}}
+@media(max-width:550px){.hostgrid .qrframe{width:115px;height:115px}.player-orb{padding:7px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){.player-orb{animation:none}}
