@@ -3,7 +3,7 @@ import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase
 import {getDatabase,ref,onValue,get,push,runTransaction,set,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js';
 import {firebaseConfig} from './firebase-config.js';
 const app=initializeApp(firebaseConfig),db=getDatabase(app),$=id=>document.getElementById(id),root=$('app');
-const params=new URLSearchParams(location.search),room=(params.get('room')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6),isHost=params.has('host');
+const params=new URLSearchParams(location.search),room=(params.get('room')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6),isHost=params.has('host'),audioDevice=isHost||!room;
 const COLORS=['#f87171','#fb923c','#fbbf24','#a3e635','#4ade80','#2dd4bf','#22d3ee','#38bdf8','#60a5fa','#818cf8','#a78bfa','#c084fc','#e879f9','#f472b6','#fb7185','#84cc16','#34d399','#06b6d4','#2563eb','#7c3aed','#d946ef','#be123c','#a16207','#0d9488'];
 const key='phraseguess-v3-',gameRef=ref(db,'rooms/'+room+'/game'),playersRef=ref(db,'rooms/'+room+'/players');
 const random=()=>{let a=new Uint32Array(6);crypto.getRandomValues(a);return Array.from(a,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('')};
@@ -24,14 +24,15 @@ function home(){shell('','<main class="welcome landing"><div class="landing-mark
  $('create').onclick=()=>{unlockSound();const code=random(),secret=uid();sessionStorage.setItem(key+'host-'+code,secret);location.href=hostRoute(code)};
  $('joinBtn').onclick=()=>{$('joinForm').classList.toggle('hidden');$('roomcode').focus();queueFit()};
  $('joinForm').onsubmit=e=>{e.preventDefault();unlockSound();const code=$('roomcode').value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if(code.length===6)location.href=route(code)};
+ unlockSound();
 }
-async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(!hostToken){shell('HOST','<main class="card"><h1>Host session not found</h1><p>Start a new game from the home page on this device.</p><a href="?">Go home</a></main>');return}startListeners();try{
+async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(!hostToken){shell('HOST','<main class="card"><h1>Host session not found</h1><p>Start a new game from the home page on this device.</p><a href="?">Go home</a></main>');return}startListeners();unlockSound();try{
  await runTransaction(ref(db,'rooms/'+room+'/hostSecret'),v=>v===null?hostToken:undefined,{applyLocally:false});
  await runTransaction(ref(db,'rooms/'+room+'/createdAt'),v=>v===null?Date.now():undefined,{applyLocally:false});
  await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',hostToken,used:{},scores:{},duration:45,winningScore:25,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
-function startListeners(){onValue(gameRef,s=>{game=s.val()||{};if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost)hostCheck()},65)}
+function startListeners(){onValue(gameRef,s=>{game=s.val()||{};if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};if(me&&(!players[me.id]||players[me.id].name!==me.name)){me=null;localStorage.removeItem(key+'player-'+room)}render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost)hostCheck()},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck()}},65)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
 function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color).sort((a,b)=>(a.joined||0)-(b.joined||0))}
 
@@ -281,13 +282,16 @@ function render(){if(!room)return;if(isHost&&hostToken)hostRender();else if(!isH
 let lastTickKey='',tickAudio=null,soundReady=false;
 let correctAudio=null,incorrectAudio=null,lastResultCue='';
 function unlockSound(){
- // Phones are silent controllers; only the host display owns game audio.
- if(!isHost)return;
+ // Only the landing screen and host play audio; room participants stay silent.
+ if(!audioDevice)return;
  soundReady=true;
- if(!tickAudio){tickAudio=new Audio('data:audio/mpeg;base64,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');tickAudio.preload='auto';tickAudio.volume=.45}
- if(!correctAudio){correctAudio=new Audio('./assets/correct.mp3');correctAudio.preload='auto';correctAudio.volume=.7}
- if(!incorrectAudio){incorrectAudio=new Audio('./assets/incorrect.mp3');incorrectAudio.preload='auto';incorrectAudio.volume=.65}
- prepareRoundMusic();syncRoundMusic();
+ if(!tickAudio){tickAudio=new Audio('data:audio/mpeg;base64,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');tickAudio.preload='auto';tickAudio.volume=.31}
+ if(!correctAudio){correctAudio=new Audio('./assets/correct.mp3');correctAudio.preload='auto';correctAudio.volume=.9}
+ if(!incorrectAudio){incorrectAudio=new Audio('./assets/incorrect.mp3');incorrectAudio.preload='auto';incorrectAudio.volume=.6}
+ if(musicState==='blocked')musicState='off';
+ if(idleState==='blocked')idleState='off';
+ if(musicContext?.state==='suspended')musicContext.resume().catch(()=>{});
+ if(isHost)prepareRoundMusic();prepareIdleMusic();syncRoundMusic();
 }
 
 /*
@@ -297,11 +301,11 @@ function unlockSound(){
  * rejoining devices at approximately the same point in the track.
  */
 const MUSIC_PATH='./assets/round-music.mp3';
-const MUSIC_LEVEL=.32;
+const MUSIC_LEVEL=.32,IDLE_LEVEL=.37,IDLE_PATH='./assets/idle-music.mp3';
 let roundMusic=null,musicContext=null,musicGain=null,musicFilter=null;
 let musicRound='',musicState='off',musicFadeTimer=null,musicVolumeRaf=0,musicMissing=false;
 function prepareRoundMusic(){
- if(!isHost||roundMusic||musicMissing||!soundReady)return;
+ if(!audioDevice||roundMusic||musicMissing||!soundReady)return;
  const track=new Audio();
  track.preload='auto';track.loop=true;track.volume=0;track.src=MUSIC_PATH;
  track.addEventListener('error',()=>{musicMissing=true;musicState='off';track.pause();});
@@ -309,7 +313,7 @@ function prepareRoundMusic(){
  try{
    const Ctx=window.AudioContext||window.webkitAudioContext;
    if(Ctx){
-     musicContext=new Ctx();
+     musicContext=musicContext||new Ctx();
      const source=musicContext.createMediaElementSource(track);
      musicFilter=musicContext.createBiquadFilter();
      musicFilter.type='lowpass';musicFilter.frequency.value=18000;
@@ -355,7 +359,7 @@ function setMusicMix(volume,cutoff,seconds){
  }
 }
 function startRoundMusic(){
- if(!isHost||!soundReady||musicMissing)return;
+ if(!audioDevice||!soundReady||musicMissing)return;
  prepareRoundMusic();
  if(!roundMusic||musicMissing)return;
  cancelMusicFade();
@@ -371,7 +375,7 @@ function startRoundMusic(){
      const elapsed=Math.max(0,(now()-startAt)/1000);
      try{track.currentTime=(offset+elapsed)%duration}catch{}
    }
-   track.play().catch(()=>{ /* Playback can be blocked before a user gesture */ });
+   track.play().catch(()=>{if(musicState==='playing')musicState='blocked'});
    if(musicContext?.state==='suspended')musicContext.resume().catch(()=>{});
    setMusicMix(MUSIC_LEVEL,18000,.85);
  };
@@ -388,13 +392,105 @@ function endRoundMusic(){
    if(musicState==='fading'){track.pause();musicState='off'}
  },1150);
 }
+
+let idleMusic=null,idleGain=null,idleFilter=null,idleFadeTimer=null,idleVolumeRaf=0,idleState='off',idleMissing=false,idleStarted=false;
+function prepareIdleMusic(){
+ if(!audioDevice||!soundReady||idleMusic||idleMissing)return;
+ const track=new Audio(IDLE_PATH);track.preload='auto';track.loop=true;track.volume=0;
+ track.addEventListener('error',()=>{idleMissing=true;idleState='off';track.pause()});
+ idleMusic=track;
+ try{
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(Ctx){
+   musicContext=musicContext||new Ctx();
+   const source=musicContext.createMediaElementSource(track);
+   idleFilter=musicContext.createBiquadFilter();idleFilter.type='lowpass';idleFilter.frequency.value=18000;
+   idleGain=musicContext.createGain();idleGain.gain.value=0;
+   source.connect(idleFilter).connect(idleGain).connect(musicContext.destination);
+   track.volume=1;
+  }
+ }catch(error){console.warn('Ambient filter unavailable',error);idleFilter=null;idleGain=null;track.volume=0}
+ track.load();
+}
+function cancelIdleFade(){
+ if(idleFadeTimer){clearTimeout(idleFadeTimer);idleFadeTimer=null}
+ if(idleVolumeRaf){cancelAnimationFrame(idleVolumeRaf);idleVolumeRaf=0}
+}
+function setIdleMix(volume,cutoff,seconds){
+ if(!idleMusic)return;
+ const duration=Math.max(0,seconds||0);
+ if(idleGain&&musicContext){
+  const t=musicContext.currentTime,g=idleGain.gain;
+  g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);
+  g.linearRampToValueAtTime(volume,t+duration);
+  if(idleFilter){
+   const f=idleFilter.frequency;
+   f.cancelScheduledValues(t);f.setValueAtTime(Math.max(80,f.value),t);
+   f.exponentialRampToValueAtTime(Math.max(80,cutoff),t+Math.max(.01,duration));
+  }
+ }else{
+  const from=idleMusic.volume,started=performance.now();
+  const animate=stamp=>{
+   const x=Math.min(1,(stamp-started)/Math.max(1,duration*1000));
+   const eased=x*x*(3-2*x);
+   idleMusic.volume=Math.max(0,Math.min(1,from+(volume-from)*eased));
+   if(x<1)idleVolumeRaf=requestAnimationFrame(animate);
+   else idleVolumeRaf=0;
+  };
+  idleVolumeRaf=requestAnimationFrame(animate);
+ }
+}
+function startIdleMusic(){
+ if(!audioDevice||!soundReady||idleMissing||idleState==='playing'||idleState==='blocked')return;
+ prepareIdleMusic();if(!idleMusic||idleMissing)return;
+ cancelIdleFade();idleState='playing';
+ const begin=()=>{
+  if(idleState!=='playing'||(room&&game.phase==='answering'))return;
+  if(!idleStarted&&Number.isFinite(idleMusic.duration)&&idleMusic.duration>12){
+   try{idleMusic.currentTime=Math.random()*(idleMusic.duration-10)}catch{}
+   idleStarted=true;
+  }
+  const playing=idleMusic.play();
+  playing?.catch(()=>{if(idleState==='playing')idleState='blocked'});
+  if(musicContext?.state==='suspended')musicContext.resume().catch(()=>{});
+  setIdleMix(IDLE_LEVEL,18000,1.15);
+ };
+ if(idleMusic.readyState>=1)begin();
+ else idleMusic.addEventListener('loadedmetadata',begin,{once:true});
+}
+function endIdleMusic(){
+ if(!idleMusic||idleState!=='playing')return;
+ cancelIdleFade();idleState='fading';
+ setIdleMix(0,1100,1.05);
+ idleFadeTimer=setTimeout(()=>{
+  idleFadeTimer=null;
+  if(idleState==='fading'){idleMusic.pause();idleState='off'}
+ },1180);
+}
+function currentMusicTarget(){
+ if(!room)return 'idle';
+ if(game.phase==='answering')return 'round';
+ if(game.phase==='results'){
+  const typingEnd=REVEAL_LEAD_MS+Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)))*REVEAL_LETTER_MS;
+  return revealElapsed()>=typingEnd+350?'idle':'quiet';
+ }
+ return 'idle';
+}
 function syncRoundMusic(){
- if(!isHost||!soundReady)return;
- if(game.phase!=='answering'){endRoundMusic();return}
- const id=room+':'+game.round;
- if(musicRound===id&&musicState==='playing')return;
- musicRound=id;
- startRoundMusic();
+ if(!audioDevice||!soundReady)return;
+ const target=currentMusicTarget();
+ if(target==='round'){
+  endIdleMusic();
+  const id=room+':'+game.round;
+  if(musicRound!==id||(musicState!=='playing'&&musicState!=='blocked')){
+   musicRound=id;
+   startRoundMusic();
+  }
+ }else{
+  endRoundMusic();
+  if(target==='idle')startIdleMusic();
+  else endIdleMusic();
+ }
 }
 
 function playResultCue(elapsed){
@@ -502,4 +598,5 @@ window.addEventListener('resize',queueFit,{passive:true});
 window.visualViewport?.addEventListener('resize',queueFit,{passive:true});
 window.visualViewport?.addEventListener('scroll',()=>{if(keyboardFocus)positionFocusedField()},{passive:true});
 
+document.addEventListener('pointerdown',()=>{if(audioDevice&&(!soundReady||musicState==='blocked'||idleState==='blocked'))unlockSound()},{passive:true});
 if(!room)home();else if(isHost)hostInit();else playerInit();
