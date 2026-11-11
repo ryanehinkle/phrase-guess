@@ -241,7 +241,7 @@ function hostRender(){
  game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">Final results</button>':'<button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
  '<button id="restart" class="primary">Play again</button>';
  if(lobby){
-   shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<h3>Players</h3>'+scoreboard()+'<div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
+   shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
    drawQR();
    startLobbyBubbles();
  }else{
