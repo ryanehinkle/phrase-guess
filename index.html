@@ -1,1 +1,29 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090e1e"><title>JINX! — Word Match</title><link rel="stylesheet" href="./style.css"></head><body><div id="app"></div><script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script><script type="module" src="./game.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090e1e">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <title>JINX! — Word Match</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
+  <script type="module">
+    // Fresh local JS/CSS on every page load, including returning iOS Safari tabs.
+    // This doesn't touch localStorage/sessionStorage, room codes or player identities.
+    const version = Date.now().toString(36);
+    const stylesheet = document.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = './style.css?v=' + version;
+    const stylesReady = new Promise(resolve => {
+      stylesheet.onload = resolve;
+      stylesheet.onerror = resolve;
+    });
+    document.head.append(stylesheet);
+    await stylesReady;
+    await import('./game.js?v=' + version);
+  </script>
+</body>
+</html>
