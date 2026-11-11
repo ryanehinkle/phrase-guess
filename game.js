@@ -143,7 +143,7 @@ function syncRevealScreen(){
 }
 
 function spawnConfetti(){
-  const stage=document.querySelector('.stage')||document.querySelector('.mobilecenter');
+  const stage=document.querySelector('.host-fullstage')||document.querySelector('.stage')||document.querySelector('.mobilecenter');
   if(!stage||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   const layer=document.createElement('div');layer.className='confetti-layer';layer.setAttribute('aria-hidden','true');
   const choices=['#ffd36f','#76a9ff','#7bf0ba','#f9a0d2','#bd9eff','#ffffff'];
