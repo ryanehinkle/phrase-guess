@@ -512,6 +512,7 @@ function unlockSound(){
  // Only the landing screen and host play audio; room participants stay silent.
  if(!audioDevice)return;
  soundReady=true;
+  prepareRevealAudio();
  if(!tickAudio){tickAudio=new Audio('data:audio/mpeg;base64,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');tickAudio.preload='auto';tickAudio.volume=.31}
  if(!correctAudio){correctAudio=new Audio('./assets/correct.mp3?v=2');correctAudio.preload='auto';correctAudio.volume=.9}
  if(!incorrectAudio){incorrectAudio=new Audio('./assets/incorrect.mp3');incorrectAudio.preload='auto';incorrectAudio.volume=.6}
@@ -612,12 +613,12 @@ function startRoundMusic(){
 function endRoundMusic(){
  if(!roundMusic||musicState!=='playing')return;
  cancelMusicFade();musicState='fading';
- setMusicMix(0,350,1.05);
+ setMusicMix(0,350,.48);
  const track=roundMusic;
  musicFadeTimer=setTimeout(()=>{
    musicFadeTimer=null;
    if(musicState==='fading'){track.pause();musicState='off'}
- },1150);
+ },560);
 }
 
 let idleMusic=null,idleGain=null,idleFilter=null,idleFadeTimer=null,idleVolumeRaf=0,idleState='off',idleMissing=false,idleStarted=false;
@@ -720,40 +721,80 @@ function syncRoundMusic(){
  }
 }
 
-// Soft Web Audio effects synchronized with the shared reveal clock.
-let lastRevealSoundId='',lastRevealLetter=0;
+// Host-only procedural effects; a shared compressor keeps the two cues balanced.
+let revealBus=null,lastRevealSoundId='',lastRevealLetter=0;
+function prepareRevealAudio(){
+ if(!isHost||!soundReady)return null;
+ try{
+  if(!musicContext){
+   const Ctx=window.AudioContext||window.webkitAudioContext;
+   if(!Ctx)return null;
+   musicContext=new Ctx();
+  }
+  const ctx=musicContext;
+  if(!revealBus){
+   const compressor=ctx.createDynamicsCompressor();
+   compressor.threshold.value=-22;compressor.knee.value=12;
+   compressor.ratio.value=3;compressor.attack.value=.005;compressor.release.value=.16;
+   revealBus=ctx.createGain();revealBus.gain.value=.88;
+   revealBus.connect(compressor).connect(ctx.destination);
+  }
+  if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+  return ctx.state==='running'?ctx:null;
+ }catch(e){console.warn('Reveal audio unavailable',e);return null}
+}
+function playSuspenseDrone(ctx,elapsed){
+ // The Firebase render can arrive after the reveal starts; use remaining intro time.
+ const remaining=(REVEAL_LEAD_MS-elapsed)/1000;
+ if(remaining<=.12)return;
+ const duration=Math.min(1.25,remaining-.04);
+ const t=ctx.currentTime,filter=ctx.createBiquadFilter(),envelope=ctx.createGain();
+ filter.type='lowpass';
+ filter.frequency.setValueAtTime(570,t);
+ filter.frequency.exponentialRampToValueAtTime(270,t+duration);
+ envelope.gain.setValueAtTime(.0001,t);
+ envelope.gain.exponentialRampToValueAtTime(.105,t+Math.min(.18,duration*.4));
+ envelope.gain.exponentialRampToValueAtTime(.0001,t+duration);
+ filter.connect(envelope).connect(revealBus);
+ // Low-mid frequencies remain audible on laptop and TV speakers.
+ for(const [frequency,wave,level] of [[164,'sine',1],[246,'triangle',.4]]){
+  const osc=ctx.createOscillator(),voice=ctx.createGain();
+  osc.type=wave;voice.gain.value=level;
+  osc.frequency.setValueAtTime(frequency,t);
+  osc.frequency.exponentialRampToValueAtTime(frequency*.9,t+duration);
+  osc.connect(voice).connect(filter);
+  osc.start(t);osc.stop(t+duration+.01);
+ }
+}
+function playTypingPulse(ctx,letterCount){
+ const t=ctx.currentTime,osc=ctx.createOscillator(),gain=ctx.createGain();
+ const variation=[0,40,-30,65,-18][letterCount%5];
+ osc.type='triangle';
+ osc.frequency.setValueAtTime(770+variation,t);
+ osc.frequency.exponentialRampToValueAtTime(560+variation,t+.095);
+ gain.gain.setValueAtTime(.0001,t);
+ gain.gain.exponentialRampToValueAtTime(.065,t+.012);
+ gain.gain.exponentialRampToValueAtTime(.0001,t+.105);
+ osc.connect(gain).connect(revealBus);
+ osc.start(t);osc.stop(t+.11);
+}
 function playRevealSoundscape(elapsed,letterCount){
- if(!isHost||!soundReady||!musicContext||musicContext.state!=='running')return;
+ if(!isHost||!soundReady)return;
  const id=room+':'+(game.sessionId||'legacy')+':'+game.round+':'+game.revealedAt;
- const ctx=musicContext;
+ const ctx=prepareRevealAudio();if(!ctx)return;
  if(lastRevealSoundId!==id){
   lastRevealSoundId=id;lastRevealLetter=0;
-  // Only play the suspense swell on a freshly opened reveal, not on reconnect.
-  if(elapsed<300){
-   const t=ctx.currentTime,filter=ctx.createBiquadFilter(),gain=ctx.createGain();
-   filter.type='lowpass';filter.frequency.setValueAtTime(180,t);filter.frequency.exponentialRampToValueAtTime(105,t+1.2);
-   gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.035,t+.24);gain.gain.exponentialRampToValueAtTime(.0001,t+1.25);
-   filter.connect(gain).connect(ctx.destination);
-   for(const [frequency,wave] of [[78,'sine'],[117,'triangle']]){
-    const osc=ctx.createOscillator();osc.type=wave;
-    osc.frequency.setValueAtTime(frequency,t);osc.frequency.exponentialRampToValueAtTime(frequency*.85,t+1.25);
-    osc.connect(filter);osc.start(t);osc.stop(t+1.27);
-   }
-  }
+  if(elapsed<REVEAL_LEAD_MS)playSuspenseDrone(ctx,elapsed);
  }
  const max=Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)));
  const typing=elapsed>=REVEAL_LEAD_MS&&elapsed<REVEAL_LEAD_MS+max*REVEAL_LETTER_MS;
  if(!typing||letterCount<=lastRevealLetter)return;
  const skipped=letterCount-lastRevealLetter;
  lastRevealLetter=letterCount;
- // One light digital pulse per two characters; don't fire a burst on tab resume.
- if(skipped!==1||letterCount%2!==0)return;
- const t=ctx.currentTime,osc=ctx.createOscillator(),gain=ctx.createGain();
- osc.type='triangle';osc.frequency.setValueAtTime(680+(letterCount%5)*43,t);
- osc.frequency.exponentialRampToValueAtTime(520+(letterCount%5)*43,t+.075);
- gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.014,t+.008);
- gain.gain.exponentialRampToValueAtTime(.0001,t+.08);
- osc.connect(gain).connect(ctx.destination);osc.start(t);osc.stop(t+.085);
+ // Light electronic pulse at the first character, then about every 190ms.
+ // Skip catch-up bursts when returning from a background tab.
+ if(skipped>3||(letterCount!==1&&letterCount%2===0))return;
+ playTypingPulse(ctx,letterCount);
 }
 function playResultCue(elapsed){
  if(!isHost)return;
