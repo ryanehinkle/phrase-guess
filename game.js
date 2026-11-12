@@ -146,7 +146,7 @@ function mobileScoreboard(){
   '<span class="score-player">'+esc(p.name)+'</span>'+
   '<b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+visibleScore(p.id)+'</b></div>'
  ).join('');
- return '<div class="mobile-scoreboard" aria-label="Player scores"><div class="mobile-scoreboard-label">SCORES</div>'+
+ return '<div class="mobile-scoreboard" aria-label="Player scores">'+
   '<div class="mobile-scoreboard-scroll"><div class="mobile-scoreboard-inner">'+scores+'</div></div></div>';
 }
 function finishScoreboardReveal(){
