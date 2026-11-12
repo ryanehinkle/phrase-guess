@@ -42,7 +42,7 @@ function home(){shell('','<main class="welcome landing"><div class="landing-mark
 async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(!hostToken){shell('HOST','<main class="card"><h1>Host session not found</h1><p>Start a new game from the home page on this device.</p><a href="?">Go home</a></main>');return}startListeners();unlockSound();try{
  await runTransaction(ref(db,'rooms/'+room+'/hostSecret'),v=>v===null?hostToken:undefined,{applyLocally:false});
  await runTransaction(ref(db,'rooms/'+room+'/createdAt'),v=>v===null?Date.now():undefined,{applyLocally:false});
- await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',sessionId:uid(),hostToken,used:{},scores:{},duration:45,winningScore:25,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
+ await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',sessionId:uid(),hostToken,used:{},scores:{},duration:45,winningScore:50,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
 function syncPlayerSession(){
@@ -126,8 +126,26 @@ function startLobbyBubbles(){
  };
  bubbleAnimation=requestAnimationFrame(tick);
 }
-function scoreboard(){if(game.mode==='duo'&&game.phase!=='lobby')return '<div class="duo-stats"><div><b>'+Number(game.matches||0)+'</b><span>matches / 10</span></div><div><b>'+Number(game.streak||0)+'</b><span>streak</span></div><div><b>'+Number(game.bestStreak||0)+'</b><span>best streak</span></div></div>';return '<div class="scores">'+playerArray().slice().sort((a,b)=>(game.scores?.[b.id]||0)-(game.scores?.[a.id]||0)).map((p,i)=>'<div class="score"><span class="rank">'+(i+1)+'</span><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span><b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+Number(game.scores?.[p.id]||0)+'</b></div>').join('')+'</div>'}
-
+function rankedPlayers(){
+ return playerArray().slice().sort((a,b)=>(Number(game.scores?.[b.id]||0)-Number(game.scores?.[a.id]||0))||a.name.localeCompare(b.name));
+}
+function scoreboard(){
+ return '<div class="round-scoreboard" aria-label="Player scores">'+rankedPlayers().map((p,i)=>
+  '<div class="round-score"><span class="rank">'+(i+1)+'</span><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span><b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+Number(game.scores?.[p.id]||0)+'</b></div>'
+ ).join('')+'</div>';
+}
+function mobileScoreboard(){
+ return '<div class="mobile-scoreboard" aria-label="Current scores">'+rankedPlayers().map((p,i)=>
+  '<div class="mobile-score-item'+(me?.id===p.id?' mine':'')+'"><span class="score-place">'+(i+1)+'</span><i style="background:'+colorStyle(p.color)+'"></i><span class="score-player">'+esc(p.name)+'</span><b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+Number(game.scores?.[p.id]||0)+'</b></div>'
+ ).join('')+'</div>';
+}
+function pointsDetail(detail){
+ if(!detail)return '';
+ const parts=[];
+ if(Number(detail.rank)>0&&Number(detail.topPoints)>0)parts.push('Top #'+Number(detail.rank)+' +'+Number(detail.topPoints));
+ if(Number(detail.matchPoints)>0)parts.push('Jinx +'+Number(detail.matchPoints));
+ return parts.join(' · ');
+}
 // Reveal timing is derived from the shared Firebase timestamp, so every phone
 // animates together, including a phone that reconnects mid-reveal.
 const REVEAL_LEAD_MS=1350, REVEAL_LETTER_MS=95, REVEAL_AFTER_MS=1700;
@@ -137,7 +155,7 @@ function displayAnswer(value){
 }
 function revealEntries(){
   const answers=submissions[game.roundKey||String(game.round)]||{};
-  return playerArray().map(p=>({...p,answer:displayAnswer(answers[p.id]?.text||''),points:Number(game.lastPoints?.[p.id]||0)}));
+  return playerArray().map(p=>({...p,answer:displayAnswer(answers[p.id]?.text||''),points:Number(game.lastPoints?.[p.id]||0),breakdown:game.lastBreakdown?.[p.id]||null}));
 }
 function phraseSegments(answer){
  const parts=String(game.prompt||'').split('_____');
@@ -157,10 +175,19 @@ function revealDuration(){
 function revealElapsed(){return game.revealedAt ? Math.max(0,now()-Number(game.revealedAt)) : Number.MAX_SAFE_INTEGER}
 function revealFinished(){return !['results','ended'].includes(game.phase)||revealElapsed()>=revealDuration()}
 function responseList(){
-  const entries=revealEntries(),part=String(game.prompt||'').split('_____');
-  const before=esc((part[0]||'').trim()),after=esc((part.slice(1).join('_____')||'').trim());
-  const cards=entries.map(p=>'<div class="reveal reveal-line" data-reveal-answer="'+esc(p.answer)+'" data-reveal-player="'+esc(p.id)+'" style="--player:'+colorStyle(p.color)+'"><div class="reveal-owner"><i></i><span class="rname">'+esc(p.name)+'</span></div><div class="completed-phrase">'+(before?'<span class="phrase-fixed">'+before+'</span> ':'')+'<span class="typed-slot"><span class="ranswer" aria-label="Answer"></span><span class="typing-caret" aria-hidden="true"></span></span>'+(after?' <span class="phrase-fixed">'+after+'</span>':'')+'</div><b class="reveal-points '+(p.points===3?'bigpoints':p.points?'somepoints':'zeropoints')+'" data-earned="'+p.points+'">'+(p.points?'+'+p.points:'—')+'</b></div>').join('');
-  return '<div class="reveal-intro" id="revealIntro">GET READY TO REVEAL</div><div class="reveals typed-reveals">'+cards+'</div><div class="match-celebration" id="matchCelebration" aria-live="polite"></div>';
+ const entries=revealEntries(),part=String(game.prompt||'').split('_____');
+ const before=esc((part[0]||'').trim()),after=esc((part.slice(1).join('_____')||'').trim());
+ const cards=entries.map(p=>
+  '<div class="reveal reveal-line" data-reveal-answer="'+esc(p.answer)+'" data-reveal-player="'+esc(p.id)+'" style="--player:'+colorStyle(p.color)+'">'+
+  '<div class="reveal-owner"><i></i><span class="rname">'+esc(p.name)+'</span></div>'+
+  '<div class="completed-phrase">'+(before?'<span class="phrase-fixed">'+before+'</span> ':'')+
+  '<span class="typed-slot"><span class="ranswer" aria-label="Answer"></span><span class="typing-caret" aria-hidden="true"></span></span>'+
+  (after?' <span class="phrase-fixed">'+after+'</span>':'')+'</div>'+
+  '<div class="reveal-score"><span class="reveal-breakdown">'+esc(pointsDetail(p.breakdown))+'</span>'+
+  '<b class="reveal-points '+(p.breakdown?.matchPoints?'bigpoints':p.points?'somepoints':'zeropoints')+'" data-earned="'+p.points+'">'+
+  (p.points?'+'+p.points:'—')+'</b></div></div>'
+ ).join('');
+ return '<div class="reveal-intro" id="revealIntro">GET READY TO REVEAL</div><div class="reveals typed-reveals">'+cards+'</div><div class="match-celebration" id="matchCelebration" aria-live="polite"></div>';
 }
 let celebratedRound='';
 function paintReveal(){
@@ -210,9 +237,10 @@ function paintReveal(){
   const next=$('next');if(next)next.disabled=!done;
   const finish=$('finish');if(finish)finish.disabled=!done;
   const celebration=$('matchCelebration');
-  const matching=revealEntries().filter(p=>p.points>0);
+  const matching=revealEntries().filter(p=>Number(p.breakdown?.matchPoints||0)>0);
+  const scored=revealEntries().some(p=>p.points>0);
   if(celebration){
-    celebration.textContent=done?(game.mode==='duo'?(game.lastMatch?'JINX! · '+game.streak+' IN A ROW':'NO MATCH'):(matching.length?matching.length+' MATCHED':'NO MATCHES')):'';
+    celebration.textContent=done?(game.mode==='duo'?(game.lastMatch?'JINX! · '+game.streak+' IN A ROW':'NO MATCH'):(matching.length?matching.length+' MATCHED':scored?'TOP ANSWER SCORED':'NO POINTS')):'';
     celebration.classList.toggle('visible',done);
   }
   const id=game.round+'-'+game.revealedAt;
@@ -229,7 +257,7 @@ function syncRevealScreen(){
  if(document.getElementById('revealScreen')?.dataset.key===id)return;
  document.getElementById('revealScreen')?.remove();
  const el=document.createElement('div');el.id='revealScreen';el.dataset.key=id;el.className='cinema';
- el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(game.mode==='duo'?(game.lastMatch?'JINX!':'NOT THIS TIME'):(revealEntries().some(p=>p.points>0)?'MATCH!':'NO MATCH'))+'</div></div>';
+ el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(game.mode==='duo'?(game.lastMatch?'JINX!':'NOT THIS TIME'):(game.lastMatch?'MATCH!':'NO MATCH'))+'</div></div>';
  document.body.append(el);paintReveal();
 }
 
@@ -249,10 +277,35 @@ function spawnConfetti(){
   stage.append(layer);
   setTimeout(()=>layer.remove(),4300);
 }
-function compute(roster,answers){const clusters=[];const points={};for(const p of roster){const text=answers[p.id]?.text;if(!text)continue;const n=normalize(text);if(!n)continue;let group=clusters.find(g=>g.keys.some(k=>similar(n,k)));if(!group){group={keys:[],ids:[]};clusters.push(group)}group.keys.push(n);group.ids.push(p.id)}for(const g of clusters)for(const id of g.ids)points[id]=g.ids.length===2?3:g.ids.length>=3?1:0;return {points,clusters}}
+function compute(roster,answers,topAnswers){
+ const ranked=validateTopAnswers(topAnswers);
+ if(ranked.length!==TOP_ANSWERS_COUNT)throw Error('This round needs five ranked answers to score.');
+ const rankKeys=ranked.map(normalize),clusters=[],points={},breakdown={};
+ for(const p of roster){
+  const n=normalize(answers[p.id]?.text||'');
+  if(!n){points[p.id]=0;breakdown[p.id]={rank:0,topPoints:0,matchPoints:0};continue}
+  let group=clusters.find(g=>g.keys.some(k=>similar(n,k)));
+  if(!group){group={keys:[],ids:[]};clusters.push(group)}
+  group.keys.push(n);group.ids.push(p.id);
+  const index=rankKeys.indexOf(n);
+  const topPoints=index<0?0:TOP_ANSWERS_COUNT-index;
+  breakdown[p.id]={rank:index<0?0:index+1,topPoints,matchPoints:0};
+  points[p.id]=topPoints;
+ }
+ const matchedIds=[];
+ for(const group of clusters){
+  if(group.ids.length<2)continue;
+  for(const id of group.ids){
+   breakdown[id].matchPoints=5;
+   points[id]+=5;
+   matchedIds.push(id);
+  }
+ }
+ return {points,breakdown,clusters,matchedIds,hasMatch:matchedIds.length>0};
+}
 function answerCount(){const ans=submissions[game.roundKey||String(game.round)]||{};return playerArray().filter(p=>ans[p.id]?.text).length}
 
-// Top Answers are corpus-informed suggestions, NOT survey responses or scoring rules.
+// Top Answers are curated ranked completions worth 5–1 points; matching adds 5.
 // Datamuse uses Google Books Ngram collocations and dictionary/WordNet relations.
 // Query when each prompt begins so the list is already available when it is revealed.
 const TOP_ANSWERS_COUNT=5;
@@ -290,6 +343,7 @@ async function ensureTopAnswers(){
 }
 function lookupTopAnswers(prompt){
  if(!isHost||!prompt)return [];
+ if(game.prompt===prompt&&Array.isArray(game.topAnswers)&&game.topAnswers.length===TOP_ANSWERS_COUNT)return game.topAnswers;
  if(!topAnswerBank){ensureTopAnswers();return []}
  if(topAnswersCache.has(prompt))return topAnswersCache.get(prompt);
  const answers=validateTopAnswers(topAnswerBank[prompt]);
@@ -300,7 +354,7 @@ function lookupTopAnswers(prompt){
  return answers;
 }
 function topAnswersMarkup(){
- return '<aside class="top-answers" id="topAnswers" aria-label="Suggested popular phrase completions" title="Common phrase suggestions, not survey results"><div class="top-answers-heading">TOP ANSWERS <span>★</span></div><div id="topAnswersList" class="top-answers-list"><span class="top-answers-loading">Finding familiar phrases…</span></div></aside>';
+ return '<aside class="top-answers" id="topAnswers" aria-label="Suggested popular phrase completions" title="Ranked completions: +5 to +1 points, plus +5 for Jinx"><div class="top-answers-heading">TOP ANSWERS <span>★</span></div><div id="topAnswersList" class="top-answers-list"><span class="top-answers-loading">Finding familiar phrases…</span></div></aside>';
 }
 function updateTopAnswerPanel(){
  const panel=$('topAnswers'),list=$('topAnswersList');
@@ -328,7 +382,7 @@ function updateTopAnswerPanel(){
  if(list.dataset.renderKey!==renderKey){
   list.dataset.renderKey=renderKey;
   list.innerHTML=ranks.map(({answer,cls,color,i})=>
-   '<div class="top-answer '+cls+'" data-top-answer="'+esc(answer)+'" data-rank="'+i+'"'+(color?' style="--top-match:'+color+'"':'')+'><span class="top-answer-rank">'+(i+1)+'</span><span class="top-answer-word"></span><span class="top-answer-caret" aria-hidden="true"></span></div>'
+   '<div class="top-answer '+cls+'" data-top-answer="'+esc(answer)+'" data-rank="'+i+'"'+(color?' style="--top-match:'+color+'"':'')+'><span class="top-answer-rank">'+(i+1)+'</span><span class="top-answer-word"></span><span class="top-answer-caret" aria-hidden="true"></span><span class="top-answer-value">+'+(TOP_ANSWERS_COUNT-i)+'</span></div>'
   ).join('');
  }
  // The panel arrives after the cinema clears, then types in five staggered
@@ -348,28 +402,37 @@ function updateTopAnswerPanel(){
  }
 }
 
-function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+'</section>'}
+function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+scoreboard()+'</section>'}
 
 let recapSelectedRound=0;
 function recapHistory(){
  const entries=Object.values(game.history||{}).filter(x=>x&&Number(x.round)>0).sort((a,b)=>Number(a.round)-Number(b.round));
  if(!entries.length&&game.round&&game.phase==='ended'){
   const answers=submissions[game.roundKey||String(game.round)]||{};
-  return [{round:game.round,prompt:game.prompt,participants:playerArray().map(p=>({id:p.id,name:p.name,color:p.color})),points:game.lastPoints||{},answers:Object.fromEntries(Object.entries(answers).map(([id,a])=>[id,a?.text||''])),match:!!game.lastMatch}];
+  return [{round:game.round,prompt:game.prompt,topAnswers:game.topAnswers||[],participants:playerArray().map(p=>({id:p.id,name:p.name,color:p.color})),points:game.lastPoints||{},breakdown:game.lastBreakdown||{},answers:Object.fromEntries(Object.entries(answers).map(([id,a])=>[id,a?.text||''])),match:!!game.lastMatch}];
  }
  return entries;
 }
+function hasRoundMatch(entry){
+ if(!entry)return false;
+ if(typeof entry.match==='boolean')return entry.match;
+ return Object.values(entry.breakdown||{}).some(x=>Number(x?.matchPoints||0)>0);
+}
 function recapDetails(entry){
  if(!entry)return '<div class="recap-empty">No round history recorded yet.</div>';
- const roster=Array.isArray(entry.participants)&&entry.participants.length?entry.participants:playerArray(),answers=entry.answers||{},points=entry.points||{};
- const matching=Object.values(points).filter(x=>Number(x)>0).length>=2;
- return '<div class="recap-detail-heading"><span class="recap-round-kicker">ROUND '+Number(entry.round)+'</span><span class="recap-round-result '+(matching?'is-match':'')+'">'+(matching?'MATCH':'NO MATCH')+'</span></div>'+
+ const roster=Array.isArray(entry.participants)&&entry.participants.length?entry.participants:playerArray(),
+  answers=entry.answers||{},points=entry.points||{};
+ const matching=hasRoundMatch(entry);
+ return '<div class="recap-detail-heading"><span class="recap-round-kicker">ROUND '+Number(entry.round)+'</span><span class="recap-round-result '+(matching?'is-match':'')+'">'+(matching?'JINX MATCH':'NO JINX')+'</span></div>'+
  '<div class="recap-prompt">'+esc(entry.prompt||'')+'</div><div class="recap-answer-grid">'+
- roster.map(p=>'<div class="recap-player-answer"><i style="background:'+colorStyle(p.color)+'"></i><span class="recap-player-name">'+esc(p.name)+'</span><b>'+esc(answers[p.id]||'—')+'</b><strong>'+(Number(points[p.id]||0)>0?'+'+Number(points[p.id]):'—')+'</strong></div>').join('')+
+ roster.map(p=>'<div class="recap-player-answer"><i style="background:'+colorStyle(p.color)+'"></i>'+
+ '<span class="recap-player-name">'+esc(p.name)+'</span><b>'+esc(answers[p.id]||'—')+'</b>'+
+ '<span class="recap-points-detail">'+esc(pointsDetail(entry.breakdown?.[p.id]))+'</span>'+
+ '<strong>'+(Number(points[p.id]||0)>0?'+'+Number(points[p.id]):'—')+'</strong></div>').join('')+
  '</div>';
 }
 function recapMarkup(){
- const history=recapHistory(),rounds=history.length,matches=history.filter(x=>Object.values(x.points||{}).filter(n=>Number(n)>0).length>=2).length;
+ const history=recapHistory(),rounds=history.length,matches=history.filter(hasRoundMatch).length;
  const rate=rounds?Math.round(matches/rounds*100):0;
  const roster=playerArray().sort((a,b)=>Number(game.scores?.[b.id]||0)-Number(game.scores?.[a.id]||0));
  const best=game.mode==='duo'?Number(game.bestStreak||0):Math.max(0,...Object.values(game.scores||{}).map(Number));
@@ -378,20 +441,20 @@ function recapMarkup(){
  ]:[
   [rounds,'Rounds played'],[matches,'Matched rounds'],[rate+'%','Match rate'],[best,'High score']
  ];
- const max=game.mode==='duo'?1:Math.max(1,...history.map(x=>Object.values(x.points||{}).reduce((a,b)=>a+Number(b||0),0)));
+ const max=Math.max(1,...history.map(x=>Object.values(x.points||{}).reduce((a,b)=>a+Number(b||0),0)));
  const bars=history.map(x=>{
   const points=Object.values(x.points||{}).reduce((a,b)=>a+Number(b||0),0);
-  const hit=Object.values(x.points||{}).filter(z=>Number(z)>0).length>=2;
-  const level=game.mode==='duo'?(hit?100:13):Math.max(13,points/max*100);
+  const hit=hasRoundMatch(x);
+  const level=Math.max(10,points/max*100);
   return '<button class="recap-bar'+(hit?' hit':'')+'" data-recap-round="'+x.round+'" title="Round '+x.round+': '+(hit?'match':'no match')+'" aria-label="View round '+x.round+'"><span class="recap-bar-track"><span class="recap-bar-fill" style="height:'+level+'%"></span></span><small>'+x.round+'</small></button>';
  }).join('');
  if(!recapSelectedRound||!history.some(x=>x.round===recapSelectedRound))recapSelectedRound=history.at(-1)?.round||0;
  return '<section class="recap-screen"><div class="recap-header"><div><div class="eyebrow">GAME RECAP</div><h1>'+(game.mode==='duo'?(game.matches>=5?'ON THE SAME WAVELENGTH':'THAT WAS A GOOD RUN'):'THAT’S A WRAP!')+'</h1></div><div class="recap-leader">'+(game.mode==='duo'?'MATCH CHALLENGE':(roster.length?'TOP PLAYER · '+esc(roster[0].name):'FINAL SCORES'))+'</div></div>'+
  '<div class="recap-metrics">'+totals.map(([v,label])=>'<div class="recap-metric"><strong>'+v+'</strong><span>'+label+'</span></div>').join('')+'</div>'+
  '<div class="recap-lower"><div class="recap-chart-panel"><div class="recap-panel-heading"><b>ROUND BY ROUND</b><span>Tap any round</span></div><div class="recap-bars">'+bars+'</div>'+
- (game.mode==='duo'?'<div class="recap-legend"><i></i> Jinx! &nbsp;&nbsp; <i class="miss"></i> No match</div>':'<div class="recap-legend">Bars show points earned each round</div>')+
+ '<div class="recap-legend">Bar height = points · Purple = Jinx</div>'+
  '</div><div class="recap-detail-panel"><div class="recap-panel-heading"><b>ROUND BREAKDOWN</b><div class="recap-nav"><button id="recapPrev" aria-label="Previous round">‹</button><button id="recapNext" aria-label="Next round">›</button></div></div><div id="recapDetail">'+recapDetails(history.find(x=>x.round===recapSelectedRound))+'</div></div></div>'+
- (game.mode==='classic'?'<div class="recap-ranking">'+roster.slice(0,5).map((p,i)=>'<span><i style="background:'+colorStyle(p.color)+'"></i>'+esc(p.name)+' <b>'+Number(game.scores?.[p.id]||0)+'</b></span>').join('')+'</div>':'')+
+ '<div class="recap-ranking">'+roster.slice(0,5).map((p,i)=>'<span><i style="background:'+colorStyle(p.color)+'"></i>'+esc(p.name)+' <b>'+Number(game.scores?.[p.id]||0)+' pts</b></span>').join('')+'</div>'+
  '</section>';
 }
 function updateRecapSelection(){
@@ -407,12 +470,12 @@ function updateRecapSelection(){
  if($('recapNext'))$('recapNext').disabled=n>=history.length-1;
 }
 function mobileRecapMarkup(){
- const history=recapHistory(),matched=history.filter(x=>Object.values(x.points||{}).filter(n=>Number(n)>0).length>=2).length;
+ const history=recapHistory(),matched=history.filter(hasRoundMatch).length;
  const rate=history.length?Math.round(matched/history.length*100):0;
  if(!recapSelectedRound||!history.some(x=>x.round===recapSelectedRound))recapSelectedRound=history.at(-1)?.round||0;
  return '<div class="mobile-recap"><div class="eyebrow">GAME RECAP</div><h1>'+ (game.mode==='duo'?'YOUR JINX! RESULTS':'FINAL SCORES')+'</h1><div class="mobile-recap-stats">'+
  '<div><strong>'+history.length+'</strong><span>Rounds</span></div><div><strong>'+(game.mode==='duo'?Number(game.matches||0):matched)+'</strong><span>Matches</span></div><div><strong>'+rate+'%</strong><span>Match rate</span></div></div>'+
- '<div class="mobile-recap-rounds">'+history.map(x=>'<button data-recap-round="'+x.round+'" class="'+(Object.values(x.points||{}).filter(n=>Number(n)>0).length>=2?'hit':'')+'">R'+x.round+'</button>').join('')+'</div>'+
+ '<div class="mobile-recap-rounds">'+history.map(x=>'<button data-recap-round="'+x.round+'" class="'+(hasRoundMatch(x)?'hit':'')+'">R'+x.round+'</button>').join('')+'</div>'+
  '<div class="mobile-recap-detail"><div class="recap-panel-heading"><b>ROUND DETAILS</b><div class="recap-nav"><button id="recapPrev" aria-label="Previous round">‹</button><button id="recapNext" aria-label="Next round">›</button></div></div><div id="recapDetail">'+recapDetails(history.find(x=>x.round===recapSelectedRound))+'</div></div></div>';
 }
 function bindRecap(){
@@ -457,9 +520,9 @@ function hostRender(){
  if(needScreen===lastScreen){updateClocks();paintReveal();return}
  lastScreen=needScreen;
  const lobby=game.phase==='lobby';
- const actions=lobby?'<label>Timer <select id="duration"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label><button id="start" class="primary">Start game</button>':
+ const actions=lobby?'<label>Timer <select id="duration"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label><button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Automatically advance rounds after each reveal"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button><button id="start" class="primary">Start game</button>':
  game.phase==='answering'?'<button id="reveal">Reveal early</button>':
- game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||25)))?'<button id="finish" class="primary">See results</button>':'<button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Toggle automatic next rounds"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button><button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
+ game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||50)))?'<button id="finish" class="primary">See results</button>':'<button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Toggle automatic next rounds"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button><button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
  '<button id="restart" class="primary">Play again</button>';
  if(lobby){
    shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<div class="lobby-players"><h3>Players</h3><div class="lobby-player-list">'+playerArray().map(p=>'<div class="lobby-player"><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span></div>').join('')+'</div></div><div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
@@ -477,7 +540,7 @@ function hostRender(){
  if($('restart'))$('restart').onclick=()=>{
   recapSelectedRound=0;autoNextEnabled=false;sessionStorage.removeItem(autoNextStore);
   autoNextTriggered='';lastScreen='';
-  updateGame(g=>g.phase==='ended'?{...g,phase:'lobby',sessionId:uid(),round:0,roundKey:'0',prompt:null,deadline:null,revealedAt:null,used:{},scores:{},history:{},lastPoints:{},lastMatch:false,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined);
+  updateGame(g=>g.phase==='ended'?{...g,phase:'lobby',sessionId:uid(),round:0,roundKey:'0',prompt:null,topAnswers:null,deadline:null,revealedAt:null,used:{},scores:{},history:{},lastPoints:{},lastBreakdown:{},lastMatch:false,winningScore:50,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined);
  };
  bindRecap();
  updateClocks();paintReveal();syncRevealScreen();updateAutoNext();if(game.phase==='answering'||game.phase==='results')lookupTopAnswers(game.prompt);updateTopAnswerPanel();
@@ -488,11 +551,11 @@ function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h
  const phase=game.phase;
  const stamp=phase+'-'+game.round+'-'+!!answer+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
  if(lastScreen===stamp){updateClocks();paintReveal();return}lastScreen=stamp;
- let body='<main class="mobile"><div class="playerbar"><span><i style="background:'+colorStyle(me.color)+'"></i>'+esc(me.name)+'</span><b>'+(game.mode==='duo'&&phase!=='lobby'?Number(game.matches||0)+' matches':Number(game.scores?.[me.id]||0)+' pts')+'</b></div>';
+ let body='<main class="mobile"><div class="playerbar"><span><i style="background:'+colorStyle(me.color)+'"></i>'+esc(me.name)+'</span><b><span data-final-score="'+Number(game.scores?.[me.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[me.id]||0)+'">'+Number(game.scores?.[me.id]||0)+'</span> pts</b></div>'+(phase!=='lobby'?mobileScoreboard():'');
  if(phase==='lobby')body+='<div class="mobilecenter"><div class="eyebrow">ROOM '+room+'</div><h1>You’re in!</h1><p>Waiting for the host to start.</p><div class="spin"></div><span class="muted">'+playerArray().length+' players in the lobby</span></div>';
  else if(phase==='answering')body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt)+'</div><div class="timer" id="timer">0:00</div><div class="progress"><div id="bar"></div></div>'+(answer?'<div class="submitted"><span class="check">✓</span><h2>Answer locked!</h2><p>'+esc(answer.text)+'</p><span class="muted" id="count">'+answerCount()+' of '+playerArray().length+' submitted</span></div>':'<form id="answerform"><input id="answer" maxlength="48" placeholder="Your word…" autocomplete="off" enterkeyhint="send" required><button class="primary">Lock in answer →</button><p class="muted">Your answer stays hidden until reveal.</p></form>')+'</div>';
  else if(phase==='ended')body+=mobileRecapMarkup();
- else body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+(game.mode==='duo'?'<div class="duo-score-mobile">'+Number(game.matches||0)+' / 10 MATCHES · '+Number(game.streak||0)+' STREAK</div>':'<div class="yourpoints" id="myRoundPoints">+'+Number(game.lastPoints?.[me.id]||0)+'</div>')+responseList()+'<p class="muted">'+(phase==='ended'?'Game over':'Next round soon…')+'</p></div>';
+ else body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+'<div class="yourpoints" id="myRoundPoints">'+(Number(game.lastPoints?.[me.id]||0)>0?'+'+Number(game.lastPoints?.[me.id]):'0')+' <small>'+esc(pointsDetail(game.lastBreakdown?.[me.id]))+'</small></div>'+responseList()+'<p class="muted">'+(phase==='ended'?'Game over':'Next round soon…')+'</p></div>';
  body+='</main><div id="error" class="error hidden"></div>';shell('PLAYER • '+room,body);
  if($('answerform'))$('answerform').onsubmit=async e=>{e.preventDefault();unlockSound();const v=$('answer').value.trim().replace(/\s+/g,' ');if(!v)return;const button=$('answerform').querySelector('button');button.disabled=true;try{const path=ref(db,'rooms/'+room+'/submissions/'+(game.roundKey||String(game.round))+'/'+me.id);const tx=await runTransaction(path,current=>current===null?{text:v,at:Date.now()}:undefined,{applyLocally:false});if(!tx.committed)throw Error('Already submitted');}catch(err){button.disabled=false;alert(err.message)}};
  updateClocks();paintReveal();syncRevealScreen();if(phase==='ended')bindRecap()
@@ -804,7 +867,7 @@ function playResultCue(elapsed){
  lastResultCue=id;
  // Ignore stale/rejoined screens; sound should happen on the last typed letter, not late.
  if(!soundReady||elapsed-endOfTyping>350)return;
- const matched=game.mode==='duo'?!!game.lastMatch:Object.values(game.lastPoints||{}).some(n=>Number(n)>0);
+ const matched=!!game.lastMatch;
  const effect=matched?correctAudio:incorrectAudio;
  if(!effect)return;
  try{effect.pause();effect.currentTime=0;effect.play().catch(()=>{})}catch{}
@@ -818,8 +881,39 @@ function countdownTick(remaining){
 function updateClocks(){if(game.phase!=='answering')return;let remain=Math.max(0,Math.ceil((game.deadline-now())/1000));countdownTick(remain);if($('timer')){$('timer').textContent=Math.floor(remain/60)+':'+String(remain%60).padStart(2,'0');$('timer').classList.toggle('danger',remain<=10)}if($('bar'))$('bar').style.width=Math.min(100,Math.max(0,(game.deadline-now())/((game.duration||45)*1000)*100))+'%';if($('count'))$('count').textContent=answerCount()+' / '+playerArray().length+' locked'}
 async function updateGame(fn){if(!hostToken)return;try{await runTransaction(gameRef,g=>{if(!g||g.hostToken!==hostToken)return;return fn(g)},{applyLocally:false})}catch(e){showError(e)}}
 async function nextRound(duration){if(hostBusy||(game.phase==='results'&&!revealFinished()))return;hostBusy=true;try{if(!deck.length){await ensureTopAnswers();if(!topAnswerBank)throw Error('Top Answers file could not load. Refresh and retry.');let res=await fetch('./prompts.json',{cache:'no-store'});if(!res.ok)throw Error('Prompt deck unavailable');const all=await res.json();deck=all.filter(prompt=>validateTopAnswers(topAnswerBank[prompt]).length===TOP_ANSWERS_COUNT);if(!deck.length)throw Error('No validated prompts found.');}
- await updateGame(g=>{if(!['lobby','results'].includes(g.phase)||(g.mode==='duo'&&g.round>=10))return;let used=g.used||{};let choices=deck.map((_,i)=>i).filter(i=>!used[i]);if(!choices.length){used={};choices=deck.map((_,i)=>i)}let index=choices[Math.floor(Math.random()*choices.length)];return {...g,phase:'answering',round:(g.round||0)+1,roundKey:(g.sessionId?g.sessionId+'-'+((g.round||0)+1):String((g.round||0)+1)),prompt:deck[index],duration,deadline:now()+duration*1000,used:{...used,[index]:true},lastPoints:{},mode:g.phase==='lobby'?(playerArray().length===2?'duo':'classic'):(g.mode||'classic')}})}catch(e){alert(e.message)}finally{hostBusy=false}}
-async function finishRound(){if(hostBusy)return;hostBusy=true;try{const snap=await get(ref(db,'rooms/'+room+'/submissions/'+(game.roundKey||String(game.round))));const answerMap=snap.val()||{};const results=compute(playerArray(),answerMap);await updateGame(g=>{if(g.phase!=='answering')return;let scores={...(g.scores||{})};for(const [pid,pts] of Object.entries(results.points))scores[pid]=(scores[pid]||0)+pts;const duo=g.mode==='duo',match=duo&&playerArray().length===2&&Object.values(results.points).filter(x=>x===3).length===2;const streak=duo?(match?(g.streak||0)+1:0):0;return {...g,phase:'results',revealedAt:now(),scores,lastPoints:results.points,lastMatch:match,streak,bestStreak:duo?Math.max(g.bestStreak||0,streak):0,matches:duo?(g.matches||0)+(match?1:0):0,history:{...(g.history||{}),[String(g.round)]:{round:g.round,prompt:g.prompt,answers:Object.fromEntries(Object.entries(answerMap).map(([id,a])=>[id,displayAnswer(a?.text||'')])),points:results.points,participants:playerArray().map(p=>({id:p.id,name:p.name,color:p.color})),match:duo?match:Object.values(results.points).some(x=>x>0),at:now()}}}})}finally{hostBusy=false}}
+ await updateGame(g=>{if(!['lobby','results'].includes(g.phase)||(g.mode==='duo'&&g.round>=10))return;let used=g.used||{};let choices=deck.map((_,i)=>i).filter(i=>!used[i]);if(!choices.length){used={};choices=deck.map((_,i)=>i)}let index=choices[Math.floor(Math.random()*choices.length)];return {...g,phase:'answering',round:(g.round||0)+1,roundKey:(g.sessionId?g.sessionId+'-'+((g.round||0)+1):String((g.round||0)+1)),prompt:deck[index],topAnswers:validateTopAnswers(topAnswerBank[deck[index]]),duration,deadline:now()+duration*1000,used:{...used,[index]:true},lastPoints:{},lastBreakdown:{},winningScore:50,mode:g.phase==='lobby'?(playerArray().length===2?'duo':'classic'):(g.mode||'classic')}})}catch(e){alert(e.message)}finally{hostBusy=false}}
+async function finishRound(){
+ if(hostBusy)return;
+ hostBusy=true;
+ try{
+  if(!Array.isArray(game.topAnswers)&&!topAnswerBank)await ensureTopAnswers();
+  const roundKey=game.roundKey||String(game.round);
+  const ranked=validateTopAnswers(game.topAnswers||topAnswerBank?.[game.prompt]);
+  if(ranked.length!==TOP_ANSWERS_COUNT)throw Error('Ranked answers could not load. Please retry the reveal.');
+  const snap=await get(ref(db,'rooms/'+room+'/submissions/'+roundKey));
+  const answerMap=snap.val()||{},roster=playerArray();
+  const results=compute(roster,answerMap,ranked);
+  await updateGame(g=>{
+   if(g.phase!=='answering'||(g.roundKey||String(g.round))!==roundKey)return;
+   const scores={...(g.scores||{})};
+   for(const [pid,pts] of Object.entries(results.points))scores[pid]=(scores[pid]||0)+pts;
+   const duo=g.mode==='duo',match=duo&&roster.length===2&&results.hasMatch;
+   const streak=duo?(match?(g.streak||0)+1:0):0;
+   return {...g,phase:'results',revealedAt:now(),scores,lastPoints:results.points,
+    lastBreakdown:results.breakdown,lastMatch:results.hasMatch,topAnswers:ranked,
+    streak,bestStreak:duo?Math.max(g.bestStreak||0,streak):0,
+    matches:duo?(g.matches||0)+(match?1:0):0,
+    history:{...(g.history||{}),[String(g.round)]:{
+     round:g.round,prompt:g.prompt,topAnswers:ranked,
+     answers:Object.fromEntries(Object.entries(answerMap).map(([id,a])=>[id,displayAnswer(a?.text||'')])),
+     points:results.points,breakdown:results.breakdown,
+     participants:roster.map(p=>({id:p.id,name:p.name,color:p.color})),
+     match:results.hasMatch,at:now()
+    }}
+   };
+  });
+ }catch(error){showError(error)}finally{hostBusy=false}
+}
 function hostCheck(){if(!isHost||game.phase!=='answering'||hostBusy)return;const total=playerArray().length;if(now()>=game.deadline || (total>=2&&answerCount()>=total))finishRound()}
 
 let fitQueued=false;

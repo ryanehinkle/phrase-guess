@@ -12,19 +12,19 @@ A phone-powered word-matching party game, hosted on GitHub Pages and synced over
 ## Game flow
 
 - The TV/computer starts in a lobby. Each player joins on their own phone and claims a unique name and one of 24 colors.
-- The host selects a 30/45/60/90-second timer and presses **Start game**.
+- The host selects a 30/45/60/90-second timer, can turn **Auto** on in the lobby, and presses **Start game**. Auto advances after the reveal plus the existing pause.
 - Everyone sees the **same randomly selected phrase** from the uploaded `prompts.json` deck (5,159 curated phrases), along with a synchronized countdown.
 - Each phone locks in **one hidden answer per round**. The round reveals when all registered players have answered **or** time expires. The host can also reveal early.
-- Matching answers are revealed together with players' names, colors and earned points.
-- Exactly **two** matching players earn **3 points each**; **three or more** matching players earn **1 point each**; unmatched and missing answers get **0 points**.
+- Matching answers are revealed together with players' names, colors, and points (with a Top Answer / Jinx breakdown); a compact live scoreboard appears on host and player screens.
+- Each answer on the curated Top 5 earns **5/4/3/2/1 points**, from rank #1 to #5. If two or more players submit the same (or typo-equivalent) answer, **each gets an additional 5-point Jinx bonus**, even in 3+ player games. These rewards stack (e.g., matching #1 = 10 each).
 - Answers are compared case-insensitively, ignoring spaces, punctuation and accents. For words of 5–12 normalized characters, one edit (typo) is tolerated. This deliberately avoids awarding points for unrelated similar words.
-- The host advances rounds and can end the game. At 25 points, the next control offers final standings.
+- The host advances rounds and can end the game. In 3+ player games, reaching 50 points offers final standings; two-player games keep their 10-round match challenge and now also track points.
 - A room's prompt history avoids repeating prompts until the entire deck is used.
 
 
 ## Top Answers
 
-JINX! displays a compact **Top Answers** panel after the cinematic reveal. Five suggested completions type in one by one; an exact guess by one player takes that player's color, and a guess made by multiple players turns gold. The suggestions do **not** affect scoring.
+JINX! displays a compact **Top Answers** panel after the cinematic reveal. Five curated, ranked completions type in one by one; an exact guess by one player takes that player's color, and a guess made by multiple players turns gold. Rank #1 awards 5 points down to #5 awarding 1 point. An additional 5 points are awarded to every player in a matched group.
 
 ### Phrase quality
 
