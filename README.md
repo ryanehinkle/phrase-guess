@@ -12,10 +12,10 @@ A phone-powered word-matching party game, hosted on GitHub Pages and synced over
 ## Game flow
 
 - The TV/computer starts in a lobby. Each player joins on their own phone and claims a unique name and one of 24 colors.
-- The host selects a 30/45/60/90-second timer, can turn **Auto** on in the lobby, and presses **Start game**. Auto advances after the reveal plus the existing pause.
+- The host selects a 30/45/60/90-second timer, can cycle **Auto Off → 5s → 10s → Off** in the lobby, and presses **Start game**. Auto advances after the reveal plus the existing pause.
 - Everyone sees the **same randomly selected phrase** from the uploaded `prompts.json` deck (5,159 curated phrases), along with a synchronized countdown.
 - Each phone locks in **one hidden answer per round**. The round reveals when all registered players have answered **or** time expires. The host can also reveal early.
-- Matching answers are revealed together with players' names, colors, and points (with a Top Answer / Jinx breakdown); a compact live scoreboard appears on host and player screens.
+- Matching answers are revealed together with players' names, colors, and points (with a Top Answer / Jinx breakdown); a compact live scoreboard appears on host and player screens. Scores and ranks stay frozen until the full answer reveal completes, preventing spoilers. On phones the scoreboard is centered, with answer cards scrolling inside the reveal if needed.
 - Each answer on the curated Top 5 earns **5/4/3/2/1 points**, from rank #1 to #5. If two or more players submit the same (or typo-equivalent) answer, **each gets an additional 5-point Jinx bonus**, even in 3+ player games. These rewards stack (e.g., matching #1 = 10 each).
 - Answers are compared case-insensitively, ignoring spaces, punctuation and accents. For words of 5–12 normalized characters, one edit (typo) is tolerated. This deliberately avoids awarding points for unrelated similar words.
 - The host advances rounds and can end the game. In 3+ player games, reaching 50 points offers final standings; two-player games keep their 10-round match challenge and now also track points.

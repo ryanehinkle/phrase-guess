@@ -411,3 +411,123 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 .recap-player-answer strong{grid-row:1 / span 3}
 @media(max-width:550px){.mobile-score-item{padding:5px 7px}.mobile-scoreboard{padding-bottom:5px}.reveal-breakdown{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.reveal-breakdown{transition:none;transform:none}}
+
+/* Centered phone leaderboard replaces the large player header and tiny score pills. */
+.mobile-scoreboard{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto;
+ width:min(100%,530px);max-width:100%;margin:0 auto 5px;padding:10px 11px 9px;
+ gap:7px;border:1px solid #3a4b70;border-radius:17px;
+ background:linear-gradient(150deg,#1c2b48ef,#141e38ed);
+ box-shadow:inset 0 1px 0 #ffffff0c;overflow:hidden;
+}
+.mobile-scoreboard-label{
+ color:#aabce0;letter-spacing:.2em;font-size:10px;line-height:1;
+ font-weight:900;text-align:center;
+}
+.mobile-scoreboard-scroll{
+ display:block;width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;
+ scrollbar-width:thin;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
+}
+.mobile-scoreboard-inner{
+ display:flex;align-items:center;justify-content:center;gap:8px;
+ min-width:100%;width:max-content;padding:1px 2px 3px;
+}
+.mobile-score-item{
+ display:flex;align-items:center;gap:7px;flex:0 0 auto;
+ min-width:clamp(126px,34vw,158px);max-width:175px;min-height:36px;
+ border:1px solid #425374;background:#23324fc9;border-radius:11px;
+ padding:8px 10px;color:#d9e4f7;font-size:12px;line-height:1.15;
+}
+.mobile-score-item.mine{
+ border-color:#899dff;background:linear-gradient(120deg,#536fcb3b,#5f66ad20);
+ box-shadow:inset 0 0 0 1px #8b9aff26;
+}
+.mobile-score-item .score-place{font-size:10px;color:#9eafce}
+.mobile-score-item i{width:9px;height:9px}
+.mobile-score-item .score-player{
+ flex:1;min-width:0;max-width:none;overflow:hidden;text-overflow:ellipsis;
+ font-size:12px;font-weight:850;white-space:nowrap;
+}
+.mobile-score-item b{
+ margin-left:3px;font-size:15px;line-height:1.15;color:#ffd67b;
+ font-weight:950;font-variant-numeric:tabular-nums;
+}
+.lobby-playerbar{min-height:48px;padding:10px 16px;margin-bottom:8px}
+
+/* Show the total awarded in bright green; detail sits to its left on two tidy lines. */
+.reveal-score{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-height:45px}
+.reveal-breakdown{
+ display:flex;flex-direction:column;align-items:flex-end;justify-content:center;
+ gap:3px;max-width:calc(100% - 75px);text-align:right;
+ font-size:clamp(11px,.95vw,14px);font-weight:750;line-height:1.18;
+ color:#a8c3ed;letter-spacing:0;
+}
+.reveal-breakdown-line{display:block;white-space:nowrap}
+.reveal-breakdown-line span{color:#d3e0ff}
+.reveal-score .reveal-points{
+ margin:0;flex:0 0 auto;font-size:clamp(29px,2.8vw,45px)!important;
+ line-height:1;font-weight:1000;font-variant-numeric:tabular-nums;
+ color:#65efb2;
+}
+.reveal-score .reveal-points.zeropoints{color:#7889a6}
+.reveal-score .reveal-points.bigpoints{color:#65efb2}
+.reveal-score:has(.points-shown) .reveal-breakdown{opacity:1;transform:none}
+
+/* Give the phone's answer reveal its space back; scrolling only inside its own panel
+   on unusually small phones or when many participants are answering. */
+.results-mode{padding-bottom:max(9px,env(safe-area-inset-bottom,9px))}
+.results-mode .mobilecenter{
+ flex:1;min-height:0;display:flex;flex-direction:column;
+ justify-content:flex-start;align-items:stretch;
+ overflow-x:hidden;overflow-y:auto;scrollbar-width:none;
+ -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
+ padding:clamp(8px,1.3vh,14px) 2px 12px;
+ gap:clamp(5px,.95vh,11px);
+}
+.results-mode .mobilecenter::-webkit-scrollbar{display:none}
+.results-mode .mobilecenter>.eyebrow{
+ flex:0 0 auto;margin:0;text-align:center;
+ font-size:11px;letter-spacing:.21em;
+}
+.results-mode .mobilecenter>.prompt{
+ flex:0 0 auto;text-align:center;line-height:1.09;
+ font-size:clamp(34px,8.5vw,55px);margin:clamp(2px,.7vh,8px) 0;
+ letter-spacing:-.025em;
+}
+.results-mode .mobilecenter .reveal-intro{
+ flex:0 0 auto;text-align:center;font-size:11px;letter-spacing:.19em;
+ margin:0;min-height:17px;
+}
+.results-mode .mobilecenter .typed-reveals{
+ flex:0 0 auto;display:grid;grid-template-columns:1fr;
+ width:100%;min-height:auto;overflow:visible;
+ gap:clamp(8px,1.2vh,13px);margin:5px auto 3px;
+}
+.results-mode .mobilecenter .reveal-line{
+ display:flex;align-content:flex-start;flex:0 0 auto;min-width:0;
+ padding:clamp(10px,1.6vh,15px) clamp(12px,3.2vw,19px);
+ gap:8px;border-radius:19px;
+}
+.results-mode .mobilecenter .reveal-owner{margin:0;font-size:12px}
+.results-mode .mobilecenter .completed-phrase{
+ flex:1 1 100%;min-height:1.3em;
+ font-size:clamp(20px,5.3vw,27px);line-height:1.2;
+}
+.results-mode .mobilecenter .reveal-score{min-height:38px}
+.results-mode .mobilecenter .reveal-breakdown{font-size:clamp(11px,2.8vw,13px)}
+.results-mode .mobilecenter .reveal-score .reveal-points{font-size:clamp(29px,7.4vw,37px)!important}
+.results-mode .mobilecenter .match-celebration{
+ flex:0 0 auto;text-align:center;min-height:26px;
+ font-size:clamp(15px,4.6vw,20px);margin:2px 0;
+}
+.results-mode .round-next-note{flex:0 0 auto;margin:0;text-align:center;padding-bottom:4px}
+@media(max-height:680px){
+ .results-mode .mobilecenter{gap:5px;padding-top:6px}
+ .results-mode .mobilecenter>.prompt{font-size:clamp(30px,7.5vw,42px)}
+ .results-mode .mobilecenter .reveal-line{padding:8px 11px}
+ .results-mode .mobilecenter .typed-reveals{gap:6px}
+ .mobile-scoreboard{padding:8px 10px 7px;margin-bottom:2px}
+}
+@media(prefers-reduced-motion:reduce){
+ .reveal-breakdown,.reveal-score .reveal-points{transition:none}
+}

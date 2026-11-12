@@ -126,18 +126,49 @@ function startLobbyBubbles(){
  };
  bubbleAnimation=requestAnimationFrame(tick);
 }
+// Keep totals AND rank order at the previous round until the full reveal finishes.
+function visibleScore(id){
+ const total=Number(game.scores?.[id]||0);
+ return game.phase==='results'&&!revealFinished()?total-Number(game.lastPoints?.[id]||0):total;
+}
 function rankedPlayers(){
- return playerArray().slice().sort((a,b)=>(Number(game.scores?.[b.id]||0)-Number(game.scores?.[a.id]||0))||a.name.localeCompare(b.name));
+ return playerArray().slice().sort((a,b)=>(visibleScore(b.id)-visibleScore(a.id))||a.name.localeCompare(b.name));
 }
 function scoreboard(){
  return '<div class="round-scoreboard" aria-label="Player scores">'+rankedPlayers().map((p,i)=>
-  '<div class="round-score"><span class="rank">'+(i+1)+'</span><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span><b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+Number(game.scores?.[p.id]||0)+'</b></div>'
+  '<div class="round-score" data-score-id="'+esc(p.id)+'"><span class="rank">'+(i+1)+'</span><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span><b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+visibleScore(p.id)+'</b></div>'
  ).join('')+'</div>';
 }
 function mobileScoreboard(){
- return '<div class="mobile-scoreboard" aria-label="Current scores">'+rankedPlayers().map((p,i)=>
-  '<div class="mobile-score-item'+(me?.id===p.id?' mine':'')+'"><span class="score-place">'+(i+1)+'</span><i style="background:'+colorStyle(p.color)+'"></i><span class="score-player">'+esc(p.name)+'</span><b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+Number(game.scores?.[p.id]||0)+'</b></div>'
- ).join('')+'</div>';
+ const scores=rankedPlayers().map((p,i)=>
+  '<div class="mobile-score-item'+(me?.id===p.id?' mine':'')+'" data-score-id="'+esc(p.id)+'" title="'+esc(p.name)+' · '+visibleScore(p.id)+' points">'+
+  '<span class="score-place">'+(i+1)+'</span><i style="background:'+colorStyle(p.color)+'"></i>'+
+  '<span class="score-player">'+esc(p.name)+'</span>'+
+  '<b data-final-score="'+Number(game.scores?.[p.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[p.id]||0)+'">'+visibleScore(p.id)+'</b></div>'
+ ).join('');
+ return '<div class="mobile-scoreboard" aria-label="Player scores"><div class="mobile-scoreboard-label">SCORES</div>'+
+  '<div class="mobile-scoreboard-scroll"><div class="mobile-scoreboard-inner">'+scores+'</div></div></div>';
+}
+function finishScoreboardReveal(){
+ if(!['results','ended'].includes(game.phase)||!revealFinished())return;
+ const key=(game.sessionId||'legacy')+':'+game.round+':'+game.revealedAt;
+ for(const board of document.querySelectorAll('.round-scoreboard,.mobile-scoreboard-inner')){
+  if(board.dataset.rankSettled===key)continue;
+  const rows=[...board.querySelectorAll(':scope > [data-score-id]')];
+  rows.sort((a,b)=>{
+   const get=id=>Number(game.scores?.[id]||0);
+   const difference=get(b.dataset.scoreId)-get(a.dataset.scoreId);
+   return difference||a.dataset.scoreId.localeCompare(b.dataset.scoreId);
+  });
+  rows.forEach((row,i)=>{
+   const rank=row.querySelector('.rank,.score-place');
+   if(rank)rank.textContent=String(i+1);
+   const name=row.querySelector('.score-player');
+   if(name)row.title=name.textContent+' · '+Number(game.scores?.[row.dataset.scoreId]||0)+' points';
+   board.append(row);
+  });
+  board.dataset.rankSettled=key;
+ }
 }
 function pointsDetail(detail){
  if(!detail)return '';
@@ -145,6 +176,13 @@ function pointsDetail(detail){
  if(Number(detail.rank)>0&&Number(detail.topPoints)>0)parts.push('Top #'+Number(detail.rank)+' +'+Number(detail.topPoints));
  if(Number(detail.matchPoints)>0)parts.push('Jinx +'+Number(detail.matchPoints));
  return parts.join(' · ');
+}
+function scoreBreakdownMarkup(detail){
+ if(!detail)return '';
+ const rows=[];
+ if(Number(detail.matchPoints)>0)rows.push('<span class="reveal-breakdown-line">Jinx <span>(+'+Number(detail.matchPoints)+')</span></span>');
+ if(Number(detail.rank)>0&&Number(detail.topPoints)>0)rows.push('<span class="reveal-breakdown-line">#'+Number(detail.rank)+' Answer <span>(+'+Number(detail.topPoints)+')</span></span>');
+ return rows.join('');
 }
 // Reveal timing is derived from the shared Firebase timestamp, so every phone
 // animates together, including a phone that reconnects mid-reveal.
@@ -183,7 +221,7 @@ function responseList(){
   '<div class="completed-phrase">'+(before?'<span class="phrase-fixed">'+before+'</span> ':'')+
   '<span class="typed-slot"><span class="ranswer" aria-label="Answer"></span><span class="typing-caret" aria-hidden="true"></span></span>'+
   (after?' <span class="phrase-fixed">'+after+'</span>':'')+'</div>'+
-  '<div class="reveal-score"><span class="reveal-breakdown">'+esc(pointsDetail(p.breakdown))+'</span>'+
+  '<div class="reveal-score"><span class="reveal-breakdown">'+scoreBreakdownMarkup(p.breakdown)+'</span>'+
   '<b class="reveal-points '+(p.breakdown?.matchPoints?'bigpoints':p.points?'somepoints':'zeropoints')+'" data-earned="'+p.points+'">'+
   (p.points?'+'+p.points:'—')+'</b></div></div>'
  ).join('');
@@ -232,6 +270,7 @@ function paintReveal(){
     if(score.textContent!==String(shown))score.textContent=String(shown);
     score.classList.toggle('score-gained',done&&earned>0);
   }
+  if(done)finishScoreboardReveal();
   const mine=$('myRoundPoints');
   if(mine)mine.classList.toggle('points-shown',done);
   const next=$('next');if(next)next.disabled=!done;
@@ -487,33 +526,34 @@ function bindRecap(){
  updateRecapSelection();
 }
 
-// Host-only auto-play setting: wait five full seconds after the reveal finishes.
-const AUTO_NEXT_DELAY_MS=5000;
+// Host-only auto-advance: cycle Off → 5s → 10s → Off in lobby and results.
 const autoNextStore='jinx:auto-next:'+room;
-let autoNextEnabled=isHost&&sessionStorage.getItem(autoNextStore)==='true';
+const savedAutoNext=sessionStorage.getItem(autoNextStore);
+let autoNextDelaySeconds=isHost?(savedAutoNext==='true'?5:[5,10].includes(Number(savedAutoNext))?Number(savedAutoNext):0):0;
 let autoNextTriggered='',autoNextArmedAt=now();
 function updateAutoNext(){
  if(!isHost)return;
- const btn=$('autoNext');
- if(!btn)return;
+ const btn=$('autoNext');if(!btn)return;
+ const delay=autoNextDelaySeconds;
  const active=game.phase==='results'&&revealFinished();
  const resultsReadyAt=Number(game.revealedAt||0)+revealDuration();
- // Enabling automation during an already finished reveal still gets a full 5s.
- const advanceAt=Math.max(resultsReadyAt,autoNextArmedAt)+AUTO_NEXT_DELAY_MS;
+ // Switching a delay mid-reveal starts a fresh countdown at that chosen delay.
+ const advanceAt=Math.max(resultsReadyAt,autoNextArmedAt)+delay*1000;
  const left=Math.max(0,Math.ceil((advanceAt-now())/1000));
- btn.setAttribute('aria-pressed',String(autoNextEnabled));
- btn.title=autoNextEnabled?'Pause automatic next rounds':'Automatically start next round 5 seconds after results';
+ const enabled=delay>0;
+ btn.setAttribute('aria-pressed',String(enabled));
+ btn.dataset.delay=String(delay);
+ btn.title=enabled?'Auto-advance '+delay+' seconds after results'+(active?' · '+left+'s remaining':'')+' · click to cycle':'Auto is off · click for 5 seconds';
  const symbol=$('autoNextIcon'),label=$('autoNextLabel');
- if(symbol)symbol.textContent=autoNextEnabled?'Ⅱ':'▶';
- if(label)label.textContent=autoNextEnabled?(active?left+'s':'Auto'):'Auto';
- btn.classList.toggle('active',autoNextEnabled);
- if(!autoNextEnabled||!active||now()<advanceAt||hostBusy)return;
+ if(symbol)symbol.textContent=enabled?'↻':'▶';
+ if(label)label.textContent=enabled?'Auto '+delay+'s':'Auto Off';
+ btn.classList.toggle('active',enabled);
+ if(!enabled||!active||now()<advanceAt||hostBusy)return;
  const id=room+':'+game.round+':'+game.revealedAt;
  if(autoNextTriggered===id)return;
  autoNextTriggered=id;
  nextRound(game.duration||45);
 }
-
 function hostRender(){
  const oldInput=$('duration')?.value;
  const needScreen=game.phase+'-'+game.round+'-'+playerArray().map(p=>p.id).join(',')+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
@@ -534,11 +574,11 @@ function hostRender(){
  }
  if($('start')){$('duration').value=oldInput||String(game.duration||45);$('start').onclick=()=>{unlockSound();if(playerArray().length<2)return alert('Need 2 players.');nextRound(Number($('duration').value))}}
  if($('next'))$('next').onclick=()=>{unlockSound();nextRound(game.duration||45)};
- if($('autoNext'))$('autoNext').onclick=()=>{autoNextEnabled=!autoNextEnabled;if(autoNextEnabled)autoNextArmedAt=now();sessionStorage.setItem(autoNextStore,String(autoNextEnabled));unlockSound();updateAutoNext()};
+ if($('autoNext'))$('autoNext').onclick=()=>{autoNextDelaySeconds=autoNextDelaySeconds===0?5:autoNextDelaySeconds===5?10:0;autoNextArmedAt=now();sessionStorage.setItem(autoNextStore,String(autoNextDelaySeconds));unlockSound();updateAutoNext()};
  if($('reveal'))$('reveal').onclick=()=>finishRound();
  if($('finish'))$('finish').onclick=()=>{if(revealFinished())updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined)};
  if($('restart'))$('restart').onclick=()=>{
-  recapSelectedRound=0;autoNextEnabled=false;sessionStorage.removeItem(autoNextStore);
+  recapSelectedRound=0;autoNextDelaySeconds=0;sessionStorage.removeItem(autoNextStore);
   autoNextTriggered='';lastScreen='';
   updateGame(g=>g.phase==='ended'?{...g,phase:'lobby',sessionId:uid(),round:0,roundKey:'0',prompt:null,topAnswers:null,deadline:null,revealedAt:null,used:{},scores:{},history:{},lastPoints:{},lastBreakdown:{},lastMatch:false,winningScore:50,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined);
  };
@@ -551,11 +591,13 @@ function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h
  const phase=game.phase;
  const stamp=phase+'-'+game.round+'-'+!!answer+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
  if(lastScreen===stamp){updateClocks();paintReveal();return}lastScreen=stamp;
- let body='<main class="mobile"><div class="playerbar"><span><i style="background:'+colorStyle(me.color)+'"></i>'+esc(me.name)+'</span><b><span data-final-score="'+Number(game.scores?.[me.id]||0)+'" data-last-earned="'+Number(game.lastPoints?.[me.id]||0)+'">'+Number(game.scores?.[me.id]||0)+'</span> pts</b></div>'+(phase!=='lobby'?mobileScoreboard():'');
+  let body='<main class="mobile'+(phase==='results'?' results-mode':'')+'">'+
+   (phase==='lobby'?'<div class="playerbar lobby-playerbar"><span><i style="background:'+colorStyle(me.color)+'"></i>'+esc(me.name)+'</span></div>':
+    phase==='ended'?'':mobileScoreboard());
  if(phase==='lobby')body+='<div class="mobilecenter"><div class="eyebrow">ROOM '+room+'</div><h1>You’re in!</h1><p>Waiting for the host to start.</p><div class="spin"></div><span class="muted">'+playerArray().length+' players in the lobby</span></div>';
  else if(phase==='answering')body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt)+'</div><div class="timer" id="timer">0:00</div><div class="progress"><div id="bar"></div></div>'+(answer?'<div class="submitted"><span class="check">✓</span><h2>Answer locked!</h2><p>'+esc(answer.text)+'</p><span class="muted" id="count">'+answerCount()+' of '+playerArray().length+' submitted</span></div>':'<form id="answerform"><input id="answer" maxlength="48" placeholder="Your word…" autocomplete="off" enterkeyhint="send" required><button class="primary">Lock in answer →</button><p class="muted">Your answer stays hidden until reveal.</p></form>')+'</div>';
  else if(phase==='ended')body+=mobileRecapMarkup();
- else body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+'<div class="yourpoints" id="myRoundPoints">'+(Number(game.lastPoints?.[me.id]||0)>0?'+'+Number(game.lastPoints?.[me.id]):'0')+' <small>'+esc(pointsDetail(game.lastBreakdown?.[me.id]))+'</small></div>'+responseList()+'<p class="muted">'+(phase==='ended'?'Game over':'Next round soon…')+'</p></div>';
+  else body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+responseList()+'<p class="muted round-next-note">Next round soon…</p></div>';
  body+='</main><div id="error" class="error hidden"></div>';shell('PLAYER • '+room,body);
  if($('answerform'))$('answerform').onsubmit=async e=>{e.preventDefault();unlockSound();const v=$('answer').value.trim().replace(/\s+/g,' ');if(!v)return;const button=$('answerform').querySelector('button');button.disabled=true;try{const path=ref(db,'rooms/'+room+'/submissions/'+(game.roundKey||String(game.round))+'/'+me.id);const tx=await runTransaction(path,current=>current===null?{text:v,at:Date.now()}:undefined,{applyLocally:false});if(!tx.committed)throw Error('Already submitted');}catch(err){button.disabled=false;alert(err.message)}};
  updateClocks();paintReveal();syncRevealScreen();if(phase==='ended')bindRecap()
