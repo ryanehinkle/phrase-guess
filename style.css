@@ -562,3 +562,35 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 .mobile-score-item .score-player{font-size:13px}
 .mobile-score-item b{margin-left:4px;font-size:16px}
 @media(max-height:680px){.mobile-scoreboard{padding:1px 0 3px;margin-bottom:3px}}
+
+/* Center incomplete host reveal rows (3+1, 3+2, etc.), keeping card widths
+   consistent instead of leaving the final cards pinned to the left. */
+.host-fullstage .typed-reveals{
+  --reveal-row-gap:clamp(6px,1vw,12px);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:stretch;
+  gap:var(--reveal-row-gap);
+}
+.host-fullstage .typed-reveals > .reveal-line{
+  flex:0 1 calc((100% - 2 * var(--reveal-row-gap)) / 3);
+  min-width:min(100%,310px);
+  max-width:100%;
+}
+/* Two-person rounds should keep the familiar wider two-card layout. */
+.host-fullstage .typed-reveals:not(:has(> .reveal-line:nth-child(3))) > .reveal-line{
+  flex-basis:calc((100% - var(--reveal-row-gap)) / 2);
+}
+@media(max-width:1050px){
+  .host-fullstage .typed-reveals > .reveal-line{
+    flex-basis:calc((100% - var(--reveal-row-gap)) / 2);
+    min-width:min(100%,270px);
+  }
+}
+@media(max-width:650px){
+  .host-fullstage .typed-reveals > .reveal-line{
+    flex-basis:100%;
+    min-width:0;
+  }
+}
