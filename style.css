@@ -563,34 +563,43 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 .mobile-score-item b{margin-left:4px;font-size:16px}
 @media(max-height:680px){.mobile-scoreboard{padding:1px 0 3px;margin-bottom:3px}}
 
-/* Center incomplete host reveal rows (3+1, 3+2, etc.), keeping card widths
-   consistent instead of leaving the final cards pinned to the left. */
+
+/* Deterministic centered host reveal rows.
+   Six grid tracks fit three cards per row, while the final row's one or two
+   cards shift to the exact middle. This avoids auto-fit's left-justified blanks. */
 .host-fullstage .typed-reveals{
-  --reveal-row-gap:clamp(6px,1vw,12px);
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  align-items:stretch;
-  gap:var(--reveal-row-gap);
+ --reveal-row-gap:clamp(6px,1vw,12px);
+ display:grid;
+ grid-template-columns:repeat(6,minmax(0,1fr));
+ gap:var(--reveal-row-gap);
 }
 .host-fullstage .typed-reveals > .reveal-line{
-  flex:0 1 calc((100% - 2 * var(--reveal-row-gap)) / 3);
-  min-width:min(100%,310px);
-  max-width:100%;
+ grid-column:span 2;
+ min-width:0;
+ max-width:none;
+ width:auto;
 }
-/* Two-person rounds should keep the familiar wider two-card layout. */
-.host-fullstage .typed-reveals:not(:has(> .reveal-line:nth-child(3))) > .reveal-line{
-  flex-basis:calc((100% - var(--reveal-row-gap)) / 2);
+@media(min-width:1051px){
+ /* Only two participants: two equal, centered half-width cards. */
+ .host-fullstage .typed-reveals:not(:has(> .reveal-line:nth-child(3))) > .reveal-line{
+  grid-column:span 3;
+ }
+ .host-fullstage .typed-reveals:has(> .reveal-line:nth-child(3)) > .reveal-line:nth-child(3n + 1):last-child{
+  grid-column:3 / span 2;
+ }
+ .host-fullstage .typed-reveals:has(> .reveal-line:nth-child(3)) > .reveal-line:nth-child(3n + 1):nth-last-child(2){
+  grid-column:2 / span 2;
+ }
+ .host-fullstage .typed-reveals:has(> .reveal-line:nth-child(3)) > .reveal-line:nth-child(3n + 2):last-child{
+  grid-column:4 / span 2;
+ }
 }
-@media(max-width:1050px){
-  .host-fullstage .typed-reveals > .reveal-line{
-    flex-basis:calc((100% - var(--reveal-row-gap)) / 2);
-    min-width:min(100%,270px);
-  }
+@media(min-width:651px) and (max-width:1050px){
+ .host-fullstage .typed-reveals{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .host-fullstage .typed-reveals > .reveal-line{grid-column:span 2}
+ .host-fullstage .typed-reveals > .reveal-line:nth-child(2n + 1):last-child{grid-column:2 / span 2}
 }
 @media(max-width:650px){
-  .host-fullstage .typed-reveals > .reveal-line{
-    flex-basis:100%;
-    min-width:0;
-  }
+ .host-fullstage .typed-reveals{grid-template-columns:minmax(0,1fr)}
+ .host-fullstage .typed-reveals > .reveal-line{grid-column:1;min-width:0}
 }

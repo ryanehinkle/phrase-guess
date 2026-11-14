@@ -170,17 +170,24 @@ function finishScoreboardReveal(){
   board.dataset.rankSettled=key;
  }
 }
+// An exactly-two-person match is a Jinx; larger matching groups display their count.
+function roundMatchHeadline(details){
+ const bonuses=Object.values(details||{}).map(d=>Number(d?.matchPoints||0));
+ if(bonuses.some(bonus=>bonus===5))return 'JINX!';
+ const count=bonuses.filter(bonus=>bonus>0).length;
+ return count?count+' MATCHED':'';
+}
 function pointsDetail(detail){
  if(!detail)return '';
  const parts=[];
  if(Number(detail.rank)>0&&Number(detail.topPoints)>0)parts.push('Top #'+Number(detail.rank)+' +'+Number(detail.topPoints));
- if(Number(detail.matchPoints)>0)parts.push('Jinx +'+Number(detail.matchPoints));
+ if(Number(detail.matchPoints)>0)parts.push((Number(detail.matchPoints)===5?'Jinx':'Match')+' +'+Number(detail.matchPoints));
  return parts.join(' · ');
 }
 function scoreBreakdownMarkup(detail){
  if(!detail)return '';
  const rows=[];
- if(Number(detail.matchPoints)>0)rows.push('<span class="reveal-breakdown-line">Jinx <span>(+'+Number(detail.matchPoints)+')</span></span>');
+ if(Number(detail.matchPoints)>0)rows.push('<span class="reveal-breakdown-line">'+(Number(detail.matchPoints)===5?'Jinx':'Match')+' <span>(+'+Number(detail.matchPoints)+')</span></span>');
  if(Number(detail.rank)>0&&Number(detail.topPoints)>0)rows.push('<span class="reveal-breakdown-line">#'+Number(detail.rank)+' Answer <span>(+'+Number(detail.topPoints)+')</span></span>');
  return rows.join('');
 }
@@ -279,7 +286,8 @@ function paintReveal(){
   const matching=revealEntries().filter(p=>Number(p.breakdown?.matchPoints||0)>0);
   const scored=revealEntries().some(p=>p.points>0);
   if(celebration){
-    celebration.textContent=done?(game.mode==='duo'?(game.lastMatch?'JINX! · '+game.streak+' IN A ROW':'NO MATCH'):(matching.length?matching.length+' MATCHED':scored?'TOP ANSWER SCORED':'NO POINTS')):'';
+    const headline=roundMatchHeadline(game.lastBreakdown);
+    celebration.textContent=done?(headline||(game.mode==='duo'?'NO MATCH':scored?'TOP ANSWER SCORED':'NO POINTS')):'';
     celebration.classList.toggle('visible',done);
   }
   const id=game.round+'-'+game.revealedAt;
@@ -296,7 +304,7 @@ function syncRevealScreen(){
  if(document.getElementById('revealScreen')?.dataset.key===id)return;
  document.getElementById('revealScreen')?.remove();
  const el=document.createElement('div');el.id='revealScreen';el.dataset.key=id;el.className='cinema';
- el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(game.mode==='duo'?(game.lastMatch?'JINX!':'NOT THIS TIME'):(game.lastMatch?'MATCH!':'NO MATCH'))+'</div></div>';
+ el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(roundMatchHeadline(game.lastBreakdown)||(game.mode==='duo'?'NOT THIS TIME':'NO MATCH'))+'</div></div>';
  document.body.append(el);paintReveal();
 }
 
@@ -334,9 +342,10 @@ function compute(roster,answers,topAnswers){
  const matchedIds=[];
  for(const group of clusters){
   if(group.ids.length<2)continue;
+  const bonus=group.ids.length===2?5:3;
   for(const id of group.ids){
-   breakdown[id].matchPoints=5;
-   points[id]+=5;
+   breakdown[id].matchPoints=bonus;
+   points[id]+=bonus;
    matchedIds.push(id);
   }
  }
@@ -344,7 +353,7 @@ function compute(roster,answers,topAnswers){
 }
 function answerCount(){const ans=submissions[game.roundKey||String(game.round)]||{};return playerArray().filter(p=>ans[p.id]?.text).length}
 
-// Top Answers are curated ranked completions worth 5–1 points; matching adds 5.
+// Top Answers are worth 5–1 points; Jinx adds 5 for pairs, 3 for groups of 3+.
 // Datamuse uses Google Books Ngram collocations and dictionary/WordNet relations.
 // Query when each prompt begins so the list is already available when it is revealed.
 const TOP_ANSWERS_COUNT=5;
@@ -352,13 +361,23 @@ let topAnswerBank=null,topAnswerLoading=null;
 const topAnswersCache=new Map();
 // Every prompt in prompts.json has exactly five precomputed completions.
 // There is no live dictionary lookup, and no "no strong guesses" empty state.
+// Treat simple singular/plural variants as the same answer family,
+// without conflating unrelated words. Published data still needs 5 unique choices.
+function topAnswerFamily(value){
+ return String(value||'').toUpperCase().trim().split(/\s+/).map(word=>{
+  if(word.length>4&&word.endsWith('IES'))return word.slice(0,-3)+'Y';
+  if(word.length>4&&/(CHES|SHES|XES|ZES|SSES)$/.test(word))return word.slice(0,-2);
+  if(word.length>3&&word.endsWith('S')&&!word.endsWith('SS'))return word.slice(0,-1);
+  return word;
+ }).join(' ');
+}
 function validateTopAnswers(values){
  const seen=new Set(),out=[];
  for(const value of values||[]){
   const candidate=String(value||'').trim().toUpperCase().replace(/[^A-Z0-9\s'-]/g,'').replace(/\s+/g,' ');
-  const key=normalize(candidate);
-  if(!key||seen.has(key)||candidate.length>30||candidate.split(' ').length>3)continue;
-  seen.add(key);out.push(candidate);
+  const key=normalize(candidate),family=topAnswerFamily(candidate);
+  if(!key||seen.has(family)||candidate.length>30||candidate.split(' ').length>3)continue;
+  seen.add(family);out.push(candidate);
   if(out.length===TOP_ANSWERS_COUNT)break;
  }
  return out;
@@ -366,7 +385,7 @@ function validateTopAnswers(values){
 async function ensureTopAnswers(){
  if(!isHost)return;
  if(topAnswerBank||topAnswerLoading)return topAnswerLoading;
- topAnswerLoading=fetch('./top-answers.json?v=3',{cache:'no-store'})
+ topAnswerLoading=fetch('./top-answers.json?v=4',{cache:'no-store'})
   .then(r=>{if(!r.ok)throw Error('Top Answers data unavailable');return r.json()})
   .then(data=>{
    topAnswerBank=data;
@@ -462,7 +481,7 @@ function recapDetails(entry){
  const roster=Array.isArray(entry.participants)&&entry.participants.length?entry.participants:playerArray(),
   answers=entry.answers||{},points=entry.points||{};
  const matching=hasRoundMatch(entry);
- return '<div class="recap-detail-heading"><span class="recap-round-kicker">ROUND '+Number(entry.round)+'</span><span class="recap-round-result '+(matching?'is-match':'')+'">'+(matching?'JINX MATCH':'NO JINX')+'</span></div>'+
+ return '<div class="recap-detail-heading"><span class="recap-round-kicker">ROUND '+Number(entry.round)+'</span><span class="recap-round-result '+(matching?'is-match':'')+'">'+(matching?(roundMatchHeadline(entry.breakdown)||'MATCH'):'NO MATCH')+'</span></div>'+
  '<div class="recap-prompt">'+esc(entry.prompt||'')+'</div><div class="recap-answer-grid">'+
  roster.map(p=>'<div class="recap-player-answer"><i style="background:'+colorStyle(p.color)+'"></i>'+
  '<span class="recap-player-name">'+esc(p.name)+'</span><b>'+esc(answers[p.id]||'—')+'</b>'+
