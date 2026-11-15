@@ -6,13 +6,6 @@
     "MIND",
     "DANCING"
   ],
-  "_____ TALK": [
-    "DIRTY",
-    "PILLOW",
-    "TRASH",
-    "SMALL",
-    "TED"
-  ],
   "BOOTY _____": [
     "CALL",
     "SHORTS",
@@ -20,61 +13,12 @@
     "DANCE",
     "CAMP"
   ],
-  "_____ CALL": [
-    "BOOTY",
-    "DRUNK",
-    "PRANK",
-    "VIDEO",
-    "WAKE UP"
-  ],
-  "_____ PARTY": [
-    "HOUSE",
-    "BACHELOR",
-    "FRAT",
-    "POOL",
-    "AFTER"
-  ],
-  "PARTY _____": [
-    "ANIMAL",
-    "BUS",
-    "FAVORS",
-    "FOUL",
-    "CRASHER"
-  ],
-  "HOUSE _____": [
-    "PARTY",
-    "MUSIC",
-    "RULES",
-    "ARREST",
-    "WINE"
-  ],
-  "_____ CLUB": [
-    "STRIP",
-    "FIGHT",
-    "NIGHT",
-    "GENTLEMEN'S",
-    "BOOK"
-  ],
   "STRIP _____": [
     "CLUB",
     "POKER",
     "TEASE",
     "MALL",
     "SEARCH"
-  ],
-  "_____ STRIP": [
-    "VEGAS",
-    "COMIC",
-    "BACON",
-    "CHICKEN",
-    "LANDING"
-  ],
-  "_____ SHOW": [
-    "SHIT",
-    "REALITY",
-    "TALK",
-    "TRUMAN",
-    "PEEP"
   ],
   "SHIT _____": [
     "SHOW",
@@ -86,16 +30,16 @@
   "_____ SHIT": [
     "HOLY",
     "BULL",
-    "BAT",
-    "CRAZY",
-    "DOG"
+    "DOG",
+    "NO",
+    "HOT"
   ],
   "FUCK _____": [
     "OFF",
-    "IT",
     "YOU",
-    "AROUND",
-    "THIS"
+    "ME",
+    "IT",
+    "AROUND"
   ],
   "_____ FUCK": [
     "HOLY",
@@ -105,445 +49,32 @@
     "CLUSTER"
   ],
   "_____ UP": [
-    "HOOK",
-    "BREAK",
     "FUCK",
-    "SHUT",
-    "THROW"
-  ],
-  "_____ SHOT": [
-    "BODY",
-    "TEQUILA",
-    "MONEY",
-    "JELLO",
-    "BACK"
-  ],
-  "BODY _____": [
-    "COUNT",
-    "SHOT",
-    "LANGUAGE",
-    "IMAGE",
-    "PILLOW"
-  ],
-  "_____ COUNT": [
-    "BODY",
-    "HEAD",
-    "WORD",
-    "VIEW",
-    "RECOUNT"
-  ],
-  "_____ TRAP": [
-    "THIRST",
-    "HONEY",
-    "MOUSE",
-    "TOURIST",
-    "BOOBY"
-  ],
-  "THIRST _____": [
-    "TRAP",
-    "QUENCHER",
-    "BUCKET",
-    "TWEET",
-    "FOLLOW"
-  ],
-  "_____ FLAG": [
-    "RED",
-    "GREEN",
-    "BEIGE",
-    "BLACK",
-    "CHECKERED"
-  ],
-  "RED _____": [
-    "FLAG",
-    "LIGHT",
-    "WINE",
-    "ROOM",
-    "BULL"
-  ],
-  "GREEN _____": [
-    "FLAG",
-    "LIGHT",
-    "CARD",
-    "DAY",
-    "ROOM"
-  ],
-  "_____ ISSUES": [
-    "DADDY",
-    "MOMMY",
-    "TRUST",
-    "ANGER",
-    "COMMITMENT"
-  ],
-  "LOVE _____": [
-    "ISLAND",
-    "TRIANGLE",
-    "POTION",
-    "BOMBING",
-    "LANGUAGE"
-  ],
-  "_____ LOVE": [
-    "TOUGH",
-    "TRUE",
-    "SELF",
-    "CRAZY",
-    "FIRST"
-  ],
-  "_____ ISLAND": [
-    "LOVE",
-    "TEMPTATION",
-    "FANTASY",
-    "LONG",
-    "STATEN"
-  ],
-  "_____ KISS": [
-    "FRENCH",
-    "FIRST",
-    "GOODNIGHT",
-    "HERSHEY",
-    "AIR"
-  ],
-  "KISS _____": [
-    "CAM",
-    "ASS",
-    "ME",
-    "AND TELL",
-    "OF DEATH"
-  ],
-  "_____ DATE": [
-    "BLIND",
-    "FIRST",
-    "DOUBLE",
-    "EXPIRATION",
-    "HOT"
-  ],
-  "DATE _____": [
-    "NIGHT",
-    "OF BIRTH",
-    "RANGE",
-    "STAMP",
-    "PALM"
-  ],
-  "_____ NIGHT": [
-    "ONE",
-    "GIRLS",
-    "LADIES",
-    "GAME",
-    "FRIDAY"
-  ],
-  "_____ STAND": [
-    "ONE NIGHT",
-    "HAND",
-    "HOT DOG",
-    "LEMONADE",
-    "MICROPHONE"
+    "HOOK",
+    "SCREW",
+    "PISS",
+    "SHUT"
   ],
   "ONE NIGHT _____": [
     "STAND",
     "ONLY",
-    "AFFAIR",
-    "OUT",
-    "IN"
-  ],
-  "_____ BENEFITS": [
-    "FRIENDS WITH",
-    "HEALTH",
-    "TAX",
-    "RETIREMENT",
-    "FRINGE"
-  ],
-  "_____ RELATIONSHIP": [
-    "TOXIC",
-    "OPEN",
-    "LONG DISTANCE",
-    "SECRET",
-    "REBOUND"
-  ],
-  "TOXIC _____": [
-    "RELATIONSHIP",
-    "MASCULINITY",
-    "WASTE",
-    "EX",
-    "TRAIT"
-  ],
-  "EX _____": [
-    "GIRLFRIEND",
-    "BOYFRIEND",
-    "HUSBAND",
-    "WIFE",
-    "BEST FRIEND"
-  ],
-  "SUGAR _____": [
-    "DADDY",
-    "BABY",
-    "RUSH",
-    "COAT",
-    "HIGH"
-  ],
-  "BABY _____": [
-    "MAMA",
-    "DADDY",
-    "SHOWER",
-    "OIL",
-    "FEVER"
-  ],
-  "_____ SHOWER": [
-    "BABY",
-    "GOLDEN",
-    "COLD",
-    "HOT",
-    "BRIDAL"
-  ],
-  "HOT _____": [
-    "MESS",
-    "TUB",
-    "GIRL",
-    "TAKE",
-    "SAUCE"
-  ],
-  "_____ TUB": [
-    "HOT",
-    "BATH",
-    "BUBBLE",
-    "WASH",
-    "ICE"
-  ],
-  "_____ GIRL": [
-    "HOT",
-    "MEAN",
-    "BAD",
-    "VSCO",
-    "CITY"
-  ],
-  "BAD _____": [
-    "GIRL",
-    "BOY",
-    "BUNNY",
-    "HABITS",
-    "ROMANCE"
-  ],
-  "_____ BUNNY": [
-    "PLAYBOY",
-    "BAD",
-    "DUST",
-    "ENERGIZER",
-    "SNOW"
+    "HOOKUP",
+    "FLING",
+    "AFFAIR"
   ],
   "PLAYBOY _____": [
     "MANSION",
     "BUNNY",
     "MAGAZINE",
-    "CARTI",
+    "CLUB",
     "CENTERFOLD"
   ],
-  "_____ PILL": [
-    "BIRTH CONTROL",
-    "MORNING AFTER",
-    "RED",
-    "BLUE",
-    "CHILL"
-  ],
-  "BIRTH _____": [
-    "CONTROL",
-    "CERTIFICATE",
-    "DAY",
-    "DEFECT",
-    "RATE"
-  ],
-  "_____ CONTROL": [
-    "BIRTH",
-    "DAMAGE",
-    "MIND",
-    "REMOTE",
-    "GUN"
-  ],
-  "MORNING _____": [
-    "WOOD",
-    "AFTER",
-    "BREATH",
-    "SICKNESS",
-    "SHOW"
-  ],
-  "_____ BREATH": [
-    "MORNING",
-    "BAD",
-    "FRESH",
-    "LAST",
-    "DRAGON"
-  ],
-  "_____ FANTASY": [
-    "FINAL",
-    "SEXUAL",
-    "FOOTBALL",
-    "DARK",
-    "WET"
-  ],
-  "FANTASY _____": [
-    "FOOTBALL",
-    "SUITE",
-    "ISLAND",
-    "LEAGUE",
-    "WORLD"
-  ],
-  "_____ BED": [
-    "KING SIZE",
-    "WATER",
-    "BUNK",
-    "DEATH",
-    "DOG"
-  ],
-  "BED _____": [
-    "BUGS",
-    "HEAD",
-    "REST",
-    "FRAME",
-    "SHEETS"
-  ],
-  "_____ ROOM": [
-    "RED",
-    "BED",
-    "CHAT",
-    "HOTEL",
-    "WAITING"
-  ],
-  "ROOM _____": [
-    "SERVICE",
-    "MATE",
-    "TEMPERATURE",
-    "KEY",
-    "NUMBER"
-  ],
-  "HOTEL _____": [
-    "ROOM",
-    "CALIFORNIA",
-    "BAR",
-    "LOBBY",
-    "STAFF"
-  ],
-  "_____ MOTEL": [
-    "BATES",
-    "CHEAP",
-    "LOVE",
-    "ROACH",
-    "NO TELL"
-  ],
-  "WALK OF _____": [
-    "SHAME",
-    "FAME",
-    "LIFE",
-    "DEATH",
-    "HONOR"
-  ],
-  "_____ OF SHAME": [
-    "WALK",
-    "WALL",
-    "HALL",
-    "CONE",
-    "LIST"
-  ],
-  "_____ HOURS": [
-    "HAPPY",
-    "AFTER",
-    "OFFICE",
-    "QUIET",
-    "LATE"
-  ],
-  "HAPPY _____": [
-    "HOUR",
-    "ENDING",
-    "BIRTHDAY",
-    "MEAL",
-    "TRAILS"
-  ],
-  "_____ HOUR": [
-    "HAPPY",
-    "WITCHING",
-    "GOLDEN",
-    "RUSH",
-    "LAST"
-  ],
-  "GOLDEN _____": [
-    "SHOWER",
-    "GLOBE",
-    "HOUR",
-    "RETRIEVER",
-    "GIRLS"
-  ],
-  "_____ GIRLS": [
-    "MEAN",
-    "GOLDEN",
-    "SPICE",
-    "GILMORE",
-    "MATERIAL"
-  ],
-  "SPICE _____": [
-    "GIRLS",
-    "RACK",
-    "WORLD",
-    "UP YOUR LIFE",
-    "MARKET"
-  ],
-  "_____ DANCING": [
-    "DIRTY",
-    "POLE",
-    "LINE",
-    "SLOW",
-    "LAP"
-  ],
-  "DANCE _____": [
-    "FLOOR",
-    "MONKEY",
-    "PARTY",
-    "BATTLE",
-    "MOM"
-  ],
-  "_____ DANCE": [
-    "LAP",
-    "STRIP",
-    "POLE",
-    "SLOW",
-    "TIKTOK"
-  ],
-  "LAP _____": [
-    "DANCE",
-    "DOG",
-    "BAND",
-    "BELT",
-    "POOL"
-  ],
-  "POLE _____": [
-    "DANCING",
-    "POSITION",
-    "VAULT",
-    "FITNESS",
-    "STAR"
-  ],
-  "_____ FITNESS": [
-    "PLANET",
-    "GROUP",
-    "POLE",
-    "PHYSICAL",
-    "CARDIO"
-  ],
-  "_____ LIFE": [
-    "SEX",
-    "NIGHT",
-    "REAL",
-    "PARTY",
-    "SINGLE"
-  ],
-  "NIGHT _____": [
-    "CLUB",
-    "LIFE",
-    "STAND",
-    "SHIFT",
-    "OWL"
-  ],
   "_____ DRUNK": [
-    "WHITE GIRL",
     "BLACKOUT",
+    "WHITE GIRL",
     "DAY",
-    "LOVE",
-    "PUNCH"
+    "PUNCH",
+    "LOVE"
   ],
   "DRUNK _____": [
     "TEXT",
@@ -552,124 +83,19 @@
     "TANK",
     "HISTORY"
   ],
-  "_____ TEXT": [
-    "DRUNK",
-    "DIRTY",
-    "GROUP",
-    "SEXY",
-    "BREAKUP"
-  ],
-  "TEXT _____": [
-    "MESSAGE",
-    "BACK",
-    "ME",
-    "ALERT",
-    "CHAIN"
-  ],
-  "_____ DIAL": [
-    "DRUNK",
-    "SPEED",
-    "BUTT",
-    "POCKET",
-    "REDIAL"
-  ],
-  "HANGOVER _____": [
-    "CURE",
-    "MOVIE",
-    "HEADACHE",
-    "REMEDY",
-    "PATCH"
-  ],
   "_____ SHOTS": [
     "TEQUILA",
     "BODY",
     "JELLO",
-    "FLU",
-    "BACK"
+    "VODKA",
+    "FIREBALL"
   ],
   "TEQUILA _____": [
-    "SUNRISE",
     "SHOTS",
-    "MOCKINGBIRD",
-    "SODA",
+    "SUNRISE",
+    "HANGOVER",
+    "BLACKOUT",
     "SLAMMER"
-  ],
-  "_____ TEQUILA": [
-    "PATRON",
-    "CASAMIGOS",
-    "JOSE CUERVO",
-    "DON JULIO",
-    "818"
-  ],
-  "VODKA _____": [
-    "SODA",
-    "CRANBERRY",
-    "TONIC",
-    "MARTINI",
-    "RED BULL"
-  ],
-  "_____ VODKA": [
-    "TITO'S",
-    "GREY GOOSE",
-    "SMIRNOFF",
-    "ABSOLUT",
-    "KETEL ONE"
-  ],
-  "_____ MARTINI": [
-    "ESPRESSO",
-    "DIRTY",
-    "APPLE",
-    "VODKA",
-    "PORNSTAR"
-  ],
-  "_____ MARGARITA": [
-    "SPICY",
-    "FROZEN",
-    "SKINNY",
-    "STRAWBERRY",
-    "CADILLAC"
-  ],
-  "_____ MOJITO": [
-    "STRAWBERRY",
-    "VIRGIN",
-    "MANGO",
-    "CLASSIC",
-    "COCONUT"
-  ],
-  "_____ MULE": [
-    "MOSCOW",
-    "KENTUCKY",
-    "MEXICAN",
-    "LONDON",
-    "IRISH"
-  ],
-  "_____ BOMBING": [
-    "LOVE",
-    "PHOTO",
-    "TEXT",
-    "REVIEW",
-    "CARPET"
-  ],
-  "_____ WINE": [
-    "BOX",
-    "RED",
-    "WHITE",
-    "HOUSE",
-    "ROSE"
-  ],
-  "WINE _____": [
-    "MOM",
-    "GLASS",
-    "NIGHT",
-    "COOLER",
-    "TASTING"
-  ],
-  "_____ BEER": [
-    "ROOT",
-    "LIGHT",
-    "CRAFT",
-    "DRAFT",
-    "GINGER"
   ],
   "BEER _____": [
     "PONG",
@@ -692,89 +118,12 @@
     "SHOP",
     "CLEANER"
   ],
-  "_____ BAR": [
-    "DIVE",
-    "OPEN",
-    "SPORTS",
-    "CASH",
-    "TIKI"
-  ],
-  "BAR _____": [
-    "CRAWL",
-    "FIGHT",
-    "TAB",
-    "HOPPING",
-    "STOOL"
-  ],
-  "_____ CRAWL": [
-    "BAR",
-    "PUB",
-    "CAFE",
-    "CREEPY",
-    "ZOMBIE"
-  ],
-  "_____ GOGGLES": [
-    "BEER",
-    "NIGHT VISION",
-    "SWIMMING",
-    "SAFETY",
-    "SKI"
-  ],
-  "_____ GAME": [
-    "DRINKING",
-    "STRIP",
-    "MIND",
-    "VIDEO",
-    "BLAME"
-  ],
   "DRINKING _____": [
     "GAME",
-    "BUDDY",
-    "AGE",
     "PROBLEM",
-    "STRAW"
-  ],
-  "_____ PROBLEM": [
-    "DRINKING",
-    "COMMITMENT",
-    "FIRST WORLD",
-    "ANGER",
-    "GAMBLING"
-  ],
-  "_____ BREAK": [
-    "SMOKE",
-    "SPRING",
-    "LUNCH",
-    "COFFEE",
-    "HEART"
-  ],
-  "SMOKE _____": [
-    "BREAK",
-    "SHOW",
-    "SIGNAL",
-    "SHOP",
-    "ALARM"
-  ],
-  "_____ SMOKE": [
-    "SECONDHAND",
-    "CIGARETTE",
-    "WEED",
-    "HOLY",
-    "CIGAR"
-  ],
-  "VAPE _____": [
-    "PEN",
-    "CLOUD",
-    "SHOP",
-    "TRICK",
-    "JUICE"
-  ],
-  "_____ JUICE": [
-    "VAPE",
-    "ORANGE",
-    "PICKLE",
-    "CRANBERRY",
-    "BEETLE"
+    "BUDDY",
+    "CONTEST",
+    "SESSION"
   ],
   "WEED _____": [
     "BROWNIES",
@@ -783,33 +132,12 @@
     "DISPENSARY",
     "WHACKER"
   ],
-  "_____ BROWNIES": [
-    "WEED",
-    "POT",
-    "FUDGE",
-    "COSMIC",
-    "BLONDE"
-  ],
   "_____ EDIBLE": [
     "WEED",
     "THC",
     "GUMMY",
-    "CHOCOLATE",
-    "CANNABIS"
-  ],
-  "_____ GUMMY": [
-    "CBD",
-    "THC",
-    "SOUR",
-    "VITAMIN",
-    "BEAR"
-  ],
-  "_____ ROLL": [
-    "TOOTSIE",
-    "EGG",
-    "BODY",
-    "DRUM",
-    "SPRING"
+    "CANNABIS",
+    "CHOCOLATE"
   ],
   "_____ BLUNT": [
     "PASS THE",
@@ -818,25 +146,11 @@
     "FAT",
     "BACKWOODS"
   ],
-  "BLUNT _____": [
-    "FORCE",
-    "OBJECT",
-    "TRAUMA",
-    "WRAP",
-    "WEAPON"
-  ],
-  "HIGH _____": [
-    "MAINTENANCE",
-    "SCHOOL",
-    "ROLLER",
-    "FIVE",
-    "AS A KITE"
-  ],
   "_____ DRUG": [
     "PARTY",
     "HARD",
-    "PRESCRIPTION",
     "DESIGNER",
+    "PRESCRIPTION",
     "GATEWAY"
   ],
   "DRUG _____": [
@@ -846,201 +160,33 @@
     "LORD",
     "ADDICT"
   ],
-  "_____ DEALER": [
-    "DRUG",
-    "CAR",
-    "BLACKJACK",
-    "CARD",
-    "WHEELER"
-  ],
-  "_____ ADDICT": [
-    "COFFEE",
-    "PHONE",
-    "DRUG",
-    "GAMBLING",
-    "SHOPPING"
-  ],
-  "_____ ADDICTION": [
-    "VIDEO GAME",
-    "SOCIAL MEDIA",
-    "DRUG",
-    "SHOPPING",
-    "PORN"
-  ],
-  "_____ PILLS": [
-    "BIRTH CONTROL",
-    "SLEEPING",
-    "PAIN",
-    "HAPPY",
-    "DIET"
-  ],
-  "_____ TRIP": [
-    "ACID",
-    "BAD",
-    "ROAD",
-    "GIRLS",
-    "POWER"
-  ],
-  "TRIP _____": [
-    "SITTER",
-    "ADVISOR",
-    "WIRE",
-    "HOP",
-    "REPORT"
-  ],
-  "_____ ACID": [
-    "BATTERY",
-    "HYDROCHLORIC",
-    "STOMACH",
-    "SALICYLIC",
-    "CITRIC"
-  ],
-  "ACID _____": [
-    "TRIP",
-    "RAIN",
-    "WASH",
-    "REFLUX",
-    "TEST"
-  ],
   "COCAINE _____": [
     "BEAR",
     "COWBOYS",
-    "NOSE",
     "BUST",
-    "BLUES"
+    "ADDICTION",
+    "PARTY"
   ],
-  "_____ BEAR": [
+  "CRACK _____": [
+    "PIPE",
     "COCAINE",
-    "TEDDY",
-    "PANDA",
-    "GRIZZLY",
-    "CARE"
-  ],
-  "_____ SPEED": [
-    "FULL",
-    "LIGHT",
-    "TOP",
-    "GOD",
-    "BLINDING"
-  ],
-  "SPEED _____": [
-    "DATING",
-    "BUMP",
-    "TRAP",
-    "LIMIT",
-    "DEMON"
-  ],
-  "_____ DATING": [
-    "SPEED",
-    "ONLINE",
-    "DOUBLE",
-    "BLIND",
-    "CASUAL"
-  ],
-  "DATING _____": [
-    "APP",
-    "PROFILE",
-    "POOL",
-    "SCENE",
-    "HISTORY"
+    "JOKE",
+    "HOUSE",
+    "BABY"
   ],
   "TINDER _____": [
     "MATCH",
     "DATE",
-    "BIO",
-    "PROFILE",
-    "GOLD"
-  ],
-  "_____ SWIPE": [
-    "RIGHT",
-    "LEFT",
-    "UP",
-    "DOWN",
-    "SUPER"
-  ],
-  "SWIPE _____": [
-    "RIGHT",
-    "LEFT",
-    "UP",
-    "DOWN",
-    "FILE"
+    "HOOKUP",
+    "GHOSTING",
+    "CATFISH"
   ],
   "_____ DMS": [
-    "SLIDE INTO",
+    "SLIDE INTO THE",
     "OPEN",
     "LEAKED",
     "UNREAD",
     "INSTAGRAM"
-  ],
-  "GHOST _____": [
-    "PEPPER",
-    "FACE",
-    "RIDER",
-    "TOWN",
-    "WRITER"
-  ],
-  "FRIEND _____": [
-    "ZONE",
-    "REQUEST",
-    "WITH BENEFITS",
-    "GROUP",
-    "SHIP"
-  ],
-  "_____ ZONE": [
-    "FRIEND",
-    "DANGER",
-    "COMFORT",
-    "TWILIGHT",
-    "END"
-  ],
-  "_____ FANS": [
-    "ONLY",
-    "SUPER",
-    "DIEHARD",
-    "FOOTBALL",
-    "BIGGEST"
-  ],
-  "ONLY _____": [
-    "FANS",
-    "ONE",
-    "YOU",
-    "CHILD",
-    "HUMAN"
-  ],
-  "_____ CONTENT": [
-    "ADULT",
-    "PREMIUM",
-    "EXPLICIT",
-    "SPONSORED",
-    "VIRAL"
-  ],
-  "_____ ACCOUNT": [
-    "ONLYFANS",
-    "SECRET",
-    "FAKE",
-    "BURNER",
-    "VERIFIED"
-  ],
-  "_____ SUBSCRIPTION": [
-    "ONLYFANS",
-    "PREMIUM",
-    "PAID",
-    "ANNUAL",
-    "MONTHLY"
-  ],
-  "_____ PICTURE": [
-    "NUDE",
-    "PROFILE",
-    "DIRTY",
-    "PRIVATE",
-    "BABY"
-  ],
-  "_____ PHOTOS": [
-    "NUDE",
-    "LEAKED",
-    "EXPLICIT",
-    "PRIVATE",
-    "FAMILY"
   ],
   "_____ NUDES": [
     "SEND",
@@ -1049,124 +195,26 @@
     "FAKE",
     "CELEBRITY"
   ],
-  "SEND _____": [
-    "NUDES",
-    "HELP",
-    "IT",
-    "MONEY",
-    "LOCATION"
-  ],
-  "_____ PIC": [
-    "DICK",
-    "PROFILE",
-    "MIRROR",
-    "BOOTY",
-    "GROUP"
-  ],
-  "_____ SELFIE": [
-    "MIRROR",
-    "BATHROOM",
-    "NUDE",
-    "GYM",
-    "CAR"
-  ],
-  "_____ PHOTO": [
-    "THIRST TRAP",
+  "_____ PHOTOS": [
     "NUDE",
     "LEAKED",
-    "PROFILE",
-    "GROUP"
-  ],
-  "PHOTO _____": [
-    "DUMP",
-    "BOMB",
-    "SHOOT",
-    "FINISH",
-    "BOOTH"
-  ],
-  "_____ BOOTH": [
-    "PHOTO",
-    "KISSING",
-    "DJ",
-    "TICKET",
-    "VOTING"
+    "EXPLICIT",
+    "ONLYFANS",
+    "BOUDOIR"
   ],
   "_____ SCANDAL": [
     "SEX",
     "CHEATING",
-    "CELEBRITY",
-    "POLITICAL",
-    "COLLEGE"
+    "ONLYFANS",
+    "NUDE",
+    "AFFAIR"
   ],
   "SEX _____": [
     "TAPE",
     "LIFE",
-    "EDUCATION",
     "TOY",
-    "DRIVE"
-  ],
-  "_____ TAPE": [
-    "SEX",
-    "DUCT",
-    "MEASURING",
-    "RED",
-    "MIX"
-  ],
-  "_____ DRIVE": [
-    "SEX",
-    "TEST",
-    "HARD",
-    "THUMB",
-    "ROAD"
-  ],
-  "_____ TOY": [
-    "SEX",
-    "BOY",
-    "ACTION",
-    "SQUEAKY",
-    "CHEW"
-  ],
-  "_____ SHOP": [
-    "SEX",
-    "SMOKE",
-    "PAWN",
-    "GIFT",
-    "THRIFT"
-  ],
-  "_____ POSITION": [
-    "SEX",
-    "POLE",
-    "LOTUS",
-    "STARTING",
-    "MISSIONARY"
-  ],
-  "_____ COWGIRL": [
-    "REVERSE",
-    "SPACE",
-    "URBAN",
-    "COUNTRY",
-    "TEXAS"
-  ],
-  "COWBOY _____": [
-    "HAT",
-    "BOOTS",
-    "CARTER",
-    "BEBOP",
-    "CAVIAR"
-  ],
-  "_____ ENERGY": [
-    "BIG DICK",
-    "MAIN CHARACTER",
-    "BAD BITCH",
-    "CHAOTIC",
-    "GOLDEN RETRIEVER"
-  ],
-  "MAIN CHARACTER _____": [
-    "ENERGY",
-    "SYNDROME",
-    "MOMENT",
-    "ARC",
-    "VIBES"
+    "DRIVE",
+    "EDUCATION"
   ],
   "BIG _____": [
     "DICK",
@@ -1175,55 +223,6 @@
     "BACK",
     "MOOD"
   ],
-  "GIRL _____": [
-    "DINNER",
-    "MATH",
-    "BOSS",
-    "CODE",
-    "POWER"
-  ],
-  "_____ DINNER": [
-    "GIRL",
-    "FAMILY",
-    "FANCY",
-    "MICROWAVE",
-    "CHICKEN"
-  ],
-  "_____ MATH": [
-    "GIRL",
-    "BOY",
-    "COMMON CORE",
-    "QUICK",
-    "FUZZY"
-  ],
-  "_____ ERA": [
-    "VILLAIN",
-    "REPUTATION",
-    "HEALING",
-    "SINGLE",
-    "BRAT"
-  ],
-  "_____ ARC": [
-    "VILLAIN",
-    "REDEMPTION",
-    "CHARACTER",
-    "TRAINING",
-    "STORY"
-  ],
-  "_____ MOMENT": [
-    "MAIN CHARACTER",
-    "BRUH",
-    "BLONDE",
-    "TEACHABLE",
-    "VIRAL"
-  ],
-  "_____ LAUNCH": [
-    "SOFT",
-    "HARD",
-    "PRODUCT",
-    "ALBUM",
-    "ROCKET"
-  ],
   "_____ TEXTING": [
     "DRUNK",
     "DOUBLE",
@@ -1231,152 +230,26 @@
     "LATE NIGHT",
     "FLIRTY"
   ],
-  "_____ MESSAGE": [
-    "DIRECT",
-    "DRUNK",
-    "TEXT",
-    "SECRET",
-    "VOICE"
-  ],
-  "_____ CHAT": [
-    "GROUP",
-    "LIVE",
-    "PRIVATE",
-    "VIDEO",
-    "DIRTY"
-  ],
-  "GROUP _____": [
-    "CHAT",
-    "DATE",
-    "TEXT",
-    "HUG",
-    "THERAPY"
-  ],
-  "_____ LOVER": [
-    "SECRET",
-    "ANIMAL",
-    "LATIN",
-    "MUSIC",
-    "COFFEE"
-  ],
-  "SECRET _____": [
-    "LOVER",
-    "ADMIRER",
-    "LIFE",
-    "SERVICE",
-    "SANTA"
-  ],
-  "_____ CRUSH": [
-    "CELEBRITY",
-    "SCHOOL",
-    "WORK",
-    "SECRET",
-    "CANDY"
-  ],
-  "_____ FEELINGS": [
-    "CATCH",
-    "HURT",
-    "TRUE",
-    "HARD",
-    "MIXED"
-  ],
-  "CATCH _____": [
-    "FEELINGS",
-    "HANDS",
-    "FLIGHTS",
-    "FIRE",
-    "A CASE"
-  ],
-  "_____ FEELING": [
-    "GUT",
-    "SINKING",
-    "FUNNY",
-    "BAD",
-    "GOOD"
-  ],
-  "VIBE _____": [
-    "CHECK",
-    "KILLER",
-    "SHIFT",
-    "CHANGE",
-    "SESSION"
-  ],
-  "_____ CHECK": [
-    "VIBE",
-    "REALITY",
-    "BACKGROUND",
-    "BOOTY",
-    "MIC"
-  ],
-  "BREAKUP _____": [
-    "SONG",
-    "TEXT",
-    "SEX",
-    "PLAYLIST",
-    "HAIRCUT"
-  ],
   "_____ SEX": [
-    "MAKEUP",
-    "BREAKUP",
-    "SAFE",
+    "ORAL",
     "CASUAL",
-    "PUBLIC"
-  ],
-  "MAKEUP _____": [
-    "SEX",
-    "ARTIST",
-    "REMOVER",
-    "BAG",
-    "TUTORIAL"
-  ],
-  "CHEATING _____": [
-    "SCANDAL",
-    "HEART",
-    "SPOUSE",
-    "BOYFRIEND",
-    "PARTNER"
+    "SAFE",
+    "PHONE",
+    "MAKEUP"
   ],
   "_____ AFFAIR": [
     "LOVE",
     "SECRET",
     "EXTRAMARITAL",
-    "FOREIGN",
-    "WORK"
-  ],
-  "_____ SIDE": [
-    "DARK",
-    "WILD",
-    "OTHER",
-    "FLIP",
-    "LEFT"
-  ],
-  "SIDE _____": [
-    "CHICK",
-    "PIECE",
-    "HUSTLE",
-    "QUEST",
-    "EFFECT"
-  ],
-  "_____ PIECE": [
-    "SIDE",
-    "ONE",
-    "TWO",
-    "CENTER",
-    "MASTER"
-  ],
-  "_____ FRIEND": [
-    "BOY",
-    "GIRL",
-    "BEST",
-    "FAKE",
-    "WORK"
+    "OFFICE",
+    "TORRID"
   ],
   "_____ HOOKUP": [
     "RANDOM",
     "LATE NIGHT",
-    "SECRET",
     "TINDER",
-    "CASUAL"
+    "CASUAL",
+    "SECRET"
   ],
   "HOOKUP _____": [
     "CULTURE",
@@ -1385,272 +258,6 @@
     "BUDDY",
     "SITE"
   ],
-  "_____ LINK": [
-    "SNEAKY",
-    "BIO",
-    "MISSING",
-    "WEAK",
-    "DIRECT"
-  ],
-  "LINK _____": [
-    "IN BIO",
-    "UP",
-    "TREE",
-    "BELOW",
-    "IN THE COMMENTS"
-  ],
-  "_____ STAGE": [
-    "TALKING",
-    "HONEYMOON",
-    "BREAKUP",
-    "EARLY",
-    "SETTING"
-  ],
-  "TALKING _____": [
-    "STAGE",
-    "SHIT",
-    "POINT",
-    "HEADS",
-    "DIRTY"
-  ],
-  "_____ SEASON": [
-    "CUFFING",
-    "FOOTBALL",
-    "WEDDING",
-    "AWARDS",
-    "HOLIDAY"
-  ],
-  "REBOUND _____": [
-    "RELATIONSHIP",
-    "GUY",
-    "GIRL",
-    "DATE",
-    "SEX"
-  ],
-  "GAME _____": [
-    "NIGHT",
-    "OVER",
-    "SHOW",
-    "PLAN",
-    "FACE"
-  ],
-  "GAME OF _____": [
-    "THRONES",
-    "LIFE",
-    "LOVE",
-    "DEATH",
-    "CHANCE"
-  ],
-  "_____ WARS": [
-    "STAR",
-    "STORAGE",
-    "CLONE",
-    "PRICE",
-    "CULTURE"
-  ],
-  "STAR _____": [
-    "WARS",
-    "TREK",
-    "BUCKS",
-    "STRUCK",
-    "POWER"
-  ],
-  "_____ KING": [
-    "BURGER",
-    "TIGER",
-    "LION",
-    "PROM",
-    "DRAMA"
-  ],
-  "_____ QUEEN": [
-    "DRAG",
-    "DANCING",
-    "PROM",
-    "BEAUTY",
-    "DRAMA"
-  ],
-  "DRAG _____": [
-    "QUEEN",
-    "RACE",
-    "SHOW",
-    "BRUNCH",
-    "MAKEUP"
-  ],
-  "_____ RACE": [
-    "DRAG",
-    "RAT",
-    "SPACE",
-    "ARMS",
-    "HUMAN"
-  ],
-  "_____ BROTHER": [
-    "BIG",
-    "LITTLE",
-    "STEP",
-    "HALF",
-    "BLOOD"
-  ],
-  "_____ BROTHERS": [
-    "JONAS",
-    "MARIO",
-    "COEN",
-    "PROPERTY",
-    "STEP"
-  ],
-  "_____ SISTERS": [
-    "KARDASHIAN",
-    "HADID",
-    "SANDERSON",
-    "WILLIAMS",
-    "OLSEN"
-  ],
-  "_____ JENNER": [
-    "KYLIE",
-    "KENDALL",
-    "KRIS",
-    "CAITLYN",
-    "BRODY"
-  ],
-  "_____ WEST": [
-    "KANYE",
-    "NORTH",
-    "WILD",
-    "KEY",
-    "MAE"
-  ],
-  "TAYLOR _____": [
-    "SWIFT",
-    "LAUTNER",
-    "SERIES",
-    "MADE",
-    "GANG"
-  ],
-  "_____ CARTER": [
-    "JIMMY",
-    "JAY Z",
-    "BEYONCE",
-    "NICK",
-    "HELENA"
-  ],
-  "_____ TRAVIS": [
-    "SCOTT",
-    "BARKER",
-    "KELCE",
-    "TRITT",
-    "FIMMEL"
-  ],
-  "_____ MUSIC": [
-    "TRAP",
-    "HOUSE",
-    "POP",
-    "RAP",
-    "COUNTRY"
-  ],
-  "_____ RAP": [
-    "GANGSTA",
-    "MUMBLE",
-    "BATTLE",
-    "FREESTYLE",
-    "TRAP"
-  ],
-  "RAP _____": [
-    "BATTLE",
-    "GOD",
-    "MUSIC",
-    "SHEET",
-    "CAREER"
-  ],
-  "DISS _____": [
-    "TRACK",
-    "SONG",
-    "RAP",
-    "BATTLE",
-    "RECORD"
-  ],
-  "_____ TRACK": [
-    "DISS",
-    "SOUND",
-    "BACKING",
-    "TRAIN",
-    "RACE"
-  ],
-  "_____ ARTIST": [
-    "RAP",
-    "MAKEUP",
-    "CON",
-    "SOLO",
-    "ESCAPE"
-  ],
-  "REALITY _____": [
-    "TV",
-    "SHOW",
-    "CHECK",
-    "STAR",
-    "BITES"
-  ],
-  "_____ TV": [
-    "REALITY",
-    "CABLE",
-    "LIVE",
-    "SMART",
-    "TRASH"
-  ],
-  "_____ STREAM": [
-    "LIVE",
-    "HOT TUB",
-    "TWITCH",
-    "GAMING",
-    "MUSIC"
-  ],
-  "STREAM _____": [
-    "SNIPING",
-    "DECK",
-    "KEY",
-    "CHAT",
-    "YARD"
-  ],
-  "_____ CONTENT CREATOR": [
-    "ONLYFANS",
-    "TIKTOK",
-    "YOUTUBE",
-    "ADULT",
-    "VIRAL"
-  ],
-  "TIKTOK _____": [
-    "LIVE",
-    "DANCE",
-    "CHALLENGE",
-    "SHOP",
-    "STAR"
-  ],
-  "INSTAGRAM _____": [
-    "MODEL",
-    "STORY",
-    "REELS",
-    "LIVE",
-    "BIO"
-  ],
-  "_____ STORY": [
-    "INSTAGRAM",
-    "SNAPCHAT",
-    "LOVE",
-    "HORROR",
-    "TOY"
-  ],
-  "_____ MODEL": [
-    "INSTAGRAM",
-    "ONLYFANS",
-    "RUNWAY",
-    "FITNESS",
-    "ROLE"
-  ],
-  "_____ STAR": [
-    "PORN",
-    "POP",
-    "ROCK",
-    "MOVIE",
-    "TIKTOK"
-  ],
   "PORN _____": [
     "STAR",
     "HUB",
@@ -1658,243 +265,12 @@
     "INDUSTRY",
     "PARODY"
   ],
-  "_____ PARODY": [
-    "PORN",
-    "SONG",
-    "MOVIE",
-    "POLITICAL",
-    "COMEDY"
-  ],
-  "GONE _____": [
-    "WILD",
-    "ROGUE",
-    "GIRL",
-    "BAD",
-    "FISHING"
-  ],
-  "SPRING _____": [
-    "BREAK",
-    "FLING",
-    "FEVER",
-    "CLEANING",
-    "TRAINING"
-  ],
-  "_____ FLING": [
-    "SUMMER",
-    "SPRING",
-    "HOLIDAY",
-    "SECRET",
-    "SHORT"
-  ],
-  "SUMMER _____": [
-    "FLING",
-    "NIGHTS",
-    "SCHOOL",
-    "LOVE",
-    "HOUSE"
-  ],
-  "_____ NIGHTS": [
-    "SUMMER",
-    "FRIDAY",
-    "DATE",
-    "LATE",
-    "MOVIE"
-  ],
-  "_____ WEEKEND": [
-    "THE",
-    "LONG",
-    "WILD",
-    "DIRTY",
-    "BACHELOR"
-  ],
-  "WEEKEND _____": [
-    "GETAWAY",
-    "PLANS",
-    "WARRIOR",
-    "TRIP",
-    "VIBES"
-  ],
-  "_____ VACATION": [
-    "FAMILY",
-    "SPRING BREAK",
-    "COUPLES",
-    "GIRLS",
-    "DREAM"
-  ],
-  "VACATION _____": [
-    "MODE",
-    "RENTAL",
-    "BIBLE SCHOOL",
-    "PICTURES",
-    "TIME"
-  ],
-  "_____ SUITE": [
-    "HONEYMOON",
-    "PRESIDENTIAL",
-    "EXECUTIVE",
-    "HOTEL",
-    "JUNIOR"
-  ],
-  "HONEYMOON _____": [
-    "SUITE",
-    "PHASE",
-    "PERIOD",
-    "NIGHT",
-    "DESTINATION"
-  ],
-  "_____ MOON": [
-    "HONEY",
-    "BLOOD",
-    "BLUE",
-    "FULL",
-    "HARVEST"
-  ],
-  "HONEY _____": [
-    "MOON",
-    "TRAP",
-    "BADGER",
-    "BUN",
-    "BOO BOO"
-  ],
-  "_____ BRIDE": [
-    "RUNAWAY",
-    "CORPSE",
-    "MAIL ORDER",
-    "PRINCESS",
-    "ZOMBIE"
-  ],
-  "BRIDE _____": [
-    "ZILLA",
-    "WARS",
-    "SQUAD",
-    "TRIBE",
-    "PRICE"
-  ],
-  "_____ WEDDING": [
-    "SHOTGUN",
-    "DESTINATION",
-    "ROYAL",
-    "VEGAS",
-    "WHITE"
-  ],
-  "WEDDING _____": [
-    "CRASHERS",
-    "NIGHT",
-    "VOWS",
-    "DRESS",
-    "BELLS"
-  ],
-  "VEGAS _____": [
-    "STRIP",
-    "SHOW",
-    "WEDDING",
-    "NIGHTS",
-    "VACATION"
-  ],
-  "_____ CASINO": [
-    "VEGAS",
-    "ONLINE",
-    "ROYAL",
-    "INDIAN",
-    "HIGH ROLLER"
-  ],
-  "CASINO _____": [
-    "NIGHT",
-    "ROYALE",
-    "CHIPS",
-    "HEIST",
-    "FLOOR"
-  ],
-  "_____ HEIST": [
-    "MONEY",
-    "BANK",
-    "CASINO",
-    "ART",
-    "DIAMOND"
-  ],
-  "_____ MONEY": [
-    "BLOOD",
-    "DIRTY",
-    "FAST",
-    "DRUG",
-    "EASY"
-  ],
-  "MONEY _____": [
-    "LAUNDERING",
-    "SHOT",
-    "TALKS",
-    "HUNGRY",
-    "TRAIN"
-  ],
-  "_____ CRYPTO": [
-    "BRO",
-    "SCAM",
-    "MINING",
-    "KING",
-    "WALLET"
-  ],
-  "CRYPTO _____": [
-    "BRO",
-    "CURRENCY",
-    "EXCHANGE",
-    "SCAM",
-    "WINTER"
-  ],
-  "_____ SCAM": [
-    "ROMANCE",
-    "CRYPTO",
-    "PHONE",
-    "PONZI",
-    "PYRAMID"
-  ],
-  "SCAM _____": [
-    "ARTIST",
-    "CALL",
-    "LIKELY",
-    "ALERT",
-    "WEBSITE"
-  ],
-  "PICKUP _____": [
-    "LINE",
-    "ARTIST",
-    "TRUCK",
-    "GAME",
-    "BASKETBALL"
-  ],
-  "_____ LINE": [
-    "PICKUP",
-    "PARTY",
-    "PUNCH",
-    "COKE",
-    "FRONT"
-  ],
-  "_____ LINES": [
-    "PICKUP",
-    "BLURRED",
-    "WHITE",
-    "BATTLE",
-    "PUNCH"
-  ],
-  "BLURRED _____": [
-    "LINES",
-    "VISION",
-    "BOUNDARIES",
-    "MEMORIES",
-    "REALITY"
-  ],
-  "_____ CONSENT": [
-    "INFORMED",
-    "MUTUAL",
-    "ENTHUSIASTIC",
-    "SEXUAL",
-    "WRITTEN"
-  ],
   "_____ REHAB": [
-    "CELEBRITY",
     "DRUG",
     "ALCOHOL",
     "SEX",
-    "PHYSICAL"
+    "CELEBRITY",
+    "GAMBLING"
   ],
   "_____ ANONYMOUS": [
     "ALCOHOLICS",
@@ -1902,27 +278,6 @@
     "GAMBLERS",
     "OVEREATERS",
     "SEX ADDICTS"
-  ],
-  "_____ THERAPY": [
-    "COUPLES",
-    "SEX",
-    "GROUP",
-    "RETAIL",
-    "TALK"
-  ],
-  "THERAPY _____": [
-    "SESSION",
-    "DOG",
-    "ANIMAL",
-    "GROUP",
-    "SPEAK"
-  ],
-  "_____ COUNSELING": [
-    "MARRIAGE",
-    "COUPLES",
-    "SEX",
-    "RELATIONSHIP",
-    "FAMILY"
   ],
   "_____ FETISH": [
     "FOOT",
@@ -1938,516 +293,54 @@
     "CONTROL",
     "HUMILIATION"
   ],
-  "KINK _____": [
-    "SHAMING",
-    "COMMUNITY",
-    "POSITIVE",
-    "FESTIVAL",
-    "TEST"
-  ],
   "_____ PLAY": [
     "ROLE",
     "POWER",
     "PUPPY",
-    "BONDAGE",
-    "FORE"
-  ],
-  "ROLE _____": [
-    "PLAY",
-    "MODEL",
-    "REVERSAL",
-    "ASSIGNMENT",
-    "PLAYER"
-  ],
-  "LINGERIE _____": [
-    "STORE",
-    "PARTY",
-    "MODEL",
-    "SHOW",
-    "SET"
-  ],
-  "WET _____": [
-    "DREAM",
-    "PAINT",
-    "FLOOR",
-    "BAR",
-    "WILLY"
-  ],
-  "_____ DREAM": [
-    "WET",
-    "AMERICAN",
-    "PIPE",
-    "FEVER",
-    "LUCID"
-  ],
-  "AMERICAN _____": [
-    "PIE",
-    "DREAM",
-    "PSYCHO",
-    "IDOL",
-    "HORROR STORY"
-  ],
-  "_____ PIE": [
-    "AMERICAN",
-    "CREAM",
-    "CHERRY",
-    "PUMPKIN",
-    "HUMBLE"
-  ],
-  "PIE _____": [
-    "CHART",
-    "FACE",
-    "CRUST",
-    "IN THE SKY",
-    "SHOP"
-  ],
-  "_____ CREAM": [
-    "WHIPPED",
-    "ICE",
-    "SOUR",
-    "BODY",
-    "SHAVING"
-  ],
-  "_____ PLEASURE": [
-    "GUILTY",
-    "SELF",
-    "MUTUAL",
-    "PURE",
-    "SECRET"
-  ],
-  "GUILTY _____": [
-    "PLEASURE",
-    "VERDICT",
-    "CONSCIENCE",
-    "AS CHARGED",
-    "PARTY"
-  ],
-  "_____ GUILT": [
-    "CATHOLIC",
-    "MOM",
-    "SURVIVORS",
-    "WHITE",
-    "TRIP"
-  ],
-  "_____ BITE": [
-    "LOVE",
-    "SHARK",
-    "VAMPIRE",
-    "SNAKE",
-    "SPIDER"
-  ],
-  "BITE _____": [
-    "ME",
-    "THE BULLET",
-    "YOUR TONGUE",
-    "SIZE",
-    "BACK"
-  ],
-  "_____ MARK": [
-    "BIRTH",
-    "CHECK",
-    "QUESTION",
-    "WATER",
-    "LOVE"
-  ],
-  "_____ FINGER": [
-    "MIDDLE",
-    "TRIGGER",
-    "RING",
-    "PINKY",
-    "INDEX"
-  ],
-  "FINGER _____": [
-    "BANG",
-    "FOOD",
-    "PRINT",
-    "NAIL",
-    "PAINT"
+    "IMPACT",
+    "BONDAGE"
   ],
   "_____ JOB": [
     "BLOW",
     "HAND",
+    "RIM",
     "NOSE",
-    "DAY",
-    "SIDE"
-  ],
-  "HAND _____": [
-    "JOB",
-    "CUFFS",
-    "SHAKE",
-    "BAG",
-    "PRINT"
+    "DAY"
   ],
   "BLOW _____": [
     "JOB",
+    "ME",
     "OUT",
     "UP",
-    "DRY",
-    "DART"
-  ],
-  "_____ OUT": [
-    "MAKE",
-    "BLOW",
-    "PASS",
-    "BLACK",
-    "HANG"
-  ],
-  "MAKE _____": [
-    "OUT",
-    "LOVE",
-    "MONEY",
-    "BELIEVE",
-    "UP"
-  ],
-  "_____ OVER": [
-    "HANG",
-    "MAKE",
-    "TURN",
-    "START",
-    "COME"
-  ],
-  "_____ BOMB": [
-    "F",
-    "LOVE",
-    "SMOKE",
-    "BATH",
-    "NUCLEAR"
-  ],
-  "_____ TEST": [
-    "PREGNANCY",
-    "DRUG",
-    "LIE DETECTOR",
-    "COVID",
-    "DNA"
-  ],
-  "PREGNANCY _____": [
-    "TEST",
-    "SCARE",
-    "CRAVINGS",
-    "GLOW",
-    "BRAIN"
-  ],
-  "_____ SCARE": [
-    "PREGNANCY",
-    "JUMP",
-    "HEALTH",
-    "BOMB",
-    "CANCER"
-  ],
-  "_____ PUMP": [
-    "BREAST",
-    "GAS",
-    "AIR",
-    "BIKE",
-    "INSULIN"
-  ],
-  "_____ PIPE": [
-    "CRACK",
-    "WATER",
-    "SMOKING",
-    "GAS",
-    "METAL"
-  ],
-  "CRACK _____": [
-    "PIPE",
-    "COCAINE",
-    "JOKE",
-    "HOUSE",
-    "BABY"
-  ],
-  "_____ HEAD": [
-    "DICK",
-    "POT",
-    "EGG",
-    "AIR",
-    "BED"
-  ],
-  "HEAD _____": [
-    "GAME",
-    "SHOT",
-    "START",
-    "CASE",
-    "BAND"
-  ],
-  "BRAIN _____": [
-    "ROT",
-    "FOG",
-    "FREEZE",
-    "DAMAGE",
-    "DEAD"
-  ],
-  "NUT _____": [
-    "CRACKER",
-    "BUTTER",
-    "JOB",
-    "CASE",
-    "SHELL"
+    "DRY"
   ],
   "BUTT _____": [
-    "DIAL",
+    "PLUG",
     "CRACK",
+    "DIAL",
     "HEAD",
-    "LIFT",
-    "PLUG"
-  ],
-  "_____ PLUG": [
-    "BUTT",
-    "SPARK",
-    "EAR",
-    "POWER",
-    "HAIR"
+    "LIFT"
   ],
   "_____ BALLS": [
     "BLUE",
-    "BASKET",
-    "MEAT",
-    "STRESS",
-    "DISCO"
+    "BIG",
+    "HAIRY",
+    "BRASS",
+    "MEAT"
   ],
   "BALLS _____": [
     "DEEP",
     "TO THE WALL",
     "OUT",
-    "UP",
-    "OF STEEL"
-  ],
-  "_____ RIDE": [
-    "JOY",
-    "HORSE",
-    "FREE",
-    "ROUGH",
-    "CAR"
-  ],
-  "RIDE _____": [
-    "OR DIE",
-    "SHARE",
-    "HOME",
-    "ALONG",
-    "THE WAVE"
-  ],
-  "_____ DOLL": [
-    "BLOW UP",
-    "BARBIE",
-    "SEX",
-    "VOODOO",
-    "RAG"
-  ],
-  "BLOW UP _____": [
-    "DOLL",
-    "MATTRESS",
-    "POOL",
-    "CASTLE",
-    "BALLOON"
-  ],
-  "_____ WIFE": [
-    "TROPHY",
-    "WORK",
-    "EX",
-    "HOUSE",
-    "TRAD"
-  ],
-  "_____ HUSBAND": [
-    "WORK",
-    "TROPHY",
-    "EX",
-    "HOUSE",
-    "FUTURE"
-  ],
-  "_____ MARRIAGE": [
-    "SHOTGUN",
-    "OPEN",
-    "SAME SEX",
-    "ARRANGED",
-    "LAVENDER"
-  ],
-  "MARRIAGE _____": [
-    "COUNSELING",
-    "LICENSE",
-    "MATERIAL",
-    "VOWS",
-    "PROPOSAL"
-  ],
-  "DIVORCE _____": [
-    "PARTY",
-    "LAWYER",
-    "PAPERS",
-    "COURT",
-    "SETTLEMENT"
-  ],
-  "_____ CHILD": [
-    "LOVE",
-    "ONLY",
-    "FIRST",
-    "GOLDEN",
-    "SPOILED"
-  ],
-  "STEP _____": [
-    "SISTER",
-    "BROTHER",
-    "MOM",
-    "DAD",
-    "CHILD"
-  ],
-  "_____ MOM": [
-    "STEP",
-    "HOT",
-    "SOCCER",
-    "DOG",
-    "SINGLE"
-  ],
-  "MOM _____": [
-    "JEANS",
-    "BOD",
-    "JOKE",
-    "GUILT",
-    "FRIEND"
-  ],
-  "DAD _____": [
-    "BOD",
-    "JOKE",
-    "ROCK",
-    "HAT",
-    "SHOES"
-  ],
-  "_____ BOD": [
-    "DAD",
-    "MOM",
-    "BEACH",
-    "HOT",
-    "SUMMER"
-  ],
-  "_____ PARENT": [
-    "STEP",
-    "SINGLE",
-    "FOSTER",
-    "GRAND",
-    "GOD"
-  ],
-  "_____ CHAIR": [
-    "ELECTRIC",
-    "MASSAGE",
-    "HIGH",
-    "ROCKING",
-    "BEAN BAG"
-  ],
-  "_____ CHAIN": [
-    "BALL AND",
-    "GOLD",
-    "FOOD",
-    "TEXT",
-    "SUPPLY"
+    "OF STEEL",
+    "UP"
   ],
   "_____ BAG": [
     "DIME",
     "BODY",
-    "GIFT",
     "TEA",
-    "TRASH"
-  ],
-  "_____ BUTTON": [
-    "PANIC",
-    "BELLY",
-    "RESET",
-    "LIKE",
-    "EASY"
-  ],
-  "_____ DISEASE": [
-    "SEXUALLY TRANSMITTED",
-    "HEART",
-    "LYME",
-    "CHRONIC",
-    "INFECTIOUS"
-  ],
-  "_____ CLINIC": [
-    "SEXUAL HEALTH",
-    "WALK IN",
-    "FREE",
-    "VACCINE",
-    "DENTAL"
-  ],
-  "_____ TEST RESULTS": [
-    "PREGNANCY",
-    "DRUG",
-    "BLOOD",
-    "DNA",
-    "COVID"
-  ],
-  "_____ SAFE": [
-    "SEX",
-    "WORK",
-    "PLAY",
-    "CHILD",
-    "HOUSE"
-  ],
-  "SAFE _____": [
-    "SEX",
-    "WORD",
-    "SPACE",
-    "HOUSE",
-    "DRIVING"
-  ],
-  "_____ WORD": [
-    "SAFE",
-    "CURSE",
-    "CODE",
-    "SECRET",
-    "FINAL"
-  ],
-  "CURSE _____": [
-    "WORD",
-    "JAR",
-    "BREAKER",
-    "OF THE PHARAOH",
-    "REMOVAL"
-  ],
-  "_____ JAR": [
-    "SWEAR",
-    "TIP",
-    "COOKIE",
-    "MASON",
-    "PICKLE"
-  ],
-  "SWEAR _____": [
-    "WORD",
-    "JAR",
-    "TO GOD",
-    "OFF",
-    "BY"
-  ],
-  "_____ JOKE": [
-    "DAD",
-    "DIRTY",
-    "KNOCK KNOCK",
-    "INSIDE",
-    "DARK"
-  ],
-  "JOKE _____": [
-    "BOOK",
-    "SHOP",
-    "OF THE DAY",
-    "AROUND",
-    "WRITER"
-  ],
-  "_____ HUMOR": [
-    "DARK",
-    "DIRTY",
-    "GROSS",
-    "GUTTER",
-    "DRY"
-  ],
-  "DARK _____": [
-    "HUMOR",
-    "WEB",
-    "SIDE",
-    "ROOM",
-    "HORSE"
-  ],
-  "_____ HORSE": [
-    "DARK",
-    "TROJAN",
-    "HIGH",
-    "WILD",
-    "ONE"
+    "DOUCHE",
+    "SCUM"
   ],
   "_____ DIRTY": [
     "GET",
@@ -2456,88 +349,452 @@
     "DO THE",
     "THINK"
   ],
-  "_____ DEEDS": [
-    "DIRTY",
-    "BAD",
-    "EVIL",
-    "GOOD",
-    "DARK"
+  "_____ PARTY": [
+    "SEX",
+    "SWINGER",
+    "LINGERIE",
+    "BACHELOR",
+    "FRAT"
   ],
-  "_____ BUSINESS": [
-    "MONKEY",
-    "DIRTY",
-    "FUNNY",
-    "RISKY",
-    "BIG"
+  "ONLYFANS _____": [
+    "MODEL",
+    "ACCOUNT",
+    "LEAK",
+    "CONTENT",
+    "SUBSCRIPTION"
   ],
-  "MONKEY _____": [
-    "BUSINESS",
-    "SEE",
-    "WRENCH",
-    "POX",
-    "BARS"
-  ],
-  "_____ SECRET": [
-    "DIRTY",
-    "DARK",
-    "FAMILY",
-    "OPEN",
-    "LITTLE"
-  ],
-  "_____ SANTA": [
+  "_____ ONLYFANS": [
+    "FREE",
+    "LEAKED",
     "SECRET",
-    "DIRTY",
-    "BAD",
-    "DRUNK",
-    "EVIL"
+    "FAKE",
+    "CELEBRITY"
   ],
-  "_____ LIST": [
-    "NAUGHTY",
-    "HIT",
-    "GUEST",
-    "BLOCK",
-    "SHIT"
+  "LEAKED _____": [
+    "NUDES",
+    "DMS",
+    "SEX TAPE",
+    "ONLYFANS",
+    "PHOTOS"
   ],
-  "NAUGHTY _____": [
-    "LIST",
-    "OR NICE",
-    "GIRL",
-    "BOY",
-    "CORNER"
+  "_____ PORN": [
+    "FOOD",
+    "REVENGE",
+    "AMATEUR",
+    "HARDCORE",
+    "CELEBRITY"
   ],
-  "_____ CLOWN": [
-    "CLASS",
-    "SCARY",
-    "EVIL",
+  "NUDE _____": [
+    "BEACH",
+    "PHOTO",
+    "SELFIE",
+    "SCENE",
+    "MODEL"
+  ],
+  "SEXUAL _____": [
+    "TENSION",
+    "CHEMISTRY",
+    "FANTASY",
+    "ATTRACTION",
+    "FRUSTRATION"
+  ],
+  "SEX TOY _____": [
+    "STORE",
+    "COLLECTION",
+    "DRAWER",
+    "CLEANER",
+    "BOX"
+  ],
+  "_____ VIBRATOR": [
+    "BULLET",
+    "RABBIT",
+    "WAND",
+    "MINI",
+    "CLITORAL"
+  ],
+  "_____ CONDOM": [
+    "MAGNUM",
+    "LATEX",
+    "BROKEN",
+    "FLAVORED",
+    "USED"
+  ],
+  "CONDOM _____": [
+    "WRAPPER",
+    "MACHINE",
+    "SIZE",
+    "AISLE",
+    "DISPENSER"
+  ],
+  "STD _____": [
+    "TEST",
+    "CLINIC",
+    "SCREENING",
+    "SCARE",
+    "RESULTS"
+  ],
+  "SWINGER _____": [
     "PARTY",
-    "BIRTHDAY"
+    "CLUB",
+    "LIFESTYLE",
+    "COUPLE",
+    "RESORT"
   ],
-  "CLOWN _____": [
+  "BDSM _____": [
+    "GEAR",
+    "DUNGEON",
+    "CLUB",
+    "PARTY",
+    "COMMUNITY"
+  ],
+  "_____ DUNGEON": [
+    "SEX",
+    "TORTURE",
+    "BDSM",
+    "PLEASURE",
+    "BONDAGE"
+  ],
+  "KINKY _____": [
+    "SEX",
+    "BOOTS",
+    "FANTASY",
+    "GAME",
+    "COUPLE"
+  ],
+  "DICK _____": [
+    "PIC",
+    "HEAD",
+    "JOKE",
+    "MOVE",
+    "WAD"
+  ],
+  "_____ PICS": [
+    "DICK",
+    "FEET",
+    "NUDE",
+    "BOOB",
+    "BOOTY"
+  ],
+  "FEET _____": [
+    "PICS",
+    "FETISH",
+    "FINDER",
+    "KINK",
+    "MODEL"
+  ],
+  "BOOB _____": [
+    "JOB",
+    "TUBE",
+    "TAPE",
+    "SWEAT",
+    "SLIP"
+  ],
+  "_____ BITCH": [
+    "BAD",
+    "BASIC",
+    "SON OF A",
+    "CRAZY",
+    "BOSS"
+  ],
+  "BITCH _____": [
+    "PLEASE",
+    "SLAP",
+    "FACE",
+    "MODE",
+    "MOVE"
+  ],
+  "_____ WHORE": [
+    "ATTENTION",
+    "CLOUT",
+    "CAMERA",
+    "FAME",
+    "MEDIA"
+  ],
+  "SLUT _____": [
+    "SHAMING",
+    "WALK",
+    "ERA",
+    "DROP",
+    "PHASE"
+  ],
+  "_____ ASS": [
+    "BAD",
+    "DUMB",
+    "FAT",
+    "SMART",
+    "KICK"
+  ],
+  "ASS _____": [
+    "HOLE",
+    "CHEEKS",
+    "CRACK",
+    "KICKING",
+    "WIPE"
+  ],
+  "_____ OFF": [
+    "FUCK",
+    "JERK",
+    "JACK",
+    "PISS",
+    "GET"
+  ],
+  "_____ AROUND": [
+    "FUCK",
+    "SLEEP",
+    "MESS",
+    "SCREW",
+    "FOOL"
+  ],
+  "_____ ME": [
+    "FUCK",
+    "BLOW",
+    "SUCK",
+    "KISS",
+    "TEXT"
+  ],
+  "_____ MY ASS": [
+    "KISS",
+    "EAT",
+    "BITE",
+    "LICK",
+    "WHOOP"
+  ],
+  "PISS _____": [
+    "OFF",
+    "POOR",
+    "TEST",
+    "BREAK",
+    "TAKE"
+  ],
+  "_____ FACE": [
+    "POKER",
+    "FUCK",
+    "BUTTER",
+    "SHIT",
+    "ASS"
+  ],
+  "BAG OF _____": [
+    "DICKS",
+    "WEED",
+    "SHIT",
+    "MONEY",
+    "DRUGS"
+  ],
+  "MOMMY _____": [
+    "ISSUES",
+    "KINK",
+    "MILKERS",
+    "MAKEOVER",
+    "DEAREST"
+  ],
+  "MILF _____": [
+    "MANOR",
+    "HUNTER",
+    "ISLAND",
+    "NEXT DOOR",
+    "PORN"
+  ],
+  "COUGAR _____": [
+    "TOWN",
+    "HUNTER",
+    "BAR",
+    "DATING",
+    "CLUB"
+  ],
+  "SEX ON THE _____": [
+    "BEACH",
+    "FLOOR",
+    "COUCH",
+    "TABLE",
+    "FIRST DATE"
+  ],
+  "SEX IN THE _____": [
     "CAR",
-    "SCHOOL",
-    "NOSE",
-    "MAKEUP",
-    "WORLD"
+    "SHOWER",
+    "BATHROOM",
+    "OFFICE",
+    "BACKSEAT"
   ],
-  "_____ CIRCUS": [
-    "FLEA",
-    "THREE RING",
-    "MEDIA",
-    "FAMILY",
-    "SHIT"
+  "_____ AND CHILL": [
+    "NETFLIX",
+    "HULU",
+    "DISNEY",
+    "HBO",
+    "PRIME"
   ],
-  "_____ FREAK": [
-    "CONTROL",
-    "FITNESS",
-    "CLEAN",
-    "SUPER",
-    "NATURE"
+  "GRINDR _____": [
+    "HOOKUP",
+    "DICK PIC",
+    "DATE",
+    "GHOSTING",
+    "CATFISH"
   ],
-  "FREAK _____": [
-    "SHOW",
-    "OUT",
-    "FLAG",
-    "ON A LEASH",
-    "ACCIDENT"
+  "SMUT _____": [
+    "BOOK",
+    "FIC",
+    "TOK",
+    "NOVEL",
+    "WRITER"
+  ],
+  "_____ ROMANCE": [
+    "DARK",
+    "SPICY",
+    "PARANORMAL",
+    "EROTIC",
+    "TABOO"
+  ],
+  "STRIPPER _____": [
+    "POLE",
+    "NAME",
+    "MONEY",
+    "GLITTER",
+    "HEELS"
+  ],
+  "STRIP CLUB _____": [
+    "DANCER",
+    "BOUNCER",
+    "DJ",
+    "OWNER",
+    "POLE"
+  ],
+  "BACHELORETTE _____": [
+    "PARTY",
+    "WEEKEND",
+    "TRIP",
+    "STRIPPER",
+    "GAMES"
+  ],
+  "_____ COCAINE": [
+    "PINK",
+    "CRACK",
+    "PURE",
+    "COLOMBIAN",
+    "POWDERED"
+  ],
+  "_____ PILLS": [
+    "BIRTH CONTROL",
+    "PARTY",
+    "SLEEPING",
+    "PAIN",
+    "HAPPY"
+  ],
+  "_____ ADDICTION": [
+    "PORN",
+    "SEX",
+    "DRUG",
+    "COCAINE",
+    "GAMBLING"
+  ],
+  "_____ AS FUCK": [
+    "BROKE",
+    "DRUNK",
+    "HIGH",
+    "FUNNY",
+    "STUPID"
+  ],
+  "_____ THE FUCK": [
+    "WHAT",
+    "WHO",
+    "WHERE",
+    "WHY",
+    "HOW"
+  ],
+  "_____ MY DICK": [
+    "SUCK",
+    "LICK",
+    "KISS",
+    "EAT",
+    "TOUCH"
+  ],
+  "_____ THAT ASS": [
+    "SHAKE",
+    "SPANK",
+    "TAP",
+    "EAT",
+    "GRAB"
+  ],
+  "_____ MY EX": [
+    "TEXT",
+    "BLOCK",
+    "CALL",
+    "FUCK",
+    "STALK"
+  ],
+  "_____ MODE": [
+    "HOE",
+    "SLUT",
+    "FREAK",
+    "BEAST",
+    "VILLAIN"
+  ],
+  "_____ ERA": [
+    "HOE",
+    "SLUT",
+    "SINGLE",
+    "HOT GIRL",
+    "VILLAIN"
+  ],
+  "WAP _____": [
+    "CHALLENGE",
+    "LYRICS",
+    "REMIX",
+    "DANCE",
+    "VIDEO"
+  ],
+  "_____ VIRGINITY": [
+    "LOSE MY",
+    "TAKE MY",
+    "SAVE MY",
+    "SELL MY",
+    "REGAIN MY"
+  ],
+  "_____ DADDY": [
+    "SUGAR",
+    "BABY",
+    "BIG",
+    "WHO'S YOUR",
+    "CALL ME"
+  ],
+  "_____ SHOT": [
+    "BODY",
+    "TEQUILA",
+    "JELLO",
+    "MONEY",
+    "CUM"
+  ],
+  "_____ BOMB": [
+    "F",
+    "JAGER",
+    "SEX",
+    "SAKE",
+    "CHERRY"
+  ],
+  "SHROOM _____": [
+    "TRIP",
+    "TEA",
+    "CHOCOLATE",
+    "GUMMIES",
+    "PARTY"
+  ],
+  "ANAL _____": [
+    "SEX",
+    "BEADS",
+    "PLAY",
+    "GLANDS",
+    "RETENTIVE"
+  ],
+  "SEX TAPE _____": [
+    "LEAK",
+    "SCANDAL",
+    "RELEASE",
+    "RUMOR",
+    "DRAMA"
+  ],
+  "ORGY _____": [
+    "SCENE",
+    "PARTY",
+    "PORN",
+    "VIDEO",
+    "NIGHT"
   ]
 }

@@ -62,6 +62,13 @@ Blank Slate is a game from The Op Games; this is an independent, unofficial digi
 
 - The host has a **single monochrome flame icon** beside the JINX! logo. It toggles in the **lobby only** and is locked when play begins so everyone shares the same prompt set.
 - Turning it on broadcasts a **dark wine-red theme** across the host display and all joined phones. Turning it off restores the existing blue/purple game.
-- The new mode is fully separate from the family-friendly game: `dirty-prompts.json` holds **363 individually selected adult/party/pop-culture prompts**, each paired with five deliberately ranked completions in `dirty-top-answers.json`. Entries include dating culture, adult humor, party/drinking slang, recognizable music/TV references, sex-related terms, and drug-related phrases. Each Top 5 is checked for five distinct answers and singular/plural duplicates.
+- The new mode is fully separate from the family-friendly game: `dirty-prompts.json` now holds **114 tightly curated NSFW/raunchy word-pair prompts**, each paired with five deliberately ranked completions in `dirty-top-answers.json`. The previously larger, weaker adult list was **cut down** rather than padded with ordinary phrases. Topics include profanity, suggestive double entendres, sex slang, drug/party culture, adult dating, taboo humor and recognizable NSFW pop-culture references. Each Top 5 is checked for five distinct answers and singular/plural duplicates. Rankings are editorial estimates of familiar completions, not survey statistics.
 - The original `prompts.json` and `top-answers.json` are **not modified**; choosing the classic mode continues using those exact files and the existing scoring/gameplay behavior.
 - The two decorative **“REVEALED” / “ANSWERS REVEALED”** lines were removed from the result screen so the answer cards can use the space.
+
+### Spicy prompt curation principles
+
+- All prompts should have a **recognizably adult or provocative angle**; a harmless everyday prompt with one NSFW answer and four filler answers is not sufficient.
+- Prefer popular, repeatable *phrase pairs* and recognizable culture (e.g., `_____ SHOT` with BODY / TEQUILA / JELLO / MONEY / CUM) over arbitrary insult/adjective lists. Top 5 alternatives must form natural combinations with the actual blank.
+- Avoid near-identical singular/plural alternatives, fabricated collocations, excessive one-off trivia, and prompts that make only one answer plausible. Fewer high-quality rounds are intentional.
+- Adult party-game mechanics informed the tone, but **no third-party card text was copied**. The JINX! scoring and standard-mode content are unchanged.
