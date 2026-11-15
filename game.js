@@ -40,8 +40,9 @@ function leadingPlayerIds(g=game){
 function resolvedWinnerId(g=game){
  return g.tiebreaker?.winnerId||g.winnerId||((leadingPlayerIds(g).length===1)?leadingPlayerIds(g)[0]:null);
 }
+// All games play exactly 10 normal rounds; extra rounds are reserved for ties.
 function isLastRegularRound(g=game){
- return g.mode==='duo'?Number(g.round||0)>=10:Math.max(0,...Object.values(g.scores||{}).map(Number))>=Number(g.winningScore||50);
+ return Number(g.round||0)>=10;
 }
 
 let game={},players={},submissions={},me=null,hostToken=null,serverOffset=0,deck=[],playing=false,lastScreen='',lastRound=-1,roundTimer=null,hostBusy=false;
