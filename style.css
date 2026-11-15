@@ -388,12 +388,13 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 
 
 /* Ranked points and compact live scores; keep reveal totals hidden until animation ends. */
-.round-scoreboard{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;max-width:1000px;max-height:105px;overflow:auto;margin:14px auto 0;padding:2px 0}
-.round-score{display:flex;align-items:center;gap:7px;min-width:108px;max-width:205px;padding:6px 10px;background:#192744b5;border:1px solid #34486c;border-radius:12px;font-size:clamp(10px,1vw,13px);color:#d4def5}
-.round-score .rank{font-size:10px;color:#8296bd}
+.round-scoreboard{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;width:100%;max-width:1250px;max-height:min(21vh,195px);overflow-x:hidden;overflow-y:auto;margin:clamp(14px,2.2vh,23px) auto 0;padding:4px 8px;scrollbar-width:thin}
+.round-score{display:flex;align-items:center;gap:10px;flex:0 1 auto;min-width:clamp(148px,14vw,206px);max-width:250px;min-height:clamp(44px,5.5vh,58px);padding:9px 15px;background:#1c2c4bcf;border:1px solid #40577f;border-radius:14px;font-size:clamp(13px,1.13vw,18px);color:#e4edff;box-shadow:inset 0 1px 0 #ffffff0a}
+.round-score .rank{font-size:clamp(12px,.9vw,15px);color:#9bb0d4;font-variant-numeric:tabular-nums}
 .round-score i,.mobile-score-item i{display:inline-block;width:8px;height:8px;flex:none;border-radius:50%}
-.round-score>span:nth-of-type(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:750}
-.round-score b{margin-left:auto;color:#ffd57c;font-variant-numeric:tabular-nums;font-size:14px}
+.round-score i{width:11px;height:11px}
+.round-score>span:nth-of-type(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:850}
+.round-score b{margin-left:auto;padding-left:7px;color:#ffd57c;font-variant-numeric:tabular-nums;font-size:clamp(18px,1.55vw,24px);font-weight:950}
 .reveal-score{width:100%;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-height:30px}
 .reveal-breakdown{font-size:clamp(10px,.85vw,13px);color:#a8c9f5;letter-spacing:.01em;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s}
 .reveal-score:has(.points-shown) .reveal-breakdown{opacity:1;transform:none}
@@ -782,4 +783,11 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
 }
 @media(prefers-reduced-motion:reduce){
  .finale-trophy,.finale-champion-name,.finale-standing,.alltime-entry.just-earned{animation:none}
+}
+
+/* Keep the enlarged host scores comfortably legible when screen width is limited. */
+@media(max-width:850px){
+ .host-fullstage .round-scoreboard{gap:7px;max-height:min(24vh,195px);padding:3px 4px}
+ .host-fullstage .round-score{min-width:140px;min-height:42px;padding:8px 10px;gap:7px;font-size:13px}
+ .host-fullstage .round-score b{font-size:18px}
 }
