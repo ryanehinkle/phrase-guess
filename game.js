@@ -52,15 +52,23 @@ const route=code=>location.pathname+'?room='+code;
 const hostRoute=code=>route(code)+'&host=1';
 function brand(){return '<span class="brand" aria-label="JINX!">J<span class="glitch-letter" data-letter="I">I</span>NX<span class="glitch-letter bang" data-letter="!">!</span></span>'}
 function shell(title,body){
- root.innerHTML='<div class="layout'+(!room?' landing-layout':'')+'"><header><a class="logo" href="?">'+brand()+'</a><div class="pill">'+title+'</div></header>'+body+'</div>';
+ document.body.classList.toggle('spicy-mode',!!room&&game?.spicy===true);
+ const flame='<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c4.3 0 7-3.2 7-7.2 0-3.5-2-5.8-4.1-7.6.2 3-1.2 4.4-2.6 4.9C12.8 8.1 10.6 4.6 8 2 8.7 7.2 5 9.9 5 15c0 4.1 2.5 7 7 7Z"/><path d="M12 22c-2.2 0-3.5-1.6-3.5-3.5 0-1.5 1.1-2.6 2-3.6.1 1.6.9 2.1 1.7 2.6.3-1.2.9-1.8 1.6-2.2.8 1.2 1.7 2.1 1.7 3.4 0 2-1.4 3.3-3.5 3.3Z"/></svg>';
+ const switcher=isHost&&room?'<button id="dirtyModeToggle" class="dirty-mode-toggle" type="button" aria-label="Toggle spicy mode" title="Spicy mode '+(game.spicy?'on':'off')+'" aria-pressed="'+String(!!game.spicy)+'"'+(game.phase!=='lobby'?' disabled':'')+'>'+flame+'</button>':'';
+ root.innerHTML='<div class="layout'+(!room?' landing-layout':'')+'"><header><div class="brand-controls"><a class="logo" href="?">'+brand()+'</a>'+switcher+'</div><div class="pill">'+title+'</div></header>'+body+'</div>';
+ const toggle=$('dirtyModeToggle');
+ if(toggle)toggle.onclick=()=>{
+  if(game.phase!=='lobby')return;
+  updateGame(g=>g.phase==='lobby'?{...g,spicy:!g.spicy,used:{}}:undefined);
+ };
  // Submission updates can replace the entire page while the keyboard is closing.
  // Apply the old dimensions immediately, before the next browser paint.
  if(!isHost&&room&&(keyboardFocus||keyboardClosing)){
-   const layout=root.querySelector('.layout');
-   if(layout){
-     layout.style.zoom=frozenZoom||'1';
-     if(frozenHeight){layout.style.height=frozenHeight+'px';layout.style.maxHeight='none'}
-   }
+  const layout=root.querySelector('.layout');
+  if(layout){
+   layout.style.zoom=frozenZoom||'1';
+   if(frozenHeight){layout.style.height=frozenHeight+'px';layout.style.maxHeight='none'}
+  }
  }
  queueFit();
 }
@@ -73,7 +81,7 @@ function home(){shell('','<main class="welcome landing"><div class="landing-mark
 async function hostInit(){hostToken=sessionStorage.getItem(key+'host-'+room);if(!hostToken){shell('HOST','<main class="card"><h1>Host session not found</h1><p>Start a new game from the home page on this device.</p><a href="?">Go home</a></main>');return}startListeners();unlockSound();try{
  await runTransaction(ref(db,'rooms/'+room+'/hostSecret'),v=>v===null?hostToken:undefined,{applyLocally:false});
  await runTransaction(ref(db,'rooms/'+room+'/createdAt'),v=>v===null?Date.now():undefined,{applyLocally:false});
- await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',sessionId:uid(),hostToken,used:{},scores:{},duration:45,winningScore:50,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
+ await runTransaction(gameRef,v=>v===null?{phase:'lobby',round:0,roundKey:'0',sessionId:uid(),hostToken,used:{},scores:{},duration:45,winningScore:50,mode:'classic',spicy:false,streak:0,bestStreak:0,matches:0}:undefined,{applyLocally:false});
  }catch(e){showError(e)}}
 function playerInit(){try{me=JSON.parse(localStorage.getItem(key+'player-'+room)||'null')}catch{}startListeners()}
 function syncPlayerSession(){
@@ -99,15 +107,16 @@ function drawQR(){
  const frame=$('qrframe');if(!frame)return;
  const url=new URL(route(room),location.href).href;
  const img=$('qr');
- img.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&color=9ACBFF&bgcolor=101B32&data='+encodeURIComponent(url);
+ const qrHex=game.spicy?'FEB4B9':'9ACBFF',qrBg=game.spicy?'240E19':'101B32';
+ img.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&color='+qrHex+'&bgcolor='+qrBg+'&data='+encodeURIComponent(url);
  if(typeof QRCodeStyling==='undefined')return;
  try{
   const q=new QRCodeStyling({
    width:184,height:184,type:'svg',data:url,margin:11,
    qrOptions:{errorCorrectionLevel:'H'},
-   dotsOptions:{type:'rounded',color:'#9acbff'},
-   cornersSquareOptions:{type:'extra-rounded',color:'#9acbff'},
-   cornersDotOptions:{type:'dot',color:'#9acbff'},
+   dotsOptions:{type:'rounded',color:(game.spicy?'#feb4b9':'#9acbff')},
+   cornersSquareOptions:{type:'extra-rounded',color:(game.spicy?'#feb4b9':'#9acbff')},
+   cornersDotOptions:{type:'dot',color:(game.spicy?'#feb4b9':'#9acbff')},
    backgroundOptions:{color:'rgba(0,0,0,0)'}
   });
   q.append(frame);img.style.display='none';
@@ -289,7 +298,7 @@ function responseList(){
   '<b class="reveal-points '+(p.breakdown?.matchPoints?'bigpoints':p.points?'somepoints':'zeropoints')+'" data-earned="'+p.points+'">'+
   (p.points?'+'+p.points:'—')+'</b></div></div>'
  ).join('');
- return '<div class="reveal-intro" id="revealIntro">GET READY TO REVEAL</div><div class="reveals typed-reveals">'+cards+'</div><div class="match-celebration" id="matchCelebration" aria-live="polite"></div>';
+ return '<div class="reveals typed-reveals">'+cards+'</div><div class="match-celebration" id="matchCelebration" aria-live="polite"></div>';
 }
 let celebratedRound='';
 function paintReveal(){
@@ -323,8 +332,7 @@ function paintReveal(){
     card.classList.toggle('typing-complete',done);
     if(elapsed>=REVEAL_LEAD_MS&&letterCount>=answer.length)card.classList.add('word-complete');
   }
-  const cinema=$('revealScreen');if(cinema){const maxLetters=Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)));cinema.classList.toggle('show-outcome',elapsed>=REVEAL_LEAD_MS+maxLetters*REVEAL_LETTER_MS+250);cinema.classList.toggle('break-away',done);if(done&&revealElapsed()>revealDuration()+280)cinema.remove()};const intro=$('revealIntro');
-  if(intro)intro.textContent=elapsed<REVEAL_LEAD_MS?'GET READY TO REVEAL':done?'ANSWERS REVEALED':'EVERYONE IS REVEALING…';
+  const cinema=$('revealScreen');if(cinema){const maxLetters=Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)));cinema.classList.toggle('show-outcome',elapsed>=REVEAL_LEAD_MS+maxLetters*REVEAL_LETTER_MS+250);cinema.classList.toggle('break-away',done);if(done&&revealElapsed()>revealDuration()+280)cinema.remove()};
   // Each group's star animates only once all of its matching phrases are typed.
   for(const star of document.querySelectorAll('.match-star')){
     star.classList.toggle('is-revealed',elapsed>=REVEAL_LEAD_MS&&letterCount>=Number(star.dataset.matchLetters||0));
@@ -420,6 +428,8 @@ function answerCount(){const ans=submissions[game.roundKey||String(game.round)]|
 // Query when each prompt begins so the list is already available when it is revealed.
 const TOP_ANSWERS_COUNT=5;
 let topAnswerBank=null,topAnswerLoading=null;
+let dirtyAnswerBank=null,dirtyAnswerLoading=null,dirtyDeck=[];
+function activeTopAnswerBank(){return game.spicy===true?dirtyAnswerBank:topAnswerBank}
 const topAnswersCache=new Map();
 // Every prompt in prompts.json has exactly five precomputed completions.
 // There is no live dictionary lookup, and no "no strong guesses" empty state.
@@ -446,31 +456,31 @@ function validateTopAnswers(values){
 }
 async function ensureTopAnswers(){
  if(!isHost)return;
+ if(game.spicy===true){
+  if(dirtyAnswerBank||dirtyAnswerLoading)return dirtyAnswerLoading;
+  dirtyAnswerLoading=fetch('./dirty-top-answers.json?v=1',{cache:'no-store'})
+   .then(r=>{if(!r.ok)throw Error('Spicy Top Answers unavailable');return r.json()})
+   .then(data=>{dirtyAnswerBank=data;topAnswersCache.clear();updateTopAnswerPanel()})
+   .catch(error=>{console.warn('Spicy answers loading issue',error);dirtyAnswerLoading=null});
+  return dirtyAnswerLoading;
+ }
  if(topAnswerBank||topAnswerLoading)return topAnswerLoading;
  topAnswerLoading=fetch('./top-answers.json?v=4',{cache:'no-store'})
   .then(r=>{if(!r.ok)throw Error('Top Answers data unavailable');return r.json()})
-  .then(data=>{
-   topAnswerBank=data;
-   topAnswersCache.clear();
-   updateTopAnswerPanel();
-  })
-  .catch(error=>{
-   console.warn('Top Answers loading issue',error);
-   topAnswerLoading=null;
-   // Allow retry on a future game state transition.
-  });
+  .then(data=>{topAnswerBank=data;topAnswersCache.clear();updateTopAnswerPanel()})
+  .catch(error=>{console.warn('Top Answers loading issue',error);topAnswerLoading=null});
  return topAnswerLoading;
 }
 function lookupTopAnswers(prompt){
  if(!isHost||!prompt)return [];
  if(game.prompt===prompt&&Array.isArray(game.topAnswers)&&game.topAnswers.length===TOP_ANSWERS_COUNT)return game.topAnswers;
- if(!topAnswerBank){ensureTopAnswers();return []}
- if(topAnswersCache.has(prompt))return topAnswersCache.get(prompt);
- const answers=validateTopAnswers(topAnswerBank[prompt]);
- // This should never occur for the published deck. Surface an actual data
- // error rather than claiming a low-quality prompt has no possible answers.
+ const bank=activeTopAnswerBank();
+ if(!bank){ensureTopAnswers();return []}
+ const cacheKey=(game.spicy?'spicy:':'classic:')+prompt;
+ if(topAnswersCache.has(cacheKey))return topAnswersCache.get(cacheKey);
+ const answers=validateTopAnswers(bank[prompt]);
  if(answers.length!==TOP_ANSWERS_COUNT)console.warn('Incomplete Top Answers',prompt,answers);
- topAnswersCache.set(prompt,answers);
+ topAnswersCache.set(cacheKey,answers);
  return answers;
 }
 function topAnswersMarkup(){
@@ -522,7 +532,7 @@ function updateTopAnswerPanel(){
  }
 }
 
-function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">'+(gameIsTiebreaker()?'TIEBREAKER '+Number(game.tiebreaker.round||1):'ROUND '+game.round)+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+scoreboard()+'</section>'}
+function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">'+(gameIsTiebreaker()?'TIEBREAKER '+Number(game.tiebreaker.round||1):'ROUND '+game.round)+'</div><div class="prompt">'+esc(game.prompt||'')+'</div>'+(answering?'<div class="timerwrap">'+'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+roundPlayers().length+' answers locked</div>'+'</div>':'')+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+scoreboard()+'</section>'}
 
 let recapSelectedRound=0;
 function recapHistory(){
@@ -703,7 +713,7 @@ function updateAutoNext(){
 }
 function hostRender(){
  const oldInput=$('duration')?.value;
- const needScreen=game.phase+'-'+game.round+'-'+playerArray().map(p=>p.id).join(',')+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
+ const needScreen=game.phase+'-'+String(!!game.spicy)+'-'+game.round+'-'+playerArray().map(p=>p.id).join(',')+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
  if(needScreen===lastScreen){updateClocks();paintReveal();return}
  lastScreen=needScreen;
  const lobby=game.phase==='lobby';
@@ -741,7 +751,7 @@ function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h
  if(!me){playerJoin();return}
  const answer=submissions[game.roundKey||String(game.round)]?.[me.id];
  const phase=game.phase;
- const stamp=phase+'-'+game.round+'-'+!!answer+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
+ const stamp=phase+'-'+String(!!game.spicy)+'-'+game.round+'-'+!!answer+'-'+JSON.stringify(game.scores||{})+'-'+JSON.stringify(game.lastPoints||{})+'-'+game.revealedAt+'-'+Object.keys(game.history||{}).length;
  if(lastScreen===stamp){updateClocks();paintReveal();return}lastScreen=stamp;
   let body='<main class="mobile'+(phase==='results'?' results-mode':'')+'">'+
    (phase==='lobby'?'<div class="playerbar lobby-playerbar"><span><i style="background:'+colorStyle(me.color)+'"></i>'+esc(me.name)+'</span></div>':
@@ -1086,28 +1096,33 @@ async function nextRound(duration,forcedTieIds=null){
  if(hostBusy||(game.phase==='results'&&!revealFinished()))return;
  hostBusy=true;
  try{
-  if(!deck.length){
+  const spicy=game.spicy===true;
+  let prompts=spicy?dirtyDeck:deck;
+  if(!prompts.length){
    await ensureTopAnswers();
-   if(!topAnswerBank)throw Error('Top Answers could not load. Refresh and retry.');
-   const res=await fetch('./prompts.json',{cache:'no-store'});
-   if(!res.ok)throw Error('Prompt deck unavailable');
-   deck=(await res.json()).filter(prompt=>validateTopAnswers(topAnswerBank[prompt]).length===TOP_ANSWERS_COUNT);
-   if(!deck.length)throw Error('No validated prompts found.');
+   const bank=spicy?dirtyAnswerBank:topAnswerBank;
+   if(!bank)throw Error((spicy?'Spicy':'Regular')+' Top Answers could not load. Refresh and retry.');
+   const res=await fetch(spicy?'./dirty-prompts.json?v=1':'./prompts.json',{cache:'no-store'});
+   if(!res.ok)throw Error((spicy?'Spicy':'Regular')+' prompt deck unavailable');
+   prompts=(await res.json()).filter(prompt=>validateTopAnswers(bank[prompt]).length===TOP_ANSWERS_COUNT);
+   if(!prompts.length)throw Error('No validated prompts found for this mode.');
+   if(spicy)dirtyDeck=prompts;else deck=prompts;
   }
+  const bank=spicy?dirtyAnswerBank:topAnswerBank;
   await updateGame(g=>{
-   if(!['lobby','results'].includes(g.phase))return;
+   if(!['lobby','results'].includes(g.phase)||!!g.spicy!==spicy)return;
    const initialTie=Array.isArray(forcedTieIds)&&forcedTieIds.length>1;
    const continuingTie=!!g.tiebreaker?.active&&!g.tiebreaker?.decided;
    if(!initialTie&&!continuingTie&&g.phase==='results'&&isLastRegularRound(g))return;
    if(!initialTie&&!continuingTie&&g.mode==='duo'&&g.round>=10)return;
-   let used=g.used||{},choices=deck.map((_,i)=>i).filter(i=>!used[i]);
-   if(!choices.length){used={};choices=deck.map((_,i)=>i)}
+   let used=g.used||{},choices=prompts.map((_,i)=>i).filter(i=>!used[i]);
+   if(!choices.length){used={};choices=prompts.map((_,i)=>i)}
    const index=choices[Math.floor(Math.random()*choices.length)];
    const tiebreaker=initialTie?{active:true,contenders:forcedTieIds.slice(),nextContenders:forcedTieIds.slice(),round:1,decided:false,winnerId:null}
      :continuingTie?{...g.tiebreaker,contenders:(g.tiebreaker.nextContenders||g.tiebreaker.contenders).slice(),round:Number(g.tiebreaker.round||1)+1,decided:false,winnerId:null}:null;
    return {...g,phase:'answering',round:(g.round||0)+1,
     roundKey:(g.sessionId?g.sessionId+'-'+((g.round||0)+1):String((g.round||0)+1)),
-    prompt:deck[index],topAnswers:validateTopAnswers(topAnswerBank[deck[index]]),
+    prompt:prompts[index],topAnswers:validateTopAnswers(bank[prompts[index]]),
     duration,deadline:now()+duration*1000,used:{...used,[index]:true},
     lastPoints:{},lastBreakdown:{},lastMatch:false,tiebreaker,
     winningScore:50,mode:g.phase==='lobby'?(playerArray().length===2?'duo':'classic'):(g.mode||'classic')};
@@ -1118,9 +1133,9 @@ async function finishRound(){
  if(hostBusy)return;
  hostBusy=true;
  try{
-  if(!Array.isArray(game.topAnswers)&&!topAnswerBank)await ensureTopAnswers();
+  if(!Array.isArray(game.topAnswers)&&!activeTopAnswerBank())await ensureTopAnswers();
   const roundKey=game.roundKey||String(game.round);
-  const ranked=validateTopAnswers(game.topAnswers||topAnswerBank?.[game.prompt]);
+  const ranked=validateTopAnswers(game.topAnswers||activeTopAnswerBank()?.[game.prompt]);
   if(ranked.length!==TOP_ANSWERS_COUNT)throw Error('Ranked answers could not load.');
   const snap=await get(ref(db,'rooms/'+room+'/submissions/'+roundKey));
   const answerMap=snap.val()||{},roster=roundPlayers(),isTie=gameIsTiebreaker();

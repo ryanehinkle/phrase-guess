@@ -874,3 +874,180 @@ html,body,#app{width:100%;height:100%;height:100dvh;margin:0;overflow:hidden}
  .match-star.is-revealed{animation:none;opacity:1;transform:none}
  .match-star-glyph{animation:none}
 }
+
+/* SPICY MODE — an isolated, room-synced wine-red theme. The original blue
+   stylesheet remains untouched and instantly returns when mode is disabled. */
+.brand-controls{display:flex;align-items:center;gap:clamp(10px,1.2vw,19px);min-width:0}
+.dirty-mode-toggle{
+ display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+ width:36px;height:36px;min-width:36px;border-radius:12px;
+ border:1px solid #354567;background:#1c2a47;color:#c8d2e8;
+ padding:0;box-shadow:inset 0 1px 0 #ffffff12;
+ transition:background .2s,border-color .2s,box-shadow .2s,transform .2s;
+}
+.dirty-mode-toggle svg{width:20px;height:20px;stroke:currentColor}
+.dirty-mode-toggle:not(:disabled):hover{transform:translateY(-1px);border-color:#8d9bc5;filter:none}
+.dirty-mode-toggle:focus-visible{outline:2px solid #c2bedf;outline-offset:3px}
+.dirty-mode-toggle[aria-pressed="true"]{
+ color:#f4edf0;background:#56303b;border-color:#9c5366;
+ box-shadow:inset 0 1px 0 #ffffff21,0 0 16px #a5364b1b;
+}
+.dirty-mode-toggle:disabled{cursor:default;opacity:.82}
+body.spicy-mode{
+ --spicy-surface:#1d111b;
+ --spicy-panel:#29151d;
+ --spicy-panel-alt:#351a26;
+ --spicy-line:#693744;
+ --spicy-ink:#fff0f2;
+ --spicy-muted:#d7aebc;
+ --spicy-red:#ec5464;
+ --spicy-red-bright:#ff9ca3;
+ --spicy-deep:#160810;
+ color:var(--spicy-ink);
+ background-color:#0f070c!important;
+ background-image:radial-gradient(ellipse at 15% -12%,#5b192f9e,transparent 60%),radial-gradient(ellipse at 100% 110%,#51132290,transparent 57%)!important;
+}
+body.spicy-mode .layout{
+ background:linear-gradient(135deg,#160a1499,#0d0811aa);
+}
+body.spicy-mode .layout>header{
+ background:linear-gradient(90deg,#3114208a,#150a15a3);
+ border-bottom-color:#632d3b!important;
+}
+body.spicy-mode .brand{color:#fff4f5;filter:drop-shadow(0 3px 18px #d53c656b)}
+body.spicy-mode .glitch-letter::before{color:#ff677d;text-shadow:1px 0 3px #ff677d66}
+body.spicy-mode .glitch-letter::after{color:#fbaa7c;text-shadow:-1px 0 3px #fbaa7c66}
+body.spicy-mode .brand .bang{color:#ffb0a6}
+body.spicy-mode .pill,
+body.spicy-mode .host-bottom-status span,
+body.spicy-mode .short-rules span{
+ background:#351c2acc;border-color:#6b3647;color:#f3dce5;
+}
+body.spicy-mode :is(.stage,.side,.card,.host-fullstage,.joincard){
+ background:linear-gradient(146deg,#291521ef,#150c17ee)!important;
+ border-color:#673646!important;
+ box-shadow:0 12px 52px #1400084f;
+}
+body.spicy-mode .hostgrid .side{background:linear-gradient(145deg,#2e1622f2,#1b101bef)!important}
+body.spicy-mode .lobby-status{
+ background:linear-gradient(90deg,transparent,#281320e9 20%,#281320e9 80%,transparent);
+}
+body.spicy-mode .lobby-wait{color:#fff0f4}
+body.spicy-mode :is(.lobby-count,.muted,.eyebrow,.recap-panel-heading>span,.lobby-players h3){
+ color:#e5b2c5;
+}
+body.spicy-mode a{color:#ffacb6}
+body.spicy-mode button:not(.dirty-mode-toggle):not(.color):not(.recap-bar){
+ background:#3b1e2e;border-color:#783e52;color:#ffecf1;
+}
+body.spicy-mode :is(button.primary,button.selected,.primary){
+ background:linear-gradient(115deg,#c5304e,#e96069)!important;
+ border-color:#ed7180!important;color:#fff9fa!important;
+ box-shadow:0 9px 27px #c6224655!important;
+}
+body.spicy-mode .dirty-mode-toggle{
+ background:#422532;border-color:#87505f;color:#f1e5eb;
+}
+body.spicy-mode .dirty-mode-toggle[aria-pressed="true"]{
+ background:#713043;border-color:#c96a79;color:#fff2f3;
+ box-shadow:0 0 16px #ce405351,inset 0 1px 0 #ffffff24;
+}
+body.spicy-mode :is(input,select,textarea,.joinform input,.joincard input){
+ color:#fff0f3;background:#311a28;border-color:#7c4355;
+}
+body.spicy-mode :is(input,textarea):focus-visible{outline-color:#f47b8f}
+body.spicy-mode .progress{background:#44202e}
+body.spicy-mode .progress>div,
+body.spicy-mode .gameview:not(:has(.typed-reveals)) .progress div{
+ background:linear-gradient(90deg,#b92c48,#fb7b7e,#b92c48);
+ background-size:200% 100%;
+}
+body.spicy-mode .timer.danger{color:#ff878c}
+body.spicy-mode .waiting .pulse,
+body.spicy-mode .spin{border-color:#e46b80}
+body.spicy-mode .reveal-line{
+ background:linear-gradient(135deg,color-mix(in srgb,var(--player),#311723 84%),#24131f 84%);
+}
+body.spicy-mode .cinema{
+ background:radial-gradient(ellipse at 50% 31%,#5c2438,#120911 73%);
+ color:#fff2f5;
+}
+body.spicy-mode .cinema-answer{
+ background:linear-gradient(130deg,color-mix(in srgb,var(--player),#27121e 88%),#281723);
+}
+body.spicy-mode .cinema-title,
+body.spicy-mode .cinema-kicker{color:#f1b9c6}
+body.spicy-mode .cinema-outcome,
+body.spicy-mode .duo-final{color:#ff9eaa}
+body.spicy-mode .cinema-full-phrase .cinema-before,
+body.spicy-mode .cinema-full-phrase .cinema-after{color:#fff1f3}
+body.spicy-mode .top-answers{
+ background:linear-gradient(160deg,#381c2bf7,#23131ff7)!important;
+ border-color:#8b4a5c!important;box-shadow:0 9px 33px #17000955;
+}
+body.spicy-mode .top-answers-heading{color:#f8d5dc}
+body.spicy-mode .top-answers-heading span{color:#ffb5ae}
+body.spicy-mode .top-answer{border-color:#754155;color:#f1d9e2}
+body.spicy-mode .top-answer-rank{color:#daa1b2}
+body.spicy-mode .top-answer.match,
+body.spicy-mode .top-answer.matched,
+body.spicy-mode .top-answer.active{background:#9b3b5940}
+body.spicy-mode .round-score,
+body.spicy-mode .mobile-score-item{
+ background:#351e2e;border-color:#84475d;color:#ffecf2;
+}
+body.spicy-mode .mobile-score-item.mine{
+ background:linear-gradient(120deg,#a4456b4f,#5121376b);
+ border-color:#e485a0;
+}
+body.spicy-mode .round-score .rank,
+body.spicy-mode .mobile-score-item .score-place{color:#e6bac8}
+body.spicy-mode .mobile-score-item b,
+body.spicy-mode .round-score b{color:#ffd0a3}
+body.spicy-mode .reveal-breakdown{color:#ecc4d3}
+body.spicy-mode .reveal-breakdown-line span{color:#ffe2ea}
+body.spicy-mode .playerbar,
+body.spicy-mode .submitted,
+body.spicy-mode .joincard{
+ background:#2c1929;border-color:#794559;
+}
+body.spicy-mode .playerbar b{color:#ffbcc7}
+body.spicy-mode .lobby-player{background:#392030;border-color:#70384b}
+body.spicy-mode .recap-chart-panel,
+body.spicy-mode .recap-detail-panel,
+body.spicy-mode .recap-metric,
+body.spicy-mode .recap-player-answer,
+body.spicy-mode .recap-ranking>span{
+ background:linear-gradient(145deg,#351d2d,#241521);
+ border-color:#714050;
+}
+body.spicy-mode .recap-bar-track{background:#4c2939}
+body.spicy-mode .recap-bar-fill{background:linear-gradient(0deg,#8b4a60,#bd7182)}
+body.spicy-mode .recap-bar.hit .recap-bar-fill{background:linear-gradient(0deg,#c63757,#f38f9f)}
+body.spicy-mode .recap-bar.selected .recap-bar-fill{background:linear-gradient(0deg,#ea5370,#ffc0a3)}
+body.spicy-mode .recap-bar:hover,
+body.spicy-mode .recap-bar.selected{background:#b0466430}
+body.spicy-mode .recap-legend i{background:#eb7588}
+body.spicy-mode .recap-legend i.miss{background:#845766}
+body.spicy-mode .finale-standing-section,
+body.spicy-mode .alltime-panel{
+ background:linear-gradient(135deg,#321926,#1c101a);
+ border-color:#763c51;
+}
+body.spicy-mode .finale-standing,
+body.spicy-mode .alltime-entry{
+ background:#3a2232;border-color:#7a4155;
+}
+body.spicy-mode .finale-standing.winner{
+ background:linear-gradient(112deg,#9c345555,#55233f84);
+ border-color:#ffa1a9;
+}
+body.spicy-mode .finale-hero{background:radial-gradient(ellipse closest-side,#b9456260,transparent 87%)}
+body.spicy-mode .finale-tab{background:#43233a;border-color:#8b4d64;color:#ffe4e9}
+body.spicy-mode .finale-tab.selected{background:linear-gradient(110deg,#c93652,#ed7774)!important}
+body.spicy-mode .alltime-entry.just-earned{
+ background:linear-gradient(90deg,#8f3d555c,#492638);
+ border-color:#e8989f;
+}
+body.spicy-mode .qr-code{color:#ffd7db}
+@media(prefers-reduced-motion:reduce){.dirty-mode-toggle{transition:none}}

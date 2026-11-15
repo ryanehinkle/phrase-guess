@@ -57,3 +57,11 @@ Blank Slate is a game from The Op Games; this is an independent, unofficial digi
 - After an official completed game, the host securely submits every player's game score to `highScores` in Firebase Realtime Database. Players whose score is a new personal best receive a highlighted **NEW BEST** entry; this game's records glow in the all-time list.
 - **Important one-time setup:** Publish the updated `database.rules.json` in **Firebase Console → Realtime Database → Rules → Publish**. Updating this file in GitHub alone does **not** deploy Firebase's live rules. Until the updated rules are published, the global board shows a clear unavailable message instead of claiming to save records. The existing game and round scoring still work.
 - For anti-spoofing, the high-score database rule verifies that a posted score, player name, session, and room match the recorded **completed game**. It accepts a replacement only if it beats the previous personal best. As with any game that relies on unauthenticated browsers, this is a casual leaderboard rather than an anti-cheat system.
+
+## Spicy / dirty mode
+
+- The host has a **single monochrome flame icon** beside the JINX! logo. It toggles in the **lobby only** and is locked when play begins so everyone shares the same prompt set.
+- Turning it on broadcasts a **dark wine-red theme** across the host display and all joined phones. Turning it off restores the existing blue/purple game.
+- The new mode is fully separate from the family-friendly game: `dirty-prompts.json` holds **363 individually selected adult/party/pop-culture prompts**, each paired with five deliberately ranked completions in `dirty-top-answers.json`. Entries include dating culture, adult humor, party/drinking slang, recognizable music/TV references, sex-related terms, and drug-related phrases. Each Top 5 is checked for five distinct answers and singular/plural duplicates.
+- The original `prompts.json` and `top-answers.json` are **not modified**; choosing the classic mode continues using those exact files and the existing scoring/gameplay behavior.
+- The two decorative **“REVEALED” / “ANSWERS REVEALED”** lines were removed from the result screen so the answer cards can use the space.
