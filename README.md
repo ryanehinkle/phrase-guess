@@ -18,7 +18,7 @@ A phone-powered word-matching party game, hosted on GitHub Pages and synced over
 - Matching answers are revealed together with players' names, colors, and points (with a Top Answer / Jinx breakdown); a compact live scoreboard appears on host and player screens. Scores and ranks stay frozen until the full answer reveal completes, preventing spoilers. On phones the scoreboard is centered, with answer cards scrolling inside the reveal if needed.
 - Each answer on the curated Top 5 earns **5/4/3/2/1 points**, from rank #1 to #5. If **exactly two** players submit the same (or typo-equivalent) answer, **each gets a +5 Jinx bonus**. If **three or more** players match, **each gets +3** instead. These rewards stack (e.g., two matching players who guess #1 get 10 each; three matching players guessing #1 get 8 each). In the reveal, exactly-two bonuses are labeled **Jinx (+5)** and larger-group bonuses **Match (+3)**; the banner says **JINX!** for any pair match and otherwise shows the number of matching players.
 - Answers are compared case-insensitively, ignoring spaces, punctuation and accents. For words of 5–12 normalized characters, one edit (typo) is tolerated. This deliberately avoids awarding points for unrelated similar words.
-- The host advances rounds and can end the game. In 3+ player games, reaching 50 points offers final standings; two-player games keep their 10-round match challenge and now also track points.
+- The host advances rounds and can end the game. In 3+ player games, reaching 50 points offers the finale; two-player games keep their 10-round match challenge and also track points. If any players tie for the highest game score, only those tied leaders enter extra tiebreaker rounds. Tiebreakers award **Top 5 placement points (5–1) only**, never Jinx/Match bonuses, and do not change the original game scores. If the tiebreaker still ties, another round runs until a single champion is determined.
 - A room's prompt history avoids repeating prompts until the entire deck is used.
 
 
@@ -47,3 +47,13 @@ Colors/names remain reserved in each room, including temporarily disconnected ph
 The QR image uses a third-party QR generator. The room code and player link are provided as alternatives.
 
 Blank Slate is a game from The Op Games; this is an independent, unofficial digital party-game implementation.
+
+
+## Game finale and all-time records
+
+- The final screen leads with a large animated **champion celebration and complete score leaderboard**. Tiebreaker winners are clearly marked even when the underlying game scores remain tied.
+- **Round Stats** retains the existing round-by-round chart, per-round answers, Jinxes, and score breakdown. **All-Time Scores** shows the 25 highest personal-best game scores, shared across rooms and devices.
+- The high-score record is keyed by a normalized uppercase player name. Accents and non-emoji punctuation are removed, while emoji remain intact. Reusing a normalized name keeps only the **best single-game score** under that name.
+- After an official completed game, the host securely submits every player's game score to `highScores` in Firebase Realtime Database. Players whose score is a new personal best receive a highlighted **NEW BEST** entry; this game's records glow in the all-time list.
+- **Important one-time setup:** Publish the updated `database.rules.json` in **Firebase Console → Realtime Database → Rules → Publish**. Updating this file in GitHub alone does **not** deploy Firebase's live rules. Until the updated rules are published, the global board shows a clear unavailable message instead of claiming to save records. The existing game and round scoring still work.
+- For anti-spoofing, the high-score database rule verifies that a posted score, player name, session, and room match the recorded **completed game**. It accepts a replacement only if it beats the previous personal best. As with any game that relies on unauthenticated browsers, this is a casual leaderboard rather than an anti-cheat system.

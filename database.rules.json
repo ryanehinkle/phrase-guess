@@ -51,6 +51,16 @@
           }
         }
       }
+    },
+    "highScores": {
+      ".read": true,
+      ".indexOn": [
+        "score"
+      ],
+      "$nameKey": {
+        ".write": "newData.exists() && (!data.exists() || newData.child('score').val() > data.child('score').val()) && newData.child('room').isString() && newData.child('playerId').isString() && root.child('rooms').child(newData.child('room').val()).child('game').child('phase').val() === 'ended' && root.child('rooms').child(newData.child('room').val()).child('game').child('winnerId').isString() && root.child('rooms').child(newData.child('room').val()).child('game').child('sessionId').val() === newData.child('sessionId').val() && root.child('rooms').child(newData.child('room').val()).child('game').child('scores').child(newData.child('playerId').val()).val() === newData.child('score').val() && root.child('rooms').child(newData.child('room').val()).child('players').child(newData.child('playerId').val()).child('name').val() === newData.child('rawName').val() && root.child('rooms').child(newData.child('room').val()).child('players').child(newData.child('playerId').val()).child('sessionId').val() === newData.child('sessionId').val()",
+        ".validate": "newData.hasChildren(['name','rawName','score','room','playerId','sessionId','at','winner','color']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 42 && newData.child('rawName').isString() && newData.child('rawName').val().length > 0 && newData.child('rawName').val().length <= 24 && newData.child('score').isNumber() && newData.child('score').val() >= 0 && newData.child('score').val() <= 10000 && newData.child('room').isString() && newData.child('room').val().matches(/^[A-HJ-NP-Z2-9]{6}$/) && newData.child('playerId').isString() && newData.child('sessionId').isString() && newData.child('winner').isBoolean() && newData.child('color').isString() && newData.child('color').val().matches(/^#[0-9a-f]{6}$/) && newData.child('at').isNumber()"
+      }
     }
   }
 }

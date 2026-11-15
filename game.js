@@ -13,6 +13,37 @@ const normalize=s=>String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,''
 const distance=(a,b)=>{let p=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let n=[i];for(let j=1;j<=b.length;j++)n[j]=Math.min(n[j-1]+1,p[j]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=n}return p[b.length]};
 const similar=(a,b)=>a===b || (Math.min(a.length,b.length)>=5 && Math.max(a.length,b.length)<=12 && distance(a,b)<=1);
 const colorStyle=c=>COLORS.includes(c)?c:'#64748b';
+function highScoreName(raw){
+ return String(raw||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/[^\p{L}\p{N}\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\u200D\uFE0F\u20E3\s]/gu,'')
+  .replace(/\s+/g,' ').trim().toLocaleUpperCase('en-US').slice(0,42)||'PLAYER';
+}
+function highScoreKey(raw){
+ return Array.from(highScoreName(raw),c=>c.codePointAt(0).toString(16)).join('_');
+}
+const HIGH_SCORE_LIMIT=25;
+let highScores={},highScoreStatus='loading',finaleView='standings',lastFinaleCelebrated='',publishedHighScoreSessions=new Set();
+function highScoreEntries(){
+ return Object.entries(highScores||{}).map(([key,entry])=>({...entry,key,score:Number(entry?.score||0)}))
+  .filter(entry=>entry.name&&Number.isFinite(entry.score))
+  .sort((a,b)=>b.score-a.score||Number(a.at||0)-Number(b.at||0)||a.name.localeCompare(b.name));
+}
+function gameIsTiebreaker(){return !!game.tiebreaker?.active}
+function roundPlayers(){
+ const roster=playerArray();
+ return gameIsTiebreaker()?roster.filter(p=>(game.tiebreaker.contenders||[]).includes(p.id)):roster;
+}
+function leadingPlayerIds(g=game){
+ const roster=playerArray(),high=Math.max(0,...roster.map(p=>Number(g.scores?.[p.id]||0)));
+ return roster.filter(p=>Number(g.scores?.[p.id]||0)===high).map(p=>p.id);
+}
+function resolvedWinnerId(g=game){
+ return g.tiebreaker?.winnerId||g.winnerId||((leadingPlayerIds(g).length===1)?leadingPlayerIds(g)[0]:null);
+}
+function isLastRegularRound(g=game){
+ return g.mode==='duo'?Number(g.round||0)>=10:Math.max(0,...Object.values(g.scores||{}).map(Number))>=Number(g.winningScore||50);
+}
+
 let game={},players={},submissions={},me=null,hostToken=null,serverOffset=0,deck=[],playing=false,lastScreen='',lastRound=-1,roundTimer=null,hostBusy=false;
 let gameLoaded=false,playersLoaded=false;
 onValue(ref(db,'.info/serverTimeOffset'),s=>serverOffset=Number(s.val()||0));
@@ -52,7 +83,7 @@ function syncPlayerSession(){
   me=null;localStorage.removeItem(key+'player-'+room);lastScreen='';
  }
 }
-function startListeners(){onValue(gameRef,s=>{game=s.val()||{};gameLoaded=true;syncPlayerSession();if(isHost)syncRoundMusic();render();if(isHost)hostCheck()},showError);onValue(playersRef,s=>{players=s.val()||{};playersLoaded=true;syncPlayerSession();render();if(isHost)hostCheck()},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost){hostCheck();updateTopAnswerPanel()}},showError);roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck();updateAutoNext();updateTopAnswerPanel()}},65)}
+function startListeners(){onValue(gameRef,s=>{game=s.val()||{};gameLoaded=true;syncPlayerSession();if(isHost)syncRoundMusic();render();if(isHost){hostCheck();publishFinishedHighScores()}},showError);onValue(playersRef,s=>{players=s.val()||{};playersLoaded=true;syncPlayerSession();render();if(isHost){hostCheck();publishFinishedHighScores()}},showError);onValue(ref(db,'rooms/'+room+'/submissions'),s=>{submissions=s.val()||{};render();if(isHost){hostCheck();updateTopAnswerPanel();publishFinishedHighScores()}},showError);onValue(ref(db,'highScores'),s=>{highScores=s.val()||{};highScoreStatus='ready';if(game.phase==='ended'){lastScreen='';render()}},e=>{highScoreStatus='unavailable';console.warn('All-time leaderboard unavailable until Firebase rules are published',e);if(game.phase==='ended'){lastScreen='';render()}});roundTimer=setInterval(()=>{updateClocks();paintReveal();if(isHost){syncRoundMusic();hostCheck();updateAutoNext();updateTopAnswerPanel()}},65)}
 function showError(e){console.error(e);let box=$('error');if(box){box.textContent='Connection issue: '+(e?.message||e);box.classList.remove('hidden')}}
 function playerArray(){return Object.values(players).filter(p=>p&&p.name&&p.color&&(p.sessionId||'legacy')===(game.sessionId||'legacy')).sort((a,b)=>(a.joined||0)-(b.joined||0))}
 
@@ -129,10 +160,10 @@ function startLobbyBubbles(){
 // Keep totals AND rank order at the previous round until the full reveal finishes.
 function visibleScore(id){
  const total=Number(game.scores?.[id]||0);
- return game.phase==='results'&&!revealFinished()?total-Number(game.lastPoints?.[id]||0):total;
+ return game.phase==='results'&&!revealFinished()&&!gameIsTiebreaker()?total-Number(game.lastPoints?.[id]||0):total;
 }
 function rankedPlayers(){
- return playerArray().slice().sort((a,b)=>(visibleScore(b.id)-visibleScore(a.id))||a.name.localeCompare(b.name));
+ return playerArray().slice().sort((a,b)=>(visibleScore(b.id)-visibleScore(a.id))||(game.phase==='ended'?(Number(b.id===game.winnerId)-Number(a.id===game.winnerId)):0)||a.name.localeCompare(b.name));
 }
 function scoreboard(){
  return '<div class="round-scoreboard" aria-label="Player scores">'+rankedPlayers().map((p,i)=>
@@ -200,7 +231,7 @@ function displayAnswer(value){
 }
 function revealEntries(){
   const answers=submissions[game.roundKey||String(game.round)]||{};
-  return playerArray().map(p=>({...p,answer:displayAnswer(answers[p.id]?.text||''),points:Number(game.lastPoints?.[p.id]||0),breakdown:game.lastBreakdown?.[p.id]||null}));
+  return roundPlayers().map(p=>({...p,answer:displayAnswer(answers[p.id]?.text||''),points:Number(game.lastPoints?.[p.id]||0),breakdown:game.lastBreakdown?.[p.id]||null}));
 }
 function phraseSegments(answer){
  const parts=String(game.prompt||'').split('_____');
@@ -273,7 +304,7 @@ function paintReveal(){
   }
   for(const score of document.querySelectorAll('[data-final-score]')){
     const value=Number(score.dataset.finalScore||0),earned=Number(score.dataset.lastEarned||0);
-    const shown=done?value:value-earned;
+    const shown=done||gameIsTiebreaker()?value:value-earned;
     if(score.textContent!==String(shown))score.textContent=String(shown);
     score.classList.toggle('score-gained',done&&earned>0);
   }
@@ -287,11 +318,11 @@ function paintReveal(){
   const scored=revealEntries().some(p=>p.points>0);
   if(celebration){
     const headline=roundMatchHeadline(game.lastBreakdown);
-    celebration.textContent=done?(headline||(game.mode==='duo'?'NO MATCH':scored?'TOP ANSWER SCORED':'NO POINTS')):'';
+    celebration.textContent=done?(gameIsTiebreaker()?(game.tiebreaker.decided?esc(playerArray().find(p=>p.id===game.tiebreaker.winnerId)?.name||'WINNER')+' WINS THE TIEBREAK!':'STILL TIED · ANOTHER ROUND'):(headline||(game.mode==='duo'?'NO MATCH':scored?'TOP ANSWER SCORED':'NO POINTS'))):'';
     celebration.classList.toggle('visible',done);
   }
   const id=game.round+'-'+game.revealedAt;
-  if(done&&matching.length&&celebratedRound!==id&&elapsed<revealDuration()+2200){
+  if(done&&(matching.length||(gameIsTiebreaker()&&game.tiebreaker.decided))&&celebratedRound!==id&&elapsed<revealDuration()+2200){
     celebratedRound=id;
     spawnConfetti();
   }
@@ -304,12 +335,12 @@ function syncRevealScreen(){
  if(document.getElementById('revealScreen')?.dataset.key===id)return;
  document.getElementById('revealScreen')?.remove();
  const el=document.createElement('div');el.id='revealScreen';el.dataset.key=id;el.className='cinema';
- el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(roundMatchHeadline(game.lastBreakdown)||(game.mode==='duo'?'NOT THIS TIME':'NO MATCH'))+'</div></div>';
+ el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(gameIsTiebreaker()?(game.tiebreaker.decided?'TIEBREAK WINNER!':'STILL TIED'):(roundMatchHeadline(game.lastBreakdown)||(game.mode==='duo'?'NOT THIS TIME':'NO MATCH')))+'</div></div>';
  document.body.append(el);paintReveal();
 }
 
 function spawnConfetti(){
-  const stage=document.querySelector('.host-fullstage')||document.querySelector('.stage')||document.querySelector('.mobilecenter');
+  const stage=document.querySelector('.host-fullstage')||document.querySelector('.stage')||document.querySelector('.mobilecenter')||document.querySelector('.finale-screen');
   if(!stage||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   const layer=document.createElement('div');layer.className='confetti-layer';layer.setAttribute('aria-hidden','true');
   const choices=['#ffd36f','#76a9ff','#7bf0ba','#f9a0d2','#bd9eff','#ffffff'];
@@ -351,7 +382,7 @@ function compute(roster,answers,topAnswers){
  }
  return {points,breakdown,clusters,matchedIds,hasMatch:matchedIds.length>0};
 }
-function answerCount(){const ans=submissions[game.roundKey||String(game.round)]||{};return playerArray().filter(p=>ans[p.id]?.text).length}
+function answerCount(){const ans=submissions[game.roundKey||String(game.round)]||{};return roundPlayers().filter(p=>ans[p.id]?.text).length}
 
 // Top Answers are worth 5–1 points; Jinx adds 5 for pairs, 3 for groups of 3+.
 // Datamuse uses Google Books Ngram collocations and dictionary/WordNet relations.
@@ -460,7 +491,7 @@ function updateTopAnswerPanel(){
  }
 }
 
-function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+scoreboard()+'</section>'}
+function roundMarkup(){const phase=game.phase,answering=phase==='answering',results=phase==='results',ended=phase==='ended';return '<section class="gameview"><div class="eyebrow">'+(gameIsTiebreaker()?'TIEBREAKER '+Number(game.tiebreaker.round||1):'ROUND '+game.round)+'</div><div class="prompt">'+esc(game.prompt||'')+'</div><div class="timerwrap">'+(answering?'<div id="timer" class="timer">0:00</div><div class="progress"><div id="bar"></div></div><div class="muted" id="count">'+answerCount()+' / '+playerArray().length+' answers locked</div>':'<div class="eyebrow">'+(ended?'FINAL':'REVEALED')+'</div>')+'</div>'+(results||ended?responseList()+(ended&&game.mode==='duo'?'<div class="duo-final">'+(game.matches>=8?'MIND READERS':game.matches>=5?'ON THE SAME PAGE':game.matches>=3?'GETTING WARMER':'KEEP TRYING')+' · '+Number(game.matches||0)+' OF 10</div>':''):'<div class="waiting"><div class="pulse"></div>Waiting for everyone to answer...</div>')+scoreboard()+'</section>'}
 
 let recapSelectedRound=0;
 function recapHistory(){
@@ -489,7 +520,7 @@ function recapDetails(entry){
  '<strong>'+(Number(points[p.id]||0)>0?'+'+Number(points[p.id]):'—')+'</strong></div>').join('')+
  '</div>';
 }
-function recapMarkup(){
+function roundStatsMarkup(){
  const history=recapHistory(),rounds=history.length,matches=history.filter(hasRoundMatch).length;
  const rate=rounds?Math.round(matches/rounds*100):0;
  const roster=playerArray().sort((a,b)=>Number(game.scores?.[b.id]||0)-Number(game.scores?.[a.id]||0));
@@ -515,6 +546,67 @@ function recapMarkup(){
  '<div class="recap-ranking">'+roster.slice(0,5).map((p,i)=>'<span><i style="background:'+colorStyle(p.color)+'"></i>'+esc(p.name)+' <b>'+Number(game.scores?.[p.id]||0)+' pts</b></span>').join('')+'</div>'+
  '</section>';
 }
+
+function winnerStandingsMarkup(){
+ const roster=rankedPlayers(),winner=roster.find(p=>p.id===game.winnerId)||roster[0];
+ if(!winner)return '<div class="finale-empty">No players in this game.</div>';
+ const winnerPoints=Number(game.scores?.[winner.id]||0);
+ const winningRecord=highScores[highScoreKey(winner.name)];
+ const winningBest=winningRecord&&winningRecord.room===room&&winningRecord.sessionId===game.sessionId;
+ const hadTiebreaker=!!game.tiebreaker?.winnerId;
+ const rows=roster.map((p,i)=>{
+  const score=Number(game.scores?.[p.id]||0),champion=p.id===winner.id;
+  const record=highScores[highScoreKey(p.name)],newBest=record?.room===room&&record?.sessionId===game.sessionId;
+  return '<div class="finale-standing'+(champion?' winner':'')+'">'+
+   '<span class="finale-place">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</span>'+
+   '<span class="finale-player-color" style="background:'+colorStyle(p.color)+'"></span>'+
+   '<span class="finale-player-name">'+esc(p.name)+(champion?'<small>CHAMPION'+(hadTiebreaker?' · TIEBREAK WINNER':'')+'</small>':newBest?'<small>NEW ALL-TIME BEST</small>':'')+'</span>'+
+   '<strong>'+score+' <small>PTS</small></strong>'+
+   (champion?'<span class="finale-win-mark">★</span>':'')+
+   '</div>';
+ }).join('');
+ return '<div class="finale-overview">'+
+  '<div class="finale-hero"><div class="finale-trophy" aria-hidden="true">🏆</div>'+
+   '<div class="finale-kicker">JINX! CHAMPION'+(hadTiebreaker?' · TIEBREAK WINNER':'')+'</div>'+
+   '<h1 class="finale-champion-name">'+esc(winner.name)+'</h1>'+
+   '<div class="finale-winning-score">'+winnerPoints+' <span>POINTS</span></div>'+
+   (winningBest?'<div class="finale-record-celebration">✦ NEW PERSONAL BEST ✦</div>':'')+
+  '</div>'+
+  '<div class="finale-standing-section"><div class="finale-standing-heading">FINAL LEADERBOARD <span>'+roster.length+' PLAYERS</span></div>'+
+   '<div class="finale-standing-list">'+rows+'</div></div></div>';
+}
+function allTimeLeaderboardMarkup(){
+ if(highScoreStatus==='unavailable')return '<div class="alltime-fallback"><h2>ALL-TIME LEADERBOARD</h2><p>Firebase high-score rules need to be published before scores can sync across devices. See database.rules.json in GitHub.</p></div>';
+ const records=highScoreEntries().slice(0,HIGH_SCORE_LIMIT);
+ if(!records.length)return '<div class="alltime-fallback"><h2>ALL-TIME LEADERBOARD</h2><p>'+(highScoreStatus==='loading'?'Loading all-time scores…':'No scores recorded yet. Finish a game to set the first record!')+'</p></div>';
+ return '<div class="alltime-panel"><div class="alltime-heading"><div><div class="eyebrow">HALL OF FAME</div><h2>ALL-TIME HIGHSCORES</h2></div><span>BEST GAME PER NAME · TOP '+HIGH_SCORE_LIMIT+'</span></div>'+
+ '<div class="alltime-list">'+records.map((entry,i)=>{
+  const justMadeIt=entry.room===room&&entry.sessionId===game.sessionId;
+  return '<div class="alltime-entry'+(justMadeIt?' just-earned':'')+'"><span class="alltime-place">'+(i<3?['🥇','🥈','🥉'][i]:'#'+(i+1))+'</span>'+
+    '<span class="alltime-name">'+esc(entry.name)+'</span>'+
+    (justMadeIt?'<span class="alltime-new">NEW BEST</span>':'')+
+    '<strong>'+Number(entry.score)+' <small>PTS</small></strong></div>';
+ }).join('')+'</div></div>';
+}
+function finaleTabButton(id,label){
+ return '<button class="finale-tab'+(finaleView===id?' selected':'')+'" data-finale-tab="'+id+'" aria-pressed="'+String(finaleView===id)+'">'+label+'</button>';
+}
+function celebrateFinale(){
+ if(game.phase!=='ended'||!game.winnerId)return;
+ const id=room+':'+game.sessionId+':'+game.finalizedAt;
+ if(lastFinaleCelebrated===id)return;
+ lastFinaleCelebrated=id;
+ requestAnimationFrame(()=>spawnConfetti());
+}
+function recapMarkup(mobile=false){
+ const main=finaleView==='stats'?(mobile?mobileRecapMarkup():roundStatsMarkup()):
+   finaleView==='alltime'?allTimeLeaderboardMarkup():winnerStandingsMarkup();
+ return '<section class="finale-screen'+(mobile?' mobile-finale':'')+'">'+
+  '<div class="finale-nav">'+finaleTabButton('standings','<span>🏆</span> Final Scores')+
+   finaleTabButton('stats','<span>📊</span> Round Stats')+
+   finaleTabButton('alltime','<span>★</span> All-Time Scores')+'</div>'+
+  '<div class="finale-main">'+main+'</div></section>';
+}
 function updateRecapSelection(){
  if(game.phase!=='ended')return;
  const history=recapHistory(),selected=history.find(x=>x.round===recapSelectedRound);
@@ -538,6 +630,11 @@ function mobileRecapMarkup(){
 }
 function bindRecap(){
  if(game.phase!=='ended')return;
+ document.querySelectorAll('[data-finale-tab]').forEach(button=>button.onclick=()=>{
+  const target=button.dataset.finaleTab;
+  if(!['standings','stats','alltime'].includes(target)||target===finaleView)return;
+  finaleView=target;lastScreen='';render();
+ });
  const entries=recapHistory();
  document.querySelectorAll('[data-recap-round]').forEach(el=>el.onclick=()=>{recapSelectedRound=Number(el.dataset.recapRound);updateRecapSelection()});
  if($('recapPrev'))$('recapPrev').onclick=()=>{let i=entries.findIndex(x=>x.round===recapSelectedRound);if(i>0){recapSelectedRound=entries[i-1].round;updateRecapSelection()}};
@@ -571,7 +668,7 @@ function updateAutoNext(){
  const id=room+':'+game.round+':'+game.revealedAt;
  if(autoNextTriggered===id)return;
  autoNextTriggered=id;
- nextRound(game.duration||45);
+ if(gameIsTiebreaker()||isLastRegularRound())finishGameOrTiebreaker();else nextRound(game.duration||45);
 }
 function hostRender(){
  const oldInput=$('duration')?.value;
@@ -579,9 +676,13 @@ function hostRender(){
  if(needScreen===lastScreen){updateClocks();paintReveal();return}
  lastScreen=needScreen;
  const lobby=game.phase==='lobby';
- const actions=lobby?'<label>Timer <select id="duration"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label><button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Automatically advance rounds after each reveal"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button><button id="start" class="primary">Start game</button>':
+ const autoButton='<button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Cycle automatic rounds"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button>';
+ const terminal=gameIsTiebreaker()||isLastRegularRound();
+ const tied=gameIsTiebreaker()?!game.tiebreaker.decided:leadingPlayerIds().length>1;
+ const actions=lobby?'<label>Timer <select id="duration"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label>'+autoButton+'<button id="start" class="primary">Start game</button>':
  game.phase==='answering'?'<button id="reveal">Reveal early</button>':
- game.phase==='results'?(((game.mode==='duo'&&game.round>=10)||(game.mode!=='duo'&&Math.max(0,...Object.values(game.scores||{}))>=Number(game.winningScore||50)))?'<button id="finish" class="primary">See results</button>':'<button id="autoNext" class="auto-next" type="button" aria-pressed="false" title="Toggle automatic next rounds"><span id="autoNextIcon">▶</span><span id="autoNextLabel">Auto</span></button><button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
+ game.phase==='results'?autoButton+(terminal?'<button id="finish" class="primary">'+(tied?(gameIsTiebreaker()?'Next tiebreaker':'Start tiebreaker'):'See results')+'</button>':
+ '<button id="next" class="primary">Next round</button><button id="finish">End game</button>'):
  '<button id="restart" class="primary">Play again</button>';
  if(lobby){
    shell('HOST • '+room,'<main class="hostgrid"><div class="stage">'+lobbyMarkup()+'</div><aside class="side">'+qrMarkup()+'<div class="lobby-players"><h3>Players</h3><div class="lobby-player-list">'+playerArray().map(p=>'<div class="lobby-player"><i style="background:'+colorStyle(p.color)+'"></i><span>'+esc(p.name)+'</span></div>').join('')+'</div></div><div class="hostcontrols">'+actions+'</div></aside></main><div id="error" class="error hidden"></div>');
@@ -595,13 +696,14 @@ function hostRender(){
  if($('next'))$('next').onclick=()=>{unlockSound();nextRound(game.duration||45)};
  if($('autoNext'))$('autoNext').onclick=()=>{autoNextDelaySeconds=autoNextDelaySeconds===0?5:autoNextDelaySeconds===5?10:0;autoNextArmedAt=now();sessionStorage.setItem(autoNextStore,String(autoNextDelaySeconds));unlockSound();updateAutoNext()};
  if($('reveal'))$('reveal').onclick=()=>finishRound();
- if($('finish'))$('finish').onclick=()=>{if(revealFinished())updateGame(g=>g.phase==='results'?{...g,phase:'ended'}:undefined)};
+ if($('finish'))$('finish').onclick=()=>{if(revealFinished())finishGameOrTiebreaker()};
  if($('restart'))$('restart').onclick=()=>{
-  recapSelectedRound=0;autoNextDelaySeconds=0;sessionStorage.removeItem(autoNextStore);
+  recapSelectedRound=0;finaleView='standings';autoNextDelaySeconds=0;sessionStorage.removeItem(autoNextStore);
   autoNextTriggered='';lastScreen='';
-  updateGame(g=>g.phase==='ended'?{...g,phase:'lobby',sessionId:uid(),round:0,roundKey:'0',prompt:null,topAnswers:null,deadline:null,revealedAt:null,used:{},scores:{},history:{},lastPoints:{},lastBreakdown:{},lastMatch:false,winningScore:50,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined);
+  updateGame(g=>g.phase==='ended'?{...g,phase:'lobby',sessionId:uid(),round:0,roundKey:'0',winnerId:null,finalizedAt:null,tiebreaker:null,prompt:null,topAnswers:null,deadline:null,revealedAt:null,used:{},scores:{},history:{},lastPoints:{},lastBreakdown:{},lastMatch:false,winningScore:50,mode:'classic',streak:0,bestStreak:0,matches:0}:undefined);
  };
  bindRecap();
+ celebrateFinale();
  updateClocks();paintReveal();syncRevealScreen();updateAutoNext();if(game.phase==='answering'||game.phase==='results')lookupTopAnswers(game.prompt);updateTopAnswerPanel();
 }
 function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h1>Looking for room…</h1><p>Make sure the host has created it.</p></main>');return}
@@ -614,12 +716,19 @@ function renderPlayer(){if(!game.phase){shell('JOIN ROOM','<main class="card"><h
    (phase==='lobby'?'<div class="playerbar lobby-playerbar"><span><i style="background:'+colorStyle(me.color)+'"></i>'+esc(me.name)+'</span></div>':
     phase==='ended'?'':mobileScoreboard());
  if(phase==='lobby')body+='<div class="mobilecenter"><div class="eyebrow">ROOM '+room+'</div><h1>You’re in!</h1><p>Waiting for the host to start.</p><div class="spin"></div><span class="muted">'+playerArray().length+' players in the lobby</span></div>';
- else if(phase==='answering')body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt)+'</div><div class="timer" id="timer">0:00</div><div class="progress"><div id="bar"></div></div>'+(answer?'<div class="submitted"><span class="check">✓</span><h2>Answer locked!</h2><p>'+esc(answer.text)+'</p><span class="muted" id="count">'+answerCount()+' of '+playerArray().length+' submitted</span></div>':'<form id="answerform"><input id="answer" maxlength="48" placeholder="Your word…" autocomplete="off" enterkeyhint="send" required><button class="primary">Lock in answer →</button><p class="muted">Your answer stays hidden until reveal.</p></form>')+'</div>';
- else if(phase==='ended')body+=mobileRecapMarkup();
-  else body+='<div class="mobilecenter"><div class="eyebrow">ROUND '+game.round+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+responseList()+'<p class="muted round-next-note">Next round soon…</p></div>';
+ else if(phase==='answering'){
+  const watching=gameIsTiebreaker()&&!(game.tiebreaker.contenders||[]).includes(me.id);
+  const title=gameIsTiebreaker()?'TIEBREAKER '+Number(game.tiebreaker.round||1):'ROUND '+game.round;
+  body+='<div class="mobilecenter"><div class="eyebrow">'+title+'</div><div class="prompt mobileprompt">'+esc(game.prompt)+'</div><div class="timer" id="timer">0:00</div><div class="progress"><div id="bar"></div></div>'+
+   (watching?'<div class="submitted"><h2>Watching the tiebreaker</h2><p>The tied leaders are playing for the win.</p></div>':
+    answer?'<div class="submitted"><span class="check">✓</span><h2>Answer locked!</h2><p>'+esc(answer.text)+'</p><span class="muted" id="count">'+answerCount()+' of '+roundPlayers().length+' submitted</span></div>':
+    '<form id="answerform"><input id="answer" maxlength="48" placeholder="Your word…" autocomplete="off" enterkeyhint="send" required><button class="primary">Lock in answer →</button><p class="muted">'+(gameIsTiebreaker()?'Top 5 only · No Jinx points.':'Your answer stays hidden until reveal.')+'</p></form>')+'</div>';
+ }
+ else if(phase==='ended')body+=recapMarkup(true);
+  else body+='<div class="mobilecenter"><div class="eyebrow">'+(gameIsTiebreaker()?'TIEBREAKER '+Number(game.tiebreaker.round||1):'ROUND '+game.round)+'</div><div class="prompt mobileprompt">'+esc(game.prompt||'')+'</div>'+responseList()+'<p class="muted round-next-note">'+(gameIsTiebreaker()?(game.tiebreaker.decided?'Winner decided!':'Still tied · one more round'):'Next round soon…')+'</p></div>';
  body+='</main><div id="error" class="error hidden"></div>';shell('PLAYER • '+room,body);
  if($('answerform'))$('answerform').onsubmit=async e=>{e.preventDefault();unlockSound();const v=$('answer').value.trim().replace(/\s+/g,' ');if(!v)return;const button=$('answerform').querySelector('button');button.disabled=true;try{const path=ref(db,'rooms/'+room+'/submissions/'+(game.roundKey||String(game.round))+'/'+me.id);const tx=await runTransaction(path,current=>current===null?{text:v,at:Date.now()}:undefined,{applyLocally:false});if(!tx.committed)throw Error('Already submitted');}catch(err){button.disabled=false;alert(err.message)}};
- updateClocks();paintReveal();syncRevealScreen();if(phase==='ended')bindRecap()
+ updateClocks();paintReveal();syncRevealScreen();if(phase==='ended'){bindRecap();celebrateFinale()}
 }
 function playerJoin(){if(lastScreen==='join'&&$('joinplayer'))return;lastScreen='join';shell('JOIN • '+room,'<main class="card joincard"><div class="eyebrow">ROOM '+room+'</div><h1>Join the game</h1><p>Pick a name and a unique color.</p><form id="joinplayer"><input id="nickname" maxlength="20" placeholder="Your name" required autocomplete="nickname"><h3>Choose your color</h3><div class="colorgrid" id="colors"></div><button class="primary">Join game →</button><div id="joinerror" class="error hidden"></div></form></main>');
  let chosen=null;for(const color of COLORS){let taken=playerArray().some(p=>p.color===color),b=document.createElement('button');b.className='color'+(taken?' taken':'');b.type='button';b.style.background=color;b.disabled=taken;b.title=taken?'Taken':color;b.onclick=()=>{chosen=color;document.querySelectorAll('.color').forEach(x=>x.classList.remove('active'));b.classList.add('active')};$('colors').append(b)}
@@ -928,7 +1037,7 @@ function playResultCue(elapsed){
  lastResultCue=id;
  // Ignore stale/rejoined screens; sound should happen on the last typed letter, not late.
  if(!soundReady||elapsed-endOfTyping>350)return;
- const matched=!!game.lastMatch;
+ const matched=!!game.lastMatch||(gameIsTiebreaker()&&game.tiebreaker.decided);
  const effect=matched?correctAudio:incorrectAudio;
  if(!effect)return;
  try{effect.pause();effect.currentTime=0;effect.play().catch(()=>{})}catch{}
@@ -939,10 +1048,41 @@ function countdownTick(remaining){
  try{tickAudio.pause();tickAudio.currentTime=0;tickAudio.play().catch(()=>{});}catch{}
 }
 
-function updateClocks(){if(game.phase!=='answering')return;let remain=Math.max(0,Math.ceil((game.deadline-now())/1000));countdownTick(remain);if($('timer')){$('timer').textContent=Math.floor(remain/60)+':'+String(remain%60).padStart(2,'0');$('timer').classList.toggle('danger',remain<=10)}if($('bar'))$('bar').style.width=Math.min(100,Math.max(0,(game.deadline-now())/((game.duration||45)*1000)*100))+'%';if($('count'))$('count').textContent=answerCount()+' / '+playerArray().length+' locked'}
+function updateClocks(){if(game.phase!=='answering')return;let remain=Math.max(0,Math.ceil((game.deadline-now())/1000));countdownTick(remain);if($('timer')){$('timer').textContent=Math.floor(remain/60)+':'+String(remain%60).padStart(2,'0');$('timer').classList.toggle('danger',remain<=10)}if($('bar'))$('bar').style.width=Math.min(100,Math.max(0,(game.deadline-now())/((game.duration||45)*1000)*100))+'%';if($('count'))$('count').textContent=answerCount()+' / '+roundPlayers().length+' locked'}
 async function updateGame(fn){if(!hostToken)return;try{await runTransaction(gameRef,g=>{if(!g||g.hostToken!==hostToken)return;return fn(g)},{applyLocally:false})}catch(e){showError(e)}}
-async function nextRound(duration){if(hostBusy||(game.phase==='results'&&!revealFinished()))return;hostBusy=true;try{if(!deck.length){await ensureTopAnswers();if(!topAnswerBank)throw Error('Top Answers file could not load. Refresh and retry.');let res=await fetch('./prompts.json',{cache:'no-store'});if(!res.ok)throw Error('Prompt deck unavailable');const all=await res.json();deck=all.filter(prompt=>validateTopAnswers(topAnswerBank[prompt]).length===TOP_ANSWERS_COUNT);if(!deck.length)throw Error('No validated prompts found.');}
- await updateGame(g=>{if(!['lobby','results'].includes(g.phase)||(g.mode==='duo'&&g.round>=10))return;let used=g.used||{};let choices=deck.map((_,i)=>i).filter(i=>!used[i]);if(!choices.length){used={};choices=deck.map((_,i)=>i)}let index=choices[Math.floor(Math.random()*choices.length)];return {...g,phase:'answering',round:(g.round||0)+1,roundKey:(g.sessionId?g.sessionId+'-'+((g.round||0)+1):String((g.round||0)+1)),prompt:deck[index],topAnswers:validateTopAnswers(topAnswerBank[deck[index]]),duration,deadline:now()+duration*1000,used:{...used,[index]:true},lastPoints:{},lastBreakdown:{},winningScore:50,mode:g.phase==='lobby'?(playerArray().length===2?'duo':'classic'):(g.mode||'classic')}})}catch(e){alert(e.message)}finally{hostBusy=false}}
+
+async function nextRound(duration,forcedTieIds=null){
+ if(hostBusy||(game.phase==='results'&&!revealFinished()))return;
+ hostBusy=true;
+ try{
+  if(!deck.length){
+   await ensureTopAnswers();
+   if(!topAnswerBank)throw Error('Top Answers could not load. Refresh and retry.');
+   const res=await fetch('./prompts.json',{cache:'no-store'});
+   if(!res.ok)throw Error('Prompt deck unavailable');
+   deck=(await res.json()).filter(prompt=>validateTopAnswers(topAnswerBank[prompt]).length===TOP_ANSWERS_COUNT);
+   if(!deck.length)throw Error('No validated prompts found.');
+  }
+  await updateGame(g=>{
+   if(!['lobby','results'].includes(g.phase))return;
+   const initialTie=Array.isArray(forcedTieIds)&&forcedTieIds.length>1;
+   const continuingTie=!!g.tiebreaker?.active&&!g.tiebreaker?.decided;
+   if(!initialTie&&!continuingTie&&g.phase==='results'&&isLastRegularRound(g))return;
+   if(!initialTie&&!continuingTie&&g.mode==='duo'&&g.round>=10)return;
+   let used=g.used||{},choices=deck.map((_,i)=>i).filter(i=>!used[i]);
+   if(!choices.length){used={};choices=deck.map((_,i)=>i)}
+   const index=choices[Math.floor(Math.random()*choices.length)];
+   const tiebreaker=initialTie?{active:true,contenders:forcedTieIds.slice(),nextContenders:forcedTieIds.slice(),round:1,decided:false,winnerId:null}
+     :continuingTie?{...g.tiebreaker,contenders:(g.tiebreaker.nextContenders||g.tiebreaker.contenders).slice(),round:Number(g.tiebreaker.round||1)+1,decided:false,winnerId:null}:null;
+   return {...g,phase:'answering',round:(g.round||0)+1,
+    roundKey:(g.sessionId?g.sessionId+'-'+((g.round||0)+1):String((g.round||0)+1)),
+    prompt:deck[index],topAnswers:validateTopAnswers(topAnswerBank[deck[index]]),
+    duration,deadline:now()+duration*1000,used:{...used,[index]:true},
+    lastPoints:{},lastBreakdown:{},lastMatch:false,tiebreaker,
+    winningScore:50,mode:g.phase==='lobby'?(playerArray().length===2?'duo':'classic'):(g.mode||'classic')};
+  });
+ }catch(error){showError(error)}finally{hostBusy=false}
+}
 async function finishRound(){
  if(hostBusy)return;
  hostBusy=true;
@@ -950,32 +1090,76 @@ async function finishRound(){
   if(!Array.isArray(game.topAnswers)&&!topAnswerBank)await ensureTopAnswers();
   const roundKey=game.roundKey||String(game.round);
   const ranked=validateTopAnswers(game.topAnswers||topAnswerBank?.[game.prompt]);
-  if(ranked.length!==TOP_ANSWERS_COUNT)throw Error('Ranked answers could not load. Please retry the reveal.');
+  if(ranked.length!==TOP_ANSWERS_COUNT)throw Error('Ranked answers could not load.');
   const snap=await get(ref(db,'rooms/'+room+'/submissions/'+roundKey));
-  const answerMap=snap.val()||{},roster=playerArray();
+  const answerMap=snap.val()||{},roster=roundPlayers(),isTie=gameIsTiebreaker();
   const results=compute(roster,answerMap,ranked);
+  const roundPoints=isTie?Object.fromEntries(roster.map(p=>[p.id,Number(results.breakdown[p.id]?.topPoints||0)])):results.points;
+  const breakdown=isTie?Object.fromEntries(roster.map(p=>[p.id,{...results.breakdown[p.id],matchPoints:0}])):results.breakdown;
   await updateGame(g=>{
    if(g.phase!=='answering'||(g.roundKey||String(g.round))!==roundKey)return;
    const scores={...(g.scores||{})};
-   for(const [pid,pts] of Object.entries(results.points))scores[pid]=(scores[pid]||0)+pts;
-   const duo=g.mode==='duo',match=duo&&roster.length===2&&results.hasMatch;
-   const streak=duo?(match?(g.streak||0)+1:0):0;
-   return {...g,phase:'results',revealedAt:now(),scores,lastPoints:results.points,
-    lastBreakdown:results.breakdown,lastMatch:results.hasMatch,topAnswers:ranked,
-    streak,bestStreak:duo?Math.max(g.bestStreak||0,streak):0,
-    matches:duo?(g.matches||0)+(match?1:0):0,
+   if(!isTie)for(const [pid,pts] of Object.entries(roundPoints))scores[pid]=(scores[pid]||0)+pts;
+   const duo=!isTie&&g.mode==='duo',match=duo&&roster.length===2&&results.hasMatch;
+   const streak=duo?(match?(g.streak||0)+1:0):Number(g.streak||0);
+   let tiebreaker=g.tiebreaker||null;
+   if(isTie){
+    const highest=Math.max(0,...Object.values(roundPoints));
+    const nextContenders=roster.filter(p=>roundPoints[p.id]===highest).map(p=>p.id);
+    const decided=nextContenders.length===1;
+    tiebreaker={...g.tiebreaker,nextContenders,decided,winnerId:decided?nextContenders[0]:null,latestPoints:roundPoints};
+   }
+   return {...g,phase:'results',revealedAt:now(),scores,lastPoints:roundPoints,
+    lastBreakdown:breakdown,lastMatch:!isTie&&results.hasMatch,topAnswers:ranked,tiebreaker,
+    streak,bestStreak:duo?Math.max(g.bestStreak||0,streak):g.bestStreak||0,
+    matches:duo?(g.matches||0)+(match?1:0):g.matches||0,
     history:{...(g.history||{}),[String(g.round)]:{
-     round:g.round,prompt:g.prompt,topAnswers:ranked,
-     answers:Object.fromEntries(Object.entries(answerMap).map(([id,a])=>[id,displayAnswer(a?.text||'')])),
-     points:results.points,breakdown:results.breakdown,
-     participants:roster.map(p=>({id:p.id,name:p.name,color:p.color})),
-     match:results.hasMatch,at:now()
+      round:g.round,prompt:g.prompt,topAnswers:ranked,tiebreaker:isTie,
+      answers:Object.fromEntries(Object.entries(answerMap).map(([id,a])=>[id,displayAnswer(a?.text||'')])),
+      points:roundPoints,breakdown,participants:roster.map(p=>({id:p.id,name:p.name,color:p.color})),
+      match:!isTie&&results.hasMatch,at:now()
     }}
    };
   });
  }catch(error){showError(error)}finally{hostBusy=false}
 }
-function hostCheck(){if(!isHost||game.phase!=='answering'||hostBusy)return;const total=playerArray().length;if(now()>=game.deadline || (total>=2&&answerCount()>=total))finishRound()}
+async function finishGameOrTiebreaker(){
+ if(!isHost||hostBusy||game.phase!=='results'||!revealFinished())return;
+ if(game.tiebreaker?.active&&!game.tiebreaker.decided){await nextRound(game.duration||45);return}
+ if(!game.tiebreaker?.active){
+  const tied=leadingPlayerIds();
+  if(tied.length>1){await nextRound(game.duration||45,tied);return}
+ }
+ const winner=resolvedWinnerId(game);
+ if(!winner){showError(new Error('Winner could not be determined'));return}
+ hostBusy=true;
+ try{
+  await updateGame(g=>{
+   if(g.phase!=='results'||(g.tiebreaker?.active&&!g.tiebreaker.decided))return;
+   return {...g,phase:'ended',winnerId:winner,finalizedAt:now(),tiebreaker:g.tiebreaker?{...g.tiebreaker,active:false}:null};
+  });
+ }finally{hostBusy=false}
+}
+async function publishFinishedHighScores(){
+ if(!isHost||game.phase!=='ended'||!game.winnerId||!playersLoaded||!game.sessionId)return;
+ const session=room+':'+game.sessionId;
+ if(publishedHighScoreSessions.has(session))return;
+ publishedHighScoreSessions.add(session);
+ const saved=await Promise.allSettled(playerArray().map(async p=>{
+  const name=highScoreName(p.name),score=Number(game.scores?.[p.id]||0),at=now();
+  if(!Number.isFinite(score)||score<0)return;
+  const record={name,rawName:p.name,score,room,playerId:p.id,sessionId:game.sessionId,
+   at,winner:p.id===game.winnerId,color:colorStyle(p.color)};
+  await runTransaction(ref(db,'highScores/'+highScoreKey(p.name)),old=>
+   old&&Number(old.score||0)>=score?undefined:record,{applyLocally:false});
+ }));
+ if(saved.some(x=>x.status==='rejected')){
+  highScoreStatus='unavailable';
+  console.warn('All-time scores require published database.rules.json',saved.filter(x=>x.status==='rejected').map(x=>String(x.reason)));
+  if(game.phase==='ended'){lastScreen='';render()}
+ }
+}
+function hostCheck(){if(!isHost||game.phase!=='answering'||hostBusy)return;const total=roundPlayers().length;if(now()>=game.deadline || (total>=1&&answerCount()>=total))finishRound()}
 
 let fitQueued=false;
 let keyboardFocus=false,keyboardClosing=false,frozenZoom='',frozenHeight=0;
