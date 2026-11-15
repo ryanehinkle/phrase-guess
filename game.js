@@ -233,6 +233,32 @@ function revealEntries(){
   const answers=submissions[game.roundKey||String(game.round)]||{};
   return roundPlayers().map(p=>({...p,answer:displayAnswer(answers[p.id]?.text||''),points:Number(game.lastPoints?.[p.id]||0),breakdown:game.lastBreakdown?.[p.id]||null}));
 }
+// Group matching answers with the same normalized/typo-tolerant logic as scoring.
+// Jinx players share a star color; separate matches get distinct colors.
+const MATCH_STAR_COLORS=['#ffd66b','#66e8f7','#c19bff','#ff8cad','#83ec9d','#ffa574','#9ab5ff','#e1d27c','#78d8c8','#f89adf','#e3a5ff','#acdf7e'];
+function matchStarMap(entries){
+ const groups=[];
+ for(const p of entries){
+  const key=normalize(p.answer);
+  if(!key||Number(p.breakdown?.matchPoints||0)<=0)continue;
+  let group=groups.find(g=>g.keys.some(k=>similar(key,k)));
+  if(!group){group={keys:[],players:[]};groups.push(group)}
+  group.keys.push(key);group.players.push(p);
+ }
+ const stars=new Map();
+ groups.filter(g=>g.players.length>=2).forEach((group,index)=>{
+  const color=MATCH_STAR_COLORS[index%MATCH_STAR_COLORS.length];
+  const letters=Math.max(...group.players.map(p=>fullPhraseLength(p.answer)));
+  const label=group.players.length===2?'Jinx!':'Match of '+group.players.length;
+  for(const p of group.players)stars.set(p.id,{color,letters,label});
+ });
+ return stars;
+}
+function matchStarMarkup(p,stars){
+ const info=stars.get(p.id);
+ return info?'<span class="match-star" style="--match-star:'+info.color+'" data-match-letters="'+info.letters+'" role="img" aria-label="'+esc(info.label)+'" title="'+esc(info.label)+'"><span class="match-star-glyph" aria-hidden="true">★</span></span>':'';
+}
+
 function phraseSegments(answer){
  const parts=String(game.prompt||'').split('_____');
  return {
@@ -251,10 +277,10 @@ function revealDuration(){
 function revealElapsed(){return game.revealedAt ? Math.max(0,now()-Number(game.revealedAt)) : Number.MAX_SAFE_INTEGER}
 function revealFinished(){return !['results','ended'].includes(game.phase)||revealElapsed()>=revealDuration()}
 function responseList(){
- const entries=revealEntries(),part=String(game.prompt||'').split('_____');
+ const entries=revealEntries(),stars=matchStarMap(entries),part=String(game.prompt||'').split('_____');
  const before=esc((part[0]||'').trim()),after=esc((part.slice(1).join('_____')||'').trim());
  const cards=entries.map(p=>
-  '<div class="reveal reveal-line" data-reveal-answer="'+esc(p.answer)+'" data-reveal-player="'+esc(p.id)+'" style="--player:'+colorStyle(p.color)+'">'+
+  '<div class="reveal reveal-line" data-reveal-answer="'+esc(p.answer)+'" data-reveal-player="'+esc(p.id)+'" style="--player:'+colorStyle(p.color)+'">'+matchStarMarkup(p,stars)+
   '<div class="reveal-owner"><i></i><span class="rname">'+esc(p.name)+'</span></div>'+
   '<div class="completed-phrase">'+(before?'<span class="phrase-fixed">'+before+'</span> ':'')+
   '<span class="typed-slot"><span class="ranswer" aria-label="Answer"></span><span class="typing-caret" aria-hidden="true"></span></span>'+
@@ -299,6 +325,10 @@ function paintReveal(){
   }
   const cinema=$('revealScreen');if(cinema){const maxLetters=Math.max(0,...revealEntries().map(p=>fullPhraseLength(p.answer)));cinema.classList.toggle('show-outcome',elapsed>=REVEAL_LEAD_MS+maxLetters*REVEAL_LETTER_MS+250);cinema.classList.toggle('break-away',done);if(done&&revealElapsed()>revealDuration()+280)cinema.remove()};const intro=$('revealIntro');
   if(intro)intro.textContent=elapsed<REVEAL_LEAD_MS?'GET READY TO REVEAL':done?'ANSWERS REVEALED':'EVERYONE IS REVEALING…';
+  // Each group's star animates only once all of its matching phrases are typed.
+  for(const star of document.querySelectorAll('.match-star')){
+    star.classList.toggle('is-revealed',elapsed>=REVEAL_LEAD_MS&&letterCount>=Number(star.dataset.matchLetters||0));
+  }
   for(const points of document.querySelectorAll('.reveal-points')){
     points.classList.toggle('points-shown',done);
   }
@@ -335,7 +365,8 @@ function syncRevealScreen(){
  if(document.getElementById('revealScreen')?.dataset.key===id)return;
  document.getElementById('revealScreen')?.remove();
  const el=document.createElement('div');el.id='revealScreen';el.dataset.key=id;el.className='cinema';
- el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+revealEntries().map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'"><small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(gameIsTiebreaker()?(game.tiebreaker.decided?'TIEBREAK WINNER!':'STILL TIED'):(roundMatchHeadline(game.lastBreakdown)||(game.mode==='duo'?'NOT THIS TIME':'NO MATCH')))+'</div></div>';
+ const entries=revealEntries(),stars=matchStarMap(entries);
+ el.innerHTML='<div class="cinema-grid"><div class="cinema-kicker">ROUND '+game.round+'</div><div class="cinema-title">LET’S SEE…</div><div class="cinema-answers">'+entries.map(p=>'<div class="cinema-answer" data-reveal-answer="'+esc(p.answer)+'" style="--player:'+colorStyle(p.color)+'">'+matchStarMarkup(p,stars)+'<small>'+esc(p.name)+'</small><div class="cinema-full-phrase"><span class="cinema-before"></span><strong class="ranswer"></strong><span class="cinema-after"></span><span class="typing-caret"></span></div></div>').join('')+'</div><div class="cinema-outcome">'+(gameIsTiebreaker()?(game.tiebreaker.decided?'TIEBREAK WINNER!':'STILL TIED'):(roundMatchHeadline(game.lastBreakdown)||(game.mode==='duo'?'NOT THIS TIME':'NO MATCH')))+'</div></div>';
  document.body.append(el);paintReveal();
 }
 
